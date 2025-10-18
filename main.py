@@ -7,6 +7,8 @@ import random
 pygame.init()
 pygame.mixer.init()
 
+WIDTH, HEIGHT = 900, 900
+
 blue_wins = 0
 orange_wins = 0
 MAX_SCORE = 5
@@ -115,31 +117,51 @@ def main_menu():
 						pygame.quit()
 						sys.exit()
 
+def draw_tron_grid(surface, color, desired_spacing=40):
+    surface.fill((0, 0, 16))  # dark navy background
 
-def draw_tron_grid(surface, color, spacing=40):
-	surface.fill((0, 0, 16))  # dark navy background
+    width = surface.get_width()
+    height = surface.get_height()
 
-	width = WIDTH
-	height = HEIGHT
+    # Compute number of full cells that fit
+    cols = width // desired_spacing
+    rows = height // desired_spacing
 
-	# draw vertical lines
-	for x in range(0, width, spacing):
-		pygame.draw.line(surface, color, (x, 0), (x, height), 1)
+    # Adjust spacing so grid fits exactly
+    spacing_x = width / cols if cols > 0 else width
+    spacing_y = height / rows if rows > 0 else height
 
-	# draw horizontal lines
-	for y in range(0, height, spacing):
-		pygame.draw.line(surface, color, (0, y), (width, y), 1)
+    # Draw vertical lines including the final right line
+    for i in range(cols + 1):
+        x = int(i * spacing_x)
+        pygame.draw.line(surface, color, (x, 0), (x, height), 1)
+    # Ensure a final line at the very right edge
+    pygame.draw.line(surface, color, (width - 1, 0), (width - 1, height), 1)
 
-	# add a glowing effect by drawing blurred edges
-	glow = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-	for i in range(3):
-		alpha = 40 - i * 10
-		glow_color = (color[0], color[1], color[2], alpha)
-		for x in range(0, width, spacing):
-			pygame.draw.line(glow, glow_color, (x, 0), (x, height), 3 + i)
-		for y in range(0, height, spacing):
-			pygame.draw.line(glow, glow_color, (0, y), (width, y), 3 + i)
-	surface.blit(glow, (0, 0))
+    # Draw horizontal lines including the final bottom line
+    for j in range(rows + 1):
+        y = int(j * spacing_y)
+        pygame.draw.line(surface, color, (0, y), (width, y), 1)
+    # Ensure a final line at the very bottom edge
+    pygame.draw.line(surface, color, (0, height - 1), (width, height - 1), 1)
+
+    # Optional glow effect
+    glow = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+    for i in range(3):
+        alpha = 40 - i * 10
+        glow_color = (color[0], color[1], color[2], alpha)
+        # Vertical glow lines
+        for k in range(cols + 1):
+            x = int(k * spacing_x)
+            pygame.draw.line(glow, glow_color, (x, 0), (x, height), 3 + i)
+        pygame.draw.line(glow, glow_color, (width - 1, 0), (width - 1, height), 3 + i)
+        # Horizontal glow lines
+        for l in range(rows + 1):
+            y = int(l * spacing_y)
+            pygame.draw.line(glow, glow_color, (0, y), (width, y), 3 + i)
+        pygame.draw.line(glow, glow_color, (0, height - 1), (width, height - 1), 3 + i)
+
+    surface.blit(glow, (0, 0))
 
 # Screen setup
 info = pygame.display.Info()
