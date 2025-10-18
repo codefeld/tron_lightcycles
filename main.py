@@ -9,6 +9,8 @@ pygame.mixer.init()
 
 blue_wins = 0
 orange_wins = 0
+MAX_SCORE = 5
+match_over = False
 
 def blit_bike_with_front_at(screen, sprite, pos_back, dir_vector, back_margin=0):
 	dx, dy = dir_vector
@@ -81,6 +83,38 @@ def reset_sprites():
 	# Clear trails (fresh lists)
 	p1_trail = []
 	p2_trail = []
+
+def main_menu():
+	global blue_wins, orange_wins, match_over
+
+	menu_running = True
+	pygame.mixer.music.load("the_game_has_changed.mp3")
+	pygame.mixer.music.play(-1)
+
+	while menu_running:
+
+		WIN.blit(background, (0, 0))
+		show_message("TRON LIGHTCYCLES", "Press SPACE to start")
+		pygame.mixer.music.load("the_game_has_changed.mp3")
+		pygame.mixer.music.play(-1)
+		waiting = True
+		while waiting:
+			for event in pygame.event.get():
+				if event.type == pygame.QUIT:
+					pygame.quit()
+					sys.exit()
+				if event.type == pygame.KEYDOWN:
+					if event.key == pygame.K_SPACE:
+						countdown()
+						blue_wins = 0
+						orange_wins = 0
+						match_over = False
+						menu_running = False
+						waiting = False
+					elif event.key == pygame.K_ESCAPE:
+						pygame.quit()
+						sys.exit()
+
 
 def draw_tron_grid(surface, color, spacing=40):
 	surface.fill((0, 0, 16))  # dark navy background
@@ -270,19 +304,19 @@ def countdown():
 
 # --- Start Screen ---
 WIN.blit(background, (0, 0))
-show_message("TRON LIGHTCYCLES", "Press SPACE to start")
-pygame.mixer.music.load("the_game_has_changed.mp3")
-pygame.mixer.music.play(-1)
-waiting = True
-while waiting:
-	for event in pygame.event.get():
-		if event.type == pygame.QUIT:
-			pygame.quit()
-			sys.exit()
-		if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-			countdown()
-			waiting = False
-
+# show_message("TRON LIGHTCYCLES", "Press SPACE to start")
+# pygame.mixer.music.load("the_game_has_changed.mp3")
+# pygame.mixer.music.play(-1)
+# waiting = True
+# while waiting:
+# 	for event in pygame.event.get():
+# 		if event.type == pygame.QUIT:
+# 			pygame.quit()
+# 			sys.exit()
+# 		if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+# 			countdown()
+# 			waiting = False
+main_menu()
 running = True
 game_over = False
 while running:
@@ -363,9 +397,14 @@ while running:
 			# Small pause to show the collision frame
 			pygame.time.delay(1800)
 
-			win_text = "ORANGE TEAM WINS!"
-			win_color = ORANGE
 			orange_wins += 1
+			win_color = ORANGE
+			# Check for match victory
+			if orange_wins >= MAX_SCORE:
+				match_over = True
+				win_text = "ORANGE TEAM WINS THE MATCH!"
+			else:
+				win_text = "ORANGE TEAM WINS!"
 			pygame.mixer.music.load("end_titles.mp3")
 			pygame.mixer.music.play(-1)
 		elif check_collision(tuple(map(int, p2_front)), p2_trail[:-1], p1_trail):
@@ -387,9 +426,15 @@ while running:
 			# Small pause to show the collision frame
 			pygame.time.delay(1800)
 
-			win_text = "BLUE TEAM WINS!"
-			win_color = BLUE
 			blue_wins += 1
+			win_color = BLUE
+			# Check for match victory
+			if blue_wins >= MAX_SCORE:
+				match_over = True
+				win_text = "BLUE TEAM WINS THE MATCH!"
+			else:
+				win_text = "BLUE TEAM WINS!"
+				
 			pygame.mixer.music.load("end_titles.mp3")
 			pygame.mixer.music.play(-1)
 
@@ -443,9 +488,14 @@ while running:
 				# Small pause to show the collision frame
 				pygame.time.delay(1800)
 
-				win_text = "ORANGE TEAM WINS!"
-				win_color = ORANGE
 				orange_wins += 1
+				win_color = ORANGE
+				# Check for match victory
+				if orange_wins >= MAX_SCORE:
+					match_over = True
+					win_text = "ORANGE TEAM WINS THE MATCH!"
+				else:
+					win_text = "ORANGE TEAM WINS!"
 				pygame.mixer.music.load("end_titles.mp3")
 				pygame.mixer.music.play(-1)
 
@@ -468,9 +518,14 @@ while running:
 				# Small pause to show the collision frame
 				pygame.time.delay(1800)
 
-				win_text = "BLUE TEAM WINS!"
-				win_color = BLUE
 				blue_wins += 1
+				win_color = BLUE
+				# Check for match victory
+				if blue_wins >= MAX_SCORE:
+					match_over = True
+					win_text = "BLUE TEAM WINS THE MATCH!"
+				else:
+					win_text = "BLUE TEAM WINS!"
 				pygame.mixer.music.load("end_titles.mp3")
 				pygame.mixer.music.play(-1)
 
@@ -497,18 +552,30 @@ while running:
 		pygame.display.update()
 
 	else:
-		# --- GAME OVER STATE ---
-		# Keep showing the final map, don't clear the screen
-		show_message(win_text, "PRESS SPACE TO PLAY AGAIN", win_color)
-		draw_scoreboard()
-		pygame.display.update()
+	# --- GAME OVER STATE ---
+		if match_over:
+			show_message(win_text, "PRESS ESC TO QUIT", win_color)
+			draw_scoreboard()
+			pygame.display.update()
 
-		# Wait for restart or quit
-		for event in pygame.event.get():
-			if event.type == pygame.QUIT:
-				running = False
-			elif event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_SPACE:
-					reset_game()
+			for event in pygame.event.get():
+				if event.type == pygame.QUIT:
+					running = False
+				elif event.type == pygame.KEYDOWN:
+					if event.key == pygame.K_ESCAPE:
+						main_menu()
+
+		else:
+			show_message(win_text, "PRESS SPACE TO PLAY AGAIN", win_color)
+			draw_scoreboard()
+			pygame.display.update()
+
+			for event in pygame.event.get():
+				if event.type == pygame.QUIT:
+					running = False
+				elif event.type == pygame.KEYDOWN:
+					if event.key == pygame.K_SPACE:
+						reset_game()
+
 
 pygame.quit()
