@@ -13,6 +13,7 @@ blue_wins = 0
 orange_wins = 0
 MAX_SCORE = 5
 match_over = False
+single_player = False
 
 obstacles = []
 OBSTACLE_SIZE = 20  # Try 15–30 for good visibility
@@ -87,7 +88,7 @@ def reset_sprites():
 	p2_trail = []
 
 def main_menu():
-	global blue_wins, orange_wins, match_over
+	global blue_wins, orange_wins, match_over, single_player
 
 	menu_running = True
 	pygame.mixer.music.load("the_game_has_changed.mp3")
@@ -96,7 +97,7 @@ def main_menu():
 	while menu_running:
 
 		WIN.blit(background, (0, 0))
-		show_message("TRON LIGHTCYCLES", "Press SPACE to start")
+		show_message("TRON LIGHTCYCLES", "Press \"1\" for 1 Player or \"2\" for 2 Players")
 		pygame.mixer.music.load("the_game_has_changed.mp3")
 		pygame.mixer.music.play(-1)
 		waiting = True
@@ -106,7 +107,16 @@ def main_menu():
 					pygame.quit()
 					sys.exit()
 				if event.type == pygame.KEYDOWN:
-					if event.key == pygame.K_SPACE:
+					if event.key == pygame.K_1:
+						single_player = True
+						blue_wins = 0
+						orange_wins = 0
+						match_over = False
+						menu_running = False
+						waiting = False
+						reset_game()
+					elif event.key == pygame.K_2:
+						single_player = False
 						blue_wins = 0
 						orange_wins = 0
 						match_over = False
@@ -145,7 +155,6 @@ def draw_tron_grid(surface, color, desired_spacing=40):
     # Ensure a final line at the very bottom edge
     pygame.draw.line(surface, color, (0, height - 1), (width, height - 1), 1)
 
-    # Optional glow effect
     glow = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
     for i in range(3):
         alpha = 40 - i * 10
@@ -303,7 +312,7 @@ def generate_obstacles():
     global obstacles
     obstacles = []
 
-    NUM_OBSTACLES = random.randint(5, 10)
+    NUM_OBSTACLES = random.randint(5, 15)
     MAX_ATTEMPTS = 100  # Avoid infinite loops
 
     while len(obstacles) < NUM_OBSTACLES:
@@ -434,6 +443,52 @@ def orange_win():
 	pygame.mixer.music.load("end_titles.mp3")
 	pygame.mixer.music.play(-1)
 
+def ai_control():
+    """Simple AI for orange bike that avoids walls, trails, and obstacles."""
+    global p2_dir, last_turn_time_p2
+
+    # Time limit to prevent over-turning
+    current_time = pygame.time.get_ticks()
+    if current_time - last_turn_time_p2 < turn_cooldown:
+        return  # wait for cooldown before next turn
+
+    possible_dirs = [dirs["UP"], dirs["DOWN"], dirs["LEFT"], dirs["RIGHT"]]
+
+    def will_collide(pos, dir_vec):
+        """Predict if moving forward will cause a collision."""
+        x, y = pos
+        dx, dy = dir_vec
+        # Look 10 steps ahead
+        for i in range(1, 12):
+            nx = x + dx * i
+            ny = y + dy * i
+            if nx < 0 or nx >= WIDTH or ny < 0 or ny >= HEIGHT:
+                return True
+            if (int(nx), int(ny)) in p1_trail or (int(nx), int(ny)) in p2_trail:
+                return True
+            for (ox, oy, size) in obstacles:
+                if ox <= nx <= ox + size and oy <= ny <= oy + size:
+                    return True
+        return False
+
+    # Prefer current direction if safe
+    if not will_collide(p2_pos, p2_dir):
+        return
+
+    # Otherwise, pick a safer turn
+    safe_dirs = [d for d in possible_dirs if not will_collide(p2_pos, d)]
+    if safe_dirs:
+        new_dir = random.choice(safe_dirs)
+        # Prevent turning back directly
+        if (p2_dir == dirs["UP"] and new_dir == dirs["DOWN"]) or \
+           (p2_dir == dirs["DOWN"] and new_dir == dirs["UP"]) or \
+           (p2_dir == dirs["LEFT"] and new_dir == dirs["RIGHT"]) or \
+           (p2_dir == dirs["RIGHT"] and new_dir == dirs["LEFT"]):
+            pass
+        else:
+            p2_dir = new_dir
+            last_turn_time_p2 = current_time
+
 # --- Start Screen ---
 WIN.blit(background, (0, 0))
 main_menu()
@@ -467,20 +522,36 @@ while running:
 				p1_dir = dirs["RIGHT"]
 				last_turn_time_p1 = current_time
 
-		# Player 2 (Arrow keys)
-		if current_time - last_turn_time_p2 > turn_cooldown:
-			if keys[pygame.K_UP] and p2_dir != dirs["DOWN"]:
-				p2_dir = dirs["UP"]
-				last_turn_time_p2 = current_time
-			elif keys[pygame.K_DOWN] and p2_dir != dirs["UP"]:
-				p2_dir = dirs["DOWN"]
-				last_turn_time_p2 = current_time
-			elif keys[pygame.K_LEFT] and p2_dir != dirs["RIGHT"]:
-				p2_dir = dirs["LEFT"]
-				last_turn_time_p2 = current_time
-			elif keys[pygame.K_RIGHT] and p2_dir != dirs["LEFT"]:
-				p2_dir = dirs["RIGHT"]
-				last_turn_time_p2 = current_time
+		# # Player 2 (Arrow keys)
+		# if current_time - last_turn_time_p2 > turn_cooldown:
+		# 	if keys[pygame.K_UP] and p2_dir != dirs["DOWN"]:
+		# 		p2_dir = dirs["UP"]
+		# 		last_turn_time_p2 = current_time
+		# 	elif keys[pygame.K_DOWN] and p2_dir != dirs["UP"]:
+		# 		p2_dir = dirs["DOWN"]
+		# 		last_turn_time_p2 = current_time
+		# 	elif keys[pygame.K_LEFT] and p2_dir != dirs["RIGHT"]:
+		# 		p2_dir = dirs["LEFT"]
+		# 		last_turn_time_p2 = current_time
+		# 	elif keys[pygame.K_RIGHT] and p2_dir != dirs["LEFT"]:
+		# 		p2_dir = dirs["RIGHT"]
+		# 		last_turn_time_p2 = current_time
+		if single_player == True:
+			ai_control()
+		else:
+			if current_time - last_turn_time_p2 > turn_cooldown:
+				if keys[pygame.K_UP] and p2_dir != dirs["DOWN"]:
+					p2_dir = dirs["UP"]
+					last_turn_time_p2 = current_time
+				elif keys[pygame.K_DOWN] and p2_dir != dirs["UP"]:
+					p2_dir = dirs["DOWN"]
+					last_turn_time_p2 = current_time
+				elif keys[pygame.K_LEFT] and p2_dir != dirs["RIGHT"]:
+					p2_dir = dirs["LEFT"]
+					last_turn_time_p2 = current_time
+				elif keys[pygame.K_RIGHT] and p2_dir != dirs["LEFT"]:
+					p2_dir = dirs["RIGHT"]
+					last_turn_time_p2 = current_time
 
 
 		# Move players
