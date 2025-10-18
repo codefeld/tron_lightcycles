@@ -9,85 +9,50 @@ pygame.mixer.init()
 
 import pygame, math
 
-# def blit_bike_with_front_at(screen, sprite, pos_front, dir_vector, front_margin=0):
-# 	dx, dy = dir_vector
-
-# 	# Angle in degrees (right = 0°)
-# 	rad = math.atan2(-dy, dx)
-# 	angle_deg = math.degrees(rad)
-
-# 	# Original sprite size
-# 	w, h = sprite.get_width(), sprite.get_height()
-	
-# 	# Vector from center to front in unrotated coordinates
-# 	local_front = pygame.math.Vector2((w/2 - front_margin, 0))
-	
-# 	# Rotate this vector
-# 	rotated_front = local_front.rotate(-angle_deg)  # Pygame's rotate is clockwise
-
-# 	# Compute center position so front matches pos_front
-# 	center_x = pos_front[0] - rotated_front.x
-# 	center_y = pos_front[1] - rotated_front.y
-
-# 	# Rotate sprite
-# 	rotated_sprite = pygame.transform.rotate(sprite, angle_deg)
-# 	bike_rect = rotated_sprite.get_rect(center=(center_x, center_y))
-	
-# 	screen.blit(rotated_sprite, bike_rect)
-
 def blit_bike_with_front_at(screen, sprite, pos_back, dir_vector, back_margin=0):
-    dx, dy = dir_vector
+	dx, dy = dir_vector
 
-    # Compute angle (right = 0°)
-    rad = math.atan2(-dy, dx)
-    angle_deg = math.degrees(rad)
+	# Compute angle (right = 0°)
+	rad = math.atan2(-dy, dx)
+	angle_deg = math.degrees(rad)
 
-    # Original sprite dimensions
-    w, h = sprite.get_width(), sprite.get_height()
+	# Original sprite dimensions
+	w, h = sprite.get_width(), sprite.get_height()
 
-    # Vector from back to center (unrotated)
-    local_center = pygame.math.Vector2((w/2 - back_margin, 0))
+	# Vector from back to center (unrotated)
+	local_center = pygame.math.Vector2((w/2 - back_margin, 0))
 
-    # Rotate that vector
-    rotated_center = local_center.rotate(-angle_deg)
+	# Rotate that vector
+	rotated_center = local_center.rotate(-angle_deg)
 
-    # Compute where the sprite's center should be
-    center_x = pos_back[0] + rotated_center.x
-    center_y = pos_back[1] + rotated_center.y
+	# Compute where the sprite's center should be
+	center_x = pos_back[0] + rotated_center.x
+	center_y = pos_back[1] + rotated_center.y
 
-    # Rotate the sprite
-    rotated_sprite = pygame.transform.rotate(sprite, angle_deg)
-    bike_rect = rotated_sprite.get_rect(center=(center_x, center_y))
+	# Rotate the sprite
+	rotated_sprite = pygame.transform.rotate(sprite, angle_deg)
+	bike_rect = rotated_sprite.get_rect(center=(center_x, center_y))
 
-    # Draw the rotated sprite
-    screen.blit(rotated_sprite, bike_rect)
+	# Draw the rotated sprite
+	screen.blit(rotated_sprite, bike_rect)
 
 def get_front_pos(pos_back, dir_vector, sprite_width=None, back_margin=4):
-    """Compute front point automatically from sprite width."""
-    dx, dy = dir_vector
-    mag = math.hypot(dx, dy)
-    if mag == 0:
-        return pos_back
-    nx, ny = dx / mag, dy / mag
+	"""Compute front point automatically from sprite width."""
+	dx, dy = dir_vector
+	mag = math.hypot(dx, dy)
+	if mag == 0:
+		return pos_back
+	nx, ny = dx / mag, dy / mag
 
-    # Use sprite width if provided, otherwise default to 30
-    length = (sprite_width or 30) - back_margin
+	# Use sprite width if provided, otherwise default to 30
+	length = (sprite_width or 30) - back_margin
 
-    front_x = pos_back[0] + nx * length
-    front_y = pos_back[1] + ny * length
-    return [front_x, front_y]
+	front_x = pos_back[0] + nx * length
+	front_y = pos_back[1] + ny * length
+	return [front_x, front_y]
 
 def reset_sprites():
 	global p1_pos, p2_pos, p1_dir, p2_dir, p1_trail, p2_trail
-
-	# pos0: dirs["DOWN"], [WIDTH // 4, 35]
-	# pos1: dirs["DOWN"], [3 * WIDTH // 4, 35]
-	# pos2: dirs["UP"], [WIDTH // 4, HEIGHT - 35]
-	# pos3: dirs["UP"], [3 * WIDTH // 4, HEIGHT - 35]
-	# pos4: dirs["LEFT"], [35, HEIGHT // 4]
-	# pos5: dirs["LEFT"], [35, 3 * HEIGHT // 4]
-	# pos6: dirs["RIGHT"], [WIDTH - 35, HEIGHT // 4]
-	# pos7: dirs["RIGHT"], [WIDTH - 35, 3 * HEIGHT // 4]
 
 	pos = [
 		[dirs["DOWN"], [WIDTH // 4, 35]],
@@ -242,46 +207,7 @@ def check_collision(pos, trail1, trail2):
 		return True
 	return False
 
-def rotate_around_pivot(image, angle, pivot_offset):
-	"""Rotate an image around a custom pivot point."""
-	rotated_image = pygame.transform.rotate(image, angle)
-	rotated_rect = rotated_image.get_rect()
-	pivot_rotated = pivot_offset.rotate(-angle)
-	new_center = (rotated_rect.centerx - pivot_rotated.x,
-				  rotated_rect.centery - pivot_rotated.y)
-	return rotated_image, rotated_rect, new_center
-
-def rotate_sprite(sprite, direction):
-	if direction == dirs["UP"]:
-		angle = 90
-	elif direction == dirs["DOWN"]:
-		angle = -90
-	elif direction == dirs["LEFT"]:
-		angle = 180
-	else:  # RIGHT
-		angle = 0
-
-	# pivot_offset is how far the pivot is from the image center.
-	# Positive Y goes *down*, so use negative Y to move pivot to the back.
-	pivot_offset = pygame.Vector2(0, sprite.get_height() // 2 - 5)  # tweak the 5
-	rotated, rect, new_center = rotate_around_pivot(sprite, angle, pivot_offset)
-	return rotated, new_center
-
-# def rotate_sprite(sprite, direction):
-# 	if direction == dirs["UP"]:
-# 		return pygame.transform.rotate(sprite, 90)
-# 	elif direction == dirs["DOWN"]:
-# 		return pygame.transform.rotate(sprite, -90)
-# 	elif direction == dirs["LEFT"]:
-# 		return pygame.transform.flip(sprite, True, False)
-# 	return sprite
-
 def draw_sprites():
-	# p1_front = (p1_pos[0], p1_pos[1]) 
-	# blit_bike_with_front_at(WIN, blue_bike, p1_front, p1_dir, front_margin=4)
-
-	# p2_front = (p2_pos[0], p2_pos[1])
-	# blit_bike_with_front_at(WIN, orange_bike, p2_front, p2_dir, front_margin=4)
 
 	p1_back = (p1_pos[0], p1_pos[1])
 	blit_bike_with_front_at(WIN, blue_bike, p1_back, p1_dir, back_margin=4)
@@ -383,24 +309,6 @@ while running:
 		p2_trail.append(tuple(p2_pos))
 
 		# Collisions
-		# if check_collision(tuple(p1_pos), p1_trail[:-1], p2_trail):
-		# 	pygame.mixer.music.stop()
-		# 	derezzed_sound.play()
-		# 	game_over = True  # <-- Stop movement
-		# 	time.sleep(2)
-		# 	win_text = "ORANGE TEAM WINS"
-		# 	win_color = ORANGE
-		# 	pygame.mixer.music.load("end_titles.mp3")
-		# 	pygame.mixer.music.play(-1)
-		# elif check_collision(tuple(p2_pos), p2_trail[:-1], p1_trail):
-		# 	pygame.mixer.music.stop()
-		# 	derezzed_sound.play()
-		# 	game_over = True  # <-- Stop movement
-		# 	time.sleep(2)
-		# 	win_text = "BLUE TEAM WINS"
-		# 	win_color = BLUE
-		# 	pygame.mixer.music.load("end_titles.mp3")
-		# 	pygame.mixer.music.play(-1)
 
 		p1_front = get_front_pos(p1_pos, p1_dir, bike_width)
 		p2_front = get_front_pos(p2_pos, p2_dir, bike_width)
@@ -409,7 +317,20 @@ while running:
 			pygame.mixer.music.stop()
 			derezzed_sound.play()
 			game_over = True
-			time.sleep(2)
+
+			# --- Draw final collision frame before pausing ---
+			WIN.fill(BLACK)
+			draw_tron_grid(WIN, TEAL)
+			for point in p1_trail:
+				pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+			for point in p2_trail:
+				pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+			draw_sprites()
+			pygame.display.update()
+
+			# Small pause to show the collision frame
+			pygame.time.delay(1800)
+
 			win_text = "ORANGE TEAM WINS"
 			win_color = ORANGE
 			pygame.mixer.music.load("end_titles.mp3")
@@ -418,11 +339,101 @@ while running:
 			pygame.mixer.music.stop()
 			derezzed_sound.play()
 			game_over = True
-			time.sleep(2)
+
+			# --- Draw final collision frame before pausing ---
+			WIN.fill(BLACK)
+			draw_tron_grid(WIN, TEAL)
+			for point in p1_trail:
+				pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+			for point in p2_trail:
+				pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+			draw_sprites()
+			pygame.display.update()
+
+			# Small pause to show the collision frame
+			pygame.time.delay(1800)
+
 			win_text = "BLUE TEAM WINS"
 			win_color = BLUE
 			pygame.mixer.music.load("end_titles.mp3")
 			pygame.mixer.music.play(-1)
+
+		# --- Bike-to-Bike Collision Check (tight hitboxes) ---
+		# Head-on collision threshold (fronts nearly touching)
+		if math.hypot(p1_front[0] - p2_front[0], p1_front[1] - p2_front[1]) < bike_width * 0.25:
+			pygame.mixer.music.stop()
+			derezzed_sound.play()
+			game_over = True
+
+			# --- Draw final collision frame before pausing ---
+			WIN.fill(BLACK)
+			draw_tron_grid(WIN, TEAL)
+			for point in p1_trail:
+				pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+			for point in p2_trail:
+				pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+			draw_sprites()
+			pygame.display.update()
+
+			# Small pause to show the collision frame
+			pygame.time.delay(1800)
+
+			win_text = "DRAW"
+			win_color = TEAL
+			pygame.mixer.music.load("end_titles.mp3")
+			pygame.mixer.music.play(-1)
+		else:
+			# Side impacts: one front hitting another's body
+			# (tighter box — about 40% of the sprite area)
+			hit_margin_x = bike_width * 0.4
+			hit_margin_y = bike_height * 0.4
+
+			if (abs(p1_front[0] - p2_pos[0]) < hit_margin_x and abs(p1_front[1] - p2_pos[1]) < hit_margin_y):
+				pygame.mixer.music.stop()
+				derezzed_sound.play()
+				game_over = True
+
+				# --- Draw final collision frame before pausing ---
+				WIN.fill(BLACK)
+				draw_tron_grid(WIN, TEAL)
+				for point in p1_trail:
+					pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+				for point in p2_trail:
+					pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+				draw_sprites()
+				pygame.display.update()
+
+				# Small pause to show the collision frame
+				pygame.time.delay(1800)
+
+				win_text = "ORANGE TEAM WINS"
+				win_color = ORANGE
+				pygame.mixer.music.load("end_titles.mp3")
+				pygame.mixer.music.play(-1)
+
+			elif (abs(p2_front[0] - p1_pos[0]) < hit_margin_x and abs(p2_front[1] - p1_pos[1]) < hit_margin_y):
+				pygame.mixer.music.stop()
+				derezzed_sound.play()
+				game_over = True
+
+				# --- Draw final collision frame before pausing ---
+				WIN.fill(BLACK)
+				draw_tron_grid(WIN, TEAL)
+				for point in p1_trail:
+					pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+				for point in p2_trail:
+					pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+				draw_sprites()
+				pygame.display.update()
+
+				# Small pause to show the collision frame
+				pygame.time.delay(1800)
+
+				win_text = "BLUE TEAM WINS"
+				win_color = BLUE
+				pygame.mixer.music.load("end_titles.mp3")
+				pygame.mixer.music.play(-1)
+
 
 
 		# Draw layers
