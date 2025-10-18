@@ -314,8 +314,6 @@ def generate_obstacles():
         if attempt >= MAX_ATTEMPTS:
             break
 
-
-
 def draw_obstacles():
     for (ox, oy, size) in obstacles:
         # Draw the black core
@@ -324,8 +322,6 @@ def draw_obstacles():
         
         # Draw a thin white outline
         pygame.draw.rect(WIN, (255, 255, 255), core, 2)  # 2 px outline
-
-
 
 def countdown():
 	pygame.mixer.music.stop()
