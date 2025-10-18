@@ -253,7 +253,7 @@ def countdown():
 # --- Start Screen ---
 WIN.blit(background, (0, 0))
 show_message("TRON LIGHTCYCLES", "Press SPACE to start")
-pygame.mixer.music.load("armory.mp3")
+pygame.mixer.music.load("the_game_has_changed.mp3")
 pygame.mixer.music.play(-1)
 waiting = True
 while waiting:
@@ -331,7 +331,7 @@ while running:
 			# Small pause to show the collision frame
 			pygame.time.delay(1800)
 
-			win_text = "ORANGE TEAM WINS"
+			win_text = "ORANGE TEAM WINS!"
 			win_color = ORANGE
 			pygame.mixer.music.load("end_titles.mp3")
 			pygame.mixer.music.play(-1)
@@ -353,7 +353,7 @@ while running:
 			# Small pause to show the collision frame
 			pygame.time.delay(1800)
 
-			win_text = "BLUE TEAM WINS"
+			win_text = "BLUE TEAM WINS!"
 			win_color = BLUE
 			pygame.mixer.music.load("end_titles.mp3")
 			pygame.mixer.music.play(-1)
@@ -378,7 +378,7 @@ while running:
 			# Small pause to show the collision frame
 			pygame.time.delay(1800)
 
-			win_text = "DRAW"
+			win_text = "DRAW!"
 			win_color = TEAL
 			pygame.mixer.music.load("end_titles.mp3")
 			pygame.mixer.music.play(-1)
@@ -406,7 +406,7 @@ while running:
 				# Small pause to show the collision frame
 				pygame.time.delay(1800)
 
-				win_text = "ORANGE TEAM WINS"
+				win_text = "ORANGE TEAM WINS!"
 				win_color = ORANGE
 				pygame.mixer.music.load("end_titles.mp3")
 				pygame.mixer.music.play(-1)
@@ -429,7 +429,7 @@ while running:
 				# Small pause to show the collision frame
 				pygame.time.delay(1800)
 
-				win_text = "BLUE TEAM WINS"
+				win_text = "BLUE TEAM WINS!"
 				win_color = BLUE
 				pygame.mixer.music.load("end_titles.mp3")
 				pygame.mixer.music.play(-1)
