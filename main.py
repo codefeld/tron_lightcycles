@@ -12,6 +12,9 @@ orange_wins = 0
 MAX_SCORE = 5
 match_over = False
 
+obstacles = []
+OBSTACLE_SIZE = 20  # Try 15–30 for good visibility
+
 def blit_bike_with_front_at(screen, sprite, pos_back, dir_vector, back_margin=0):
 	dx, dy = dir_vector
 
@@ -77,9 +80,6 @@ def reset_sprites():
 	p1_pos = random_poses[0][1]
 	p2_pos = random_poses[1][1]
 
-	print("(" + str(p1_dir) + ", " + str(p1_pos) + ")")
-	print("(" + str(p2_dir) + ", " + str(p2_pos) + ")")
-
 	# Clear trails (fresh lists)
 	p1_trail = []
 	p2_trail = []
@@ -105,12 +105,12 @@ def main_menu():
 					sys.exit()
 				if event.type == pygame.KEYDOWN:
 					if event.key == pygame.K_SPACE:
-						countdown()
 						blue_wins = 0
 						orange_wins = 0
 						match_over = False
 						menu_running = False
 						waiting = False
+						reset_game()
 					elif event.key == pygame.K_ESCAPE:
 						pygame.quit()
 						sys.exit()
@@ -267,6 +267,7 @@ def reset_game():
 	global p1_pos, p2_pos, p1_dir, p2_dir, p1_trail, p2_trail, game_over
 
 	reset_sprites()
+	generate_obstacles()
 
 	game_over = False
 
@@ -276,6 +277,56 @@ def reset_game():
 
 	countdown()
 
+def generate_obstacles():
+    global obstacles
+    obstacles = []
+
+    NUM_OBSTACLES = random.randint(5, 10)
+    MAX_ATTEMPTS = 100  # Avoid infinite loops
+
+    while len(obstacles) < NUM_OBSTACLES:
+        attempt = 0
+        while attempt < MAX_ATTEMPTS:
+            size = random.randint(30, 60)
+            x = random.randrange(0, WIDTH - size, OBSTACLE_SIZE)
+            y = random.randrange(0, HEIGHT - size, OBSTACLE_SIZE)
+
+            # Avoid spawning near players
+            if (abs(x - p1_pos[0]) < 3 * OBSTACLE_SIZE and abs(y - p1_pos[1]) < 3 * OBSTACLE_SIZE) or \
+               (abs(x - p2_pos[0]) < 3 * OBSTACLE_SIZE and abs(y - p2_pos[1]) < 3 * OBSTACLE_SIZE):
+                attempt += 1
+                continue
+
+            # Check for overlap with existing obstacles
+            overlap = False
+            for (ox, oy, osize) in obstacles:
+                if x < ox + osize and x + size > ox and y < oy + osize and y + size > oy:
+                    overlap = True
+                    break
+
+            if not overlap:
+                obstacles.append((x, y, size))
+                break
+
+            attempt += 1
+
+        # If we exceeded attempts, just skip this obstacle
+        if attempt >= MAX_ATTEMPTS:
+            break
+
+
+
+def draw_obstacles():
+    for (ox, oy, size) in obstacles:
+        # Draw the black core
+        core = pygame.Rect(ox, oy, size, size)
+        pygame.draw.rect(WIN, BLACK, core)
+        
+        # Draw a thin white outline
+        pygame.draw.rect(WIN, (255, 255, 255), core, 2)  # 2 px outline
+
+
+
 def countdown():
 	pygame.mixer.music.stop()
 	pygame.mixer.music.load("clu.mp3")
@@ -283,19 +334,86 @@ def countdown():
 	font = pygame.font.Font(None, 100)
 	for i in range(3, 0, -1):
 		draw_tron_grid(WIN, TEAL)
-		show_message(str(i))
+		draw_obstacles()
 		draw_sprites()
+		show_message(str(i))
 		pygame.display.update()
 		pygame.time.delay(1000)
 
 	# Flash "GO!"
 	draw_tron_grid(WIN, TEAL)
-	show_message("GO!")
+	draw_obstacles()
 	draw_sprites()
+	show_message("GO!")
 	pygame.display.update()
 	pygame.time.delay(800)
 	pygame.mixer.music.stop()
 	pygame.mixer.music.load("derezzed.mp3")
+	pygame.mixer.music.play(-1)
+
+def blue_win():
+	global game_over, match_over, win_color, win_text, blue_wins
+	pygame.mixer.music.stop()
+	derezzed_sound.play()
+	game_over = True
+
+	# --- Draw final collision frame before pausing ---
+	WIN.fill(BLACK)
+	draw_tron_grid(WIN, TEAL)
+	draw_obstacles()
+	for point in p1_trail:
+		pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+	for point in p2_trail:
+		pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+	draw_sprites()
+	draw_scoreboard()
+	pygame.display.update()
+
+	# Small pause to show the collision frame
+	pygame.time.delay(1800)
+
+	blue_wins += 1
+	win_color = BLUE
+	# Check for match victory
+	if blue_wins >= MAX_SCORE:
+		match_over = True
+		win_text = "BLUE TEAM WINS THE MATCH!"
+	else:
+		win_text = "BLUE TEAM WINS!"
+		
+	pygame.mixer.music.load("end_titles.mp3")
+	pygame.mixer.music.play(-1)
+
+def orange_win():
+	global game_over, match_over, win_color, win_text, orange_wins
+	pygame.mixer.music.stop()
+	derezzed_sound.play()
+	game_over = True
+
+	# --- Draw final collision frame before pausing ---
+	WIN.fill(BLACK)
+	draw_tron_grid(WIN, TEAL)
+	draw_obstacles()
+	for point in p1_trail:
+		pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+	for point in p2_trail:
+		pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+	draw_sprites()
+	draw_scoreboard()
+	pygame.display.update()
+
+	# Small pause to show the collision frame
+	pygame.time.delay(1800)
+
+	orange_wins += 1
+	win_color = ORANGE
+	# Check for match victory
+	if orange_wins >= MAX_SCORE:
+		match_over = True
+		win_text = "ORANGE TEAM WINS THE MATCH!"
+	else:
+		win_text = "ORANGE TEAM WINS!"
+	pygame.mixer.music.load("end_titles.mp3")
 	pygame.mixer.music.play(-1)
 
 # --- Start Screen ---
@@ -363,64 +481,9 @@ while running:
 		p2_front = get_front_pos(p2_pos, p2_dir, bike_width)
 
 		if check_collision(tuple(map(int, p1_front)), p1_trail[:-1], p2_trail):
-			pygame.mixer.music.stop()
-			derezzed_sound.play()
-			game_over = True
-
-			# --- Draw final collision frame before pausing ---
-			WIN.fill(BLACK)
-			draw_tron_grid(WIN, TEAL)
-			for point in p1_trail:
-				pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-			for point in p2_trail:
-				pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-			draw_sprites()
-			draw_scoreboard()
-			pygame.display.update()
-
-			# Small pause to show the collision frame
-			pygame.time.delay(1800)
-
-			orange_wins += 1
-			win_color = ORANGE
-			# Check for match victory
-			if orange_wins >= MAX_SCORE:
-				match_over = True
-				win_text = "ORANGE TEAM WINS THE MATCH!"
-			else:
-				win_text = "ORANGE TEAM WINS!"
-			pygame.mixer.music.load("end_titles.mp3")
-			pygame.mixer.music.play(-1)
+			orange_win()
 		elif check_collision(tuple(map(int, p2_front)), p2_trail[:-1], p1_trail):
-			pygame.mixer.music.stop()
-			derezzed_sound.play()
-			game_over = True
-
-			# --- Draw final collision frame before pausing ---
-			WIN.fill(BLACK)
-			draw_tron_grid(WIN, TEAL)
-			for point in p1_trail:
-				pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-			for point in p2_trail:
-				pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-			draw_sprites()
-			draw_scoreboard()
-			pygame.display.update()
-
-			# Small pause to show the collision frame
-			pygame.time.delay(1800)
-
-			blue_wins += 1
-			win_color = BLUE
-			# Check for match victory
-			if blue_wins >= MAX_SCORE:
-				match_over = True
-				win_text = "BLUE TEAM WINS THE MATCH!"
-			else:
-				win_text = "BLUE TEAM WINS!"
-				
-			pygame.mixer.music.load("end_titles.mp3")
-			pygame.mixer.music.play(-1)
+			blue_win()
 
 		# --- Bike-to-Bike Collision Check (tight hitboxes) ---
 		# Head-on collision threshold (fronts nearly touching)
@@ -432,6 +495,7 @@ while running:
 			# --- Draw final collision frame before pausing ---
 			WIN.fill(BLACK)
 			draw_tron_grid(WIN, TEAL)
+			draw_obstacles()
 			for point in p1_trail:
 				pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 			for point in p2_trail:
@@ -454,64 +518,23 @@ while running:
 			hit_margin_y = bike_height * 0.4
 
 			if (abs(p1_front[0] - p2_pos[0]) < hit_margin_x and abs(p1_front[1] - p2_pos[1]) < hit_margin_y):
-				pygame.mixer.music.stop()
-				derezzed_sound.play()
-				game_over = True
-
-				# --- Draw final collision frame before pausing ---
-				WIN.fill(BLACK)
-				draw_tron_grid(WIN, TEAL)
-				for point in p1_trail:
-					pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-				for point in p2_trail:
-					pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-				draw_sprites()
-				draw_scoreboard()
-				pygame.display.update()
-
-				# Small pause to show the collision frame
-				pygame.time.delay(1800)
-
-				orange_wins += 1
-				win_color = ORANGE
-				# Check for match victory
-				if orange_wins >= MAX_SCORE:
-					match_over = True
-					win_text = "ORANGE TEAM WINS THE MATCH!"
-				else:
-					win_text = "ORANGE TEAM WINS!"
-				pygame.mixer.music.load("end_titles.mp3")
-				pygame.mixer.music.play(-1)
+				orange_win()
 
 			elif (abs(p2_front[0] - p1_pos[0]) < hit_margin_x and abs(p2_front[1] - p1_pos[1]) < hit_margin_y):
-				pygame.mixer.music.stop()
-				derezzed_sound.play()
-				game_over = True
+				blue_win()
 
-				# --- Draw final collision frame before pausing ---
-				WIN.fill(BLACK)
-				draw_tron_grid(WIN, TEAL)
-				for point in p1_trail:
-					pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-				for point in p2_trail:
-					pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-				draw_sprites()
-				draw_scoreboard()
-				pygame.display.update()
+		# Check obstacle collisions
+		# Player 1 obstacle collision
+		for (ox, oy, size) in obstacles:
+			if ox <= p1_front[0] <= ox + size and oy <= p1_front[1] <= oy + size:
+				orange_win()
+				break
 
-				# Small pause to show the collision frame
-				pygame.time.delay(1800)
+		for (ox, oy, size) in obstacles:
+			if ox <= p2_front[0] <= ox + size and oy <= p2_front[1] <= oy + size:
+				blue_win()
+				break
 
-				blue_wins += 1
-				win_color = BLUE
-				# Check for match victory
-				if blue_wins >= MAX_SCORE:
-					match_over = True
-					win_text = "BLUE TEAM WINS THE MATCH!"
-				else:
-					win_text = "BLUE TEAM WINS!"
-				pygame.mixer.music.load("end_titles.mp3")
-				pygame.mixer.music.play(-1)
 
 
 
@@ -528,6 +551,8 @@ while running:
 
 		# Draw bikes
 		draw_sprites()
+
+		draw_obstacles()
 
 		pygame.display.update()
 
