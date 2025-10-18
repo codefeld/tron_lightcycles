@@ -7,7 +7,8 @@ import random
 pygame.init()
 pygame.mixer.init()
 
-import pygame, math
+blue_wins = 0
+orange_wins = 0
 
 def blit_bike_with_front_at(screen, sprite, pos_back, dir_vector, back_margin=0):
 	dx, dy = dir_vector
@@ -156,6 +157,10 @@ clock = pygame.time.Clock()
 font = pygame.font.Font(None, 74)
 small_font = pygame.font.Font(None, 36)
 
+turn_cooldown = 50  # milliseconds
+last_turn_time_p1 = 0
+last_turn_time_p2 = 0
+
 def show_message(text, subtext="", color=TEAL):
 	# Render text surfaces
 	title = font.render(text, True, color)
@@ -214,6 +219,19 @@ def draw_sprites():
 
 	p2_back = (p2_pos[0], p2_pos[1])
 	blit_bike_with_front_at(WIN, orange_bike, p2_back, p2_dir, back_margin=4)
+
+	draw_scoreboard()
+
+def draw_scoreboard():
+	blue_text = small_font.render(f"Blue: {blue_wins}", True, BLUE)
+	orange_text = small_font.render(f"Orange: {orange_wins}", True, ORANGE)
+
+	# Space them evenly at the top center
+	total_width = blue_text.get_width() + orange_text.get_width() + 50  # spacing between texts
+	start_x = WIDTH // 2 - total_width // 2
+
+	WIN.blit(blue_text, (start_x, 10))
+	WIN.blit(orange_text, (start_x + blue_text.get_width() + 50, 10))
 
 def reset_game():
 	global p1_pos, p2_pos, p1_dir, p2_dir, p1_trail, p2_trail, game_over
@@ -278,25 +296,38 @@ while running:
 
 		keys = pygame.key.get_pressed()
 
-		# Player 1 (WASD)
-		if keys[pygame.K_w] and p1_dir != dirs["DOWN"]:
-			p1_dir = dirs["UP"]
-		if keys[pygame.K_s] and p1_dir != dirs["UP"]:
-			p1_dir = dirs["DOWN"]
-		if keys[pygame.K_a] and p1_dir != dirs["RIGHT"]:
-			p1_dir = dirs["LEFT"]
-		if keys[pygame.K_d] and p1_dir != dirs["LEFT"]:
-			p1_dir = dirs["RIGHT"]
+		current_time = pygame.time.get_ticks()
 
-		# Player 2 (Arrows)
-		if keys[pygame.K_UP] and p2_dir != dirs["DOWN"]:
-			p2_dir = dirs["UP"]
-		if keys[pygame.K_DOWN] and p2_dir != dirs["UP"]:
-			p2_dir = dirs["DOWN"]
-		if keys[pygame.K_LEFT] and p2_dir != dirs["RIGHT"]:
-			p2_dir = dirs["LEFT"]
-		if keys[pygame.K_RIGHT] and p2_dir != dirs["LEFT"]:
-			p2_dir = dirs["RIGHT"]
+		# Player 1 (WASD)
+		if current_time - last_turn_time_p1 > turn_cooldown:
+			if keys[pygame.K_w] and p1_dir != dirs["DOWN"]:
+				p1_dir = dirs["UP"]
+				last_turn_time_p1 = current_time
+			elif keys[pygame.K_s] and p1_dir != dirs["UP"]:
+				p1_dir = dirs["DOWN"]
+				last_turn_time_p1 = current_time
+			elif keys[pygame.K_a] and p1_dir != dirs["RIGHT"]:
+				p1_dir = dirs["LEFT"]
+				last_turn_time_p1 = current_time
+			elif keys[pygame.K_d] and p1_dir != dirs["LEFT"]:
+				p1_dir = dirs["RIGHT"]
+				last_turn_time_p1 = current_time
+
+		# Player 2 (Arrow keys)
+		if current_time - last_turn_time_p2 > turn_cooldown:
+			if keys[pygame.K_UP] and p2_dir != dirs["DOWN"]:
+				p2_dir = dirs["UP"]
+				last_turn_time_p2 = current_time
+			elif keys[pygame.K_DOWN] and p2_dir != dirs["UP"]:
+				p2_dir = dirs["DOWN"]
+				last_turn_time_p2 = current_time
+			elif keys[pygame.K_LEFT] and p2_dir != dirs["RIGHT"]:
+				p2_dir = dirs["LEFT"]
+				last_turn_time_p2 = current_time
+			elif keys[pygame.K_RIGHT] and p2_dir != dirs["LEFT"]:
+				p2_dir = dirs["RIGHT"]
+				last_turn_time_p2 = current_time
+
 
 		# Move players
 		p1_pos[0] += p1_dir[0]
@@ -326,6 +357,7 @@ while running:
 			for point in p2_trail:
 				pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 			draw_sprites()
+			draw_scoreboard()
 			pygame.display.update()
 
 			# Small pause to show the collision frame
@@ -333,6 +365,7 @@ while running:
 
 			win_text = "ORANGE TEAM WINS!"
 			win_color = ORANGE
+			orange_wins += 1
 			pygame.mixer.music.load("end_titles.mp3")
 			pygame.mixer.music.play(-1)
 		elif check_collision(tuple(map(int, p2_front)), p2_trail[:-1], p1_trail):
@@ -348,6 +381,7 @@ while running:
 			for point in p2_trail:
 				pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 			draw_sprites()
+			draw_scoreboard()
 			pygame.display.update()
 
 			# Small pause to show the collision frame
@@ -355,6 +389,7 @@ while running:
 
 			win_text = "BLUE TEAM WINS!"
 			win_color = BLUE
+			blue_wins += 1
 			pygame.mixer.music.load("end_titles.mp3")
 			pygame.mixer.music.play(-1)
 
@@ -373,6 +408,7 @@ while running:
 			for point in p2_trail:
 				pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 			draw_sprites()
+			draw_scoreboard()
 			pygame.display.update()
 
 			# Small pause to show the collision frame
@@ -401,6 +437,7 @@ while running:
 				for point in p2_trail:
 					pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 				draw_sprites()
+				draw_scoreboard()
 				pygame.display.update()
 
 				# Small pause to show the collision frame
@@ -408,6 +445,7 @@ while running:
 
 				win_text = "ORANGE TEAM WINS!"
 				win_color = ORANGE
+				orange_wins += 1
 				pygame.mixer.music.load("end_titles.mp3")
 				pygame.mixer.music.play(-1)
 
@@ -424,6 +462,7 @@ while running:
 				for point in p2_trail:
 					pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 				draw_sprites()
+				draw_scoreboard()
 				pygame.display.update()
 
 				# Small pause to show the collision frame
@@ -431,6 +470,7 @@ while running:
 
 				win_text = "BLUE TEAM WINS!"
 				win_color = BLUE
+				blue_wins += 1
 				pygame.mixer.music.load("end_titles.mp3")
 				pygame.mixer.music.play(-1)
 
@@ -447,8 +487,12 @@ while running:
 		for point in p2_trail:
 			pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 
+		draw_scoreboard()
+
 		# Draw bikes
 		draw_sprites()
+
+		# draw_scoreboard()
 
 		pygame.display.update()
 
@@ -456,6 +500,7 @@ while running:
 		# --- GAME OVER STATE ---
 		# Keep showing the final map, don't clear the screen
 		show_message(win_text, "PRESS SPACE TO PLAY AGAIN", win_color)
+		draw_scoreboard()
 		pygame.display.update()
 
 		# Wait for restart or quit
