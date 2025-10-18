@@ -119,8 +119,6 @@ def main_menu():
 def draw_tron_grid(surface, color, spacing=40):
 	surface.fill((0, 0, 16))  # dark navy background
 
-	# width, height = surface.get_size()
-
 	width = WIDTH
 	height = HEIGHT
 
@@ -145,7 +143,6 @@ def draw_tron_grid(surface, color, spacing=40):
 
 # Screen setup
 info = pygame.display.Info()
-# WIDTH, HEIGHT = info.current_w, info.current_h
 WIDTH, HEIGHT = 900, 900
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 background = pygame.image.load("grid.jpg")
@@ -182,7 +179,6 @@ bike_width = int(blue_bike_big.get_width() * scale_factor)
 bike_height = int(blue_bike_big.get_height() * scale_factor)
 blue_bike = pygame.transform.scale(blue_bike_big, (bike_width, bike_height))
 orange_bike = pygame.transform.scale(orange_bike_big, (bike_width, bike_height))
-# print(bike_width)
 
 # Player state
 reset_sprites()
@@ -212,7 +208,7 @@ def show_message(text, subtext="", color=TEAL):
 		box_height = title.get_height() + subtitle.get_height() + 2 * padding_y + spacing
 	else:
 		box_width = title.get_width() + 2 * padding_x
-		box_height = title.get_height() + 2 * padding_y# + spacing
+		box_height = title.get_height() + 2 * padding_y
 
 	# Position box centered on screen
 	box_x = WIDTH // 2 - box_width // 2
@@ -261,7 +257,7 @@ def draw_scoreboard():
 	orange_text = small_font.render(f"Orange: {orange_wins}", True, ORANGE)
 
 	# Space them evenly at the top center
-	total_width = blue_text.get_width() + orange_text.get_width() + 50  # spacing between texts
+	total_width = blue_text.get_width() + orange_text.get_width() + 50
 	start_x = WIDTH // 2 - total_width // 2
 
 	WIN.blit(blue_text, (start_x, 10))
@@ -304,18 +300,6 @@ def countdown():
 
 # --- Start Screen ---
 WIN.blit(background, (0, 0))
-# show_message("TRON LIGHTCYCLES", "Press SPACE to start")
-# pygame.mixer.music.load("the_game_has_changed.mp3")
-# pygame.mixer.music.play(-1)
-# waiting = True
-# while waiting:
-# 	for event in pygame.event.get():
-# 		if event.type == pygame.QUIT:
-# 			pygame.quit()
-# 			sys.exit()
-# 		if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-# 			countdown()
-# 			waiting = False
 main_menu()
 running = True
 game_over = False
@@ -542,12 +526,8 @@ while running:
 		for point in p2_trail:
 			pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 
-		draw_scoreboard()
-
 		# Draw bikes
 		draw_sprites()
-
-		# draw_scoreboard()
 
 		pygame.display.update()
 
