@@ -522,20 +522,6 @@ while running:
 				p1_dir = dirs["RIGHT"]
 				last_turn_time_p1 = current_time
 
-		# # Player 2 (Arrow keys)
-		# if current_time - last_turn_time_p2 > turn_cooldown:
-		# 	if keys[pygame.K_UP] and p2_dir != dirs["DOWN"]:
-		# 		p2_dir = dirs["UP"]
-		# 		last_turn_time_p2 = current_time
-		# 	elif keys[pygame.K_DOWN] and p2_dir != dirs["UP"]:
-		# 		p2_dir = dirs["DOWN"]
-		# 		last_turn_time_p2 = current_time
-		# 	elif keys[pygame.K_LEFT] and p2_dir != dirs["RIGHT"]:
-		# 		p2_dir = dirs["LEFT"]
-		# 		last_turn_time_p2 = current_time
-		# 	elif keys[pygame.K_RIGHT] and p2_dir != dirs["LEFT"]:
-		# 		p2_dir = dirs["RIGHT"]
-		# 		last_turn_time_p2 = current_time
 		if single_player == True:
 			ai_control()
 		else:
