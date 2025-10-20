@@ -3,9 +3,16 @@ import sys
 import math
 import time
 import random
+from pathlib import Path
 
 pygame.init()
 pygame.mixer.init()
+
+clu = Path("clu.mp3")
+derezzed_sound_file = Path("derezzed_sound.mp3")
+derezzed = Path("derezzed.mp3")
+end_titles = Path("end_titles.mp3")
+the_game_has_changed = Path("the_game_has_changed.mp3")
 
 WIDTH, HEIGHT = 900, 900
 
@@ -46,7 +53,7 @@ def blit_bike_with_front_at(screen, sprite, pos_back, dir_vector, back_margin=0)
 	screen.blit(rotated_sprite, bike_rect)
 
 def get_front_pos(pos_back, dir_vector, sprite_width=None, back_margin=4):
-	"""Compute front point automatically from sprite width."""
+	# Compute front point automatically from sprite width.
 	dx, dy = dir_vector
 	mag = math.hypot(dx, dy)
 	if mag == 0:
@@ -91,15 +98,14 @@ def main_menu():
 	global blue_wins, orange_wins, match_over, single_player
 
 	menu_running = True
-	pygame.mixer.music.load("the_game_has_changed.mp3")
-	pygame.mixer.music.play(-1)
 
 	while menu_running:
 
 		WIN.blit(background, (0, 0))
 		show_message("TRON LIGHTCYCLES", "Press \"1\" for 1 Player or \"2\" for 2 Players")
-		pygame.mixer.music.load("the_game_has_changed.mp3")
-		pygame.mixer.music.play(-1)
+		if the_game_has_changed.exists():
+			pygame.mixer.music.load("the_game_has_changed.mp3")
+			pygame.mixer.music.play(-1)
 		waiting = True
 		while waiting:
 			for event in pygame.event.get():
@@ -191,7 +197,8 @@ TEAL = (0, 180, 150)
 SPEED = 5
 BLOCK_SIZE = 5
 
-derezzed_sound = pygame.mixer.Sound("derezzed_sound.mp3")
+if derezzed_sound_file.exists():
+	derezzed_sound = pygame.mixer.Sound("derezzed_sound.mp3")
 
 dirs = {
 	"UP": (0, -SPEED),
@@ -355,10 +362,10 @@ def draw_obstacles():
         pygame.draw.rect(WIN, (255, 255, 255), core, 2)  # 2 px outline
 
 def countdown():
-	pygame.mixer.music.stop()
-	pygame.mixer.music.load("clu.mp3")
-	pygame.mixer.music.play(-1)
-	font = pygame.font.Font(None, 100)
+	if clu.exists():
+		pygame.mixer.music.stop()
+		pygame.mixer.music.load("clu.mp3")
+		pygame.mixer.music.play(-1)
 	for i in range(3, 0, -1):
 		draw_tron_grid(WIN, TEAL)
 		draw_obstacles()
@@ -374,14 +381,16 @@ def countdown():
 	show_message("GO!")
 	pygame.display.update()
 	pygame.time.delay(800)
-	pygame.mixer.music.stop()
-	pygame.mixer.music.load("derezzed.mp3")
-	pygame.mixer.music.play(-1)
+	if derezzed.exists():
+		pygame.mixer.music.stop()
+		pygame.mixer.music.load("derezzed.mp3")
+		pygame.mixer.music.play(-1)
 
 def blue_win():
 	global game_over, match_over, win_color, win_text, blue_wins
-	pygame.mixer.music.stop()
-	derezzed_sound.play()
+	if derezzed_sound_file.exists():
+		pygame.mixer.music.stop()
+		derezzed_sound.play()
 	game_over = True
 
 	# --- Draw final collision frame before pausing ---
@@ -408,13 +417,15 @@ def blue_win():
 	else:
 		win_text = "BLUE TEAM WINS!"
 		
-	pygame.mixer.music.load("end_titles.mp3")
-	pygame.mixer.music.play(-1)
+	if end_titles.exists():
+		pygame.mixer.music.load("end_titles.mp3")
+		pygame.mixer.music.play(-1)
 
 def orange_win():
 	global game_over, match_over, win_color, win_text, orange_wins
-	pygame.mixer.music.stop()
-	derezzed_sound.play()
+	if derezzed_sound_file.exists():
+		pygame.mixer.music.stop()
+		derezzed_sound.play()
 	game_over = True
 
 	# --- Draw final collision frame before pausing ---
@@ -440,11 +451,12 @@ def orange_win():
 		win_text = "ORANGE TEAM WINS THE MATCH!"
 	else:
 		win_text = "ORANGE TEAM WINS!"
-	pygame.mixer.music.load("end_titles.mp3")
-	pygame.mixer.music.play(-1)
+	if end_titles.exists():
+		pygame.mixer.music.load("end_titles.mp3")
+		pygame.mixer.music.play(-1)
 
 def ai_control():
-    """Simple AI for orange bike that avoids walls, trails, and obstacles."""
+    # Simple AI for orange bike that avoids walls, trails, and obstacles.
     global p2_dir, last_turn_time_p2
 
     # Time limit to prevent over-turning
@@ -455,7 +467,7 @@ def ai_control():
     possible_dirs = [dirs["UP"], dirs["DOWN"], dirs["LEFT"], dirs["RIGHT"]]
 
     def will_collide(pos, dir_vec):
-        """Predict if moving forward will cause a collision."""
+        # Predict if moving forward will cause a collision.
         x, y = pos
         dx, dy = dir_vec
         # Look 10 steps ahead
@@ -570,8 +582,9 @@ while running:
 		# --- Bike-to-Bike Collision Check (tight hitboxes) ---
 		# Head-on collision threshold (fronts nearly touching)
 		if math.hypot(p1_front[0] - p2_front[0], p1_front[1] - p2_front[1]) < bike_width * 0.25:
-			pygame.mixer.music.stop()
-			derezzed_sound.play()
+			if derezzed_sound_file.exists():
+				pygame.mixer.music.stop()
+				derezzed_sound.play()
 			game_over = True
 
 			# --- Draw final collision frame before pausing ---
@@ -591,8 +604,9 @@ while running:
 
 			win_text = "DRAW!"
 			win_color = TEAL
-			pygame.mixer.music.load("end_titles.mp3")
-			pygame.mixer.music.play(-1)
+			if end_titles.exists():
+				pygame.mixer.music.load("end_titles.mp3")
+				pygame.mixer.music.play(-1)
 		else:
 			# Side impacts: one front hitting another's body
 			# (tighter box — about 40% of the sprite area)
