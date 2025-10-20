@@ -539,18 +539,25 @@ while running:
 					p2_dir = dirs["RIGHT"]
 					last_turn_time_p2 = current_time
 
+		# --- Predict next positions for collision ---
+		p1_next = [p1_pos[0] + p1_dir[0], p1_pos[1] + p1_dir[1]]
+		p2_next = [p2_pos[0] + p2_dir[0], p2_pos[1] + p2_dir[1]]
 
-		# Move players
-		p1_pos[0] += p1_dir[0]
-		p1_pos[1] += p1_dir[1]
-		p2_pos[0] += p2_dir[0]
-		p2_pos[1] += p2_dir[1]
+		# Check if either bike *will* collide before moving
+		if check_collision(tuple(map(int, p1_next)), p1_trail, p2_trail):
+			orange_win()
+			continue
+		elif check_collision(tuple(map(int, p2_next)), p2_trail, p1_trail):
+			blue_win()
+			continue
 
-		# Add to trails
+		# --- Safe to move ---
+		p1_pos = p1_next
+		p2_pos = p2_next
+
+		# Update trails after moving
 		p1_trail.append(tuple(p1_pos))
 		p2_trail.append(tuple(p2_pos))
-
-		# Collisions
 
 		p1_front = get_front_pos(p1_pos, p1_dir, bike_width)
 		p2_front = get_front_pos(p2_pos, p2_dir, bike_width)
