@@ -134,49 +134,49 @@ def main_menu():
 						sys.exit()
 
 def draw_tron_grid(surface, color, desired_spacing=40):
-    surface.fill((0, 0, 16))  # dark navy background
+	surface.fill((0, 0, 16))  # dark navy background
 
-    width = surface.get_width()
-    height = surface.get_height()
+	width = surface.get_width()
+	height = surface.get_height()
 
-    # Compute number of full cells that fit
-    cols = width // desired_spacing
-    rows = height // desired_spacing
+	# Compute number of full cells that fit
+	cols = width // desired_spacing
+	rows = height // desired_spacing
 
-    # Adjust spacing so grid fits exactly
-    spacing_x = width / cols if cols > 0 else width
-    spacing_y = height / rows if rows > 0 else height
+	# Adjust spacing so grid fits exactly
+	spacing_x = width / cols if cols > 0 else width
+	spacing_y = height / rows if rows > 0 else height
 
-    # Draw vertical lines including the final right line
-    for i in range(cols + 1):
-        x = int(i * spacing_x)
-        pygame.draw.line(surface, color, (x, 0), (x, height), 1)
-    # Ensure a final line at the very right edge
-    pygame.draw.line(surface, color, (width - 1, 0), (width - 1, height), 1)
+	# Draw vertical lines including the final right line
+	for i in range(cols + 1):
+		x = int(i * spacing_x)
+		pygame.draw.line(surface, color, (x, 0), (x, height), 1)
+	# Ensure a final line at the very right edge
+	pygame.draw.line(surface, color, (width - 1, 0), (width - 1, height), 1)
 
-    # Draw horizontal lines including the final bottom line
-    for j in range(rows + 1):
-        y = int(j * spacing_y)
-        pygame.draw.line(surface, color, (0, y), (width, y), 1)
-    # Ensure a final line at the very bottom edge
-    pygame.draw.line(surface, color, (0, height - 1), (width, height - 1), 1)
+	# Draw horizontal lines including the final bottom line
+	for j in range(rows + 1):
+		y = int(j * spacing_y)
+		pygame.draw.line(surface, color, (0, y), (width, y), 1)
+	# Ensure a final line at the very bottom edge
+	pygame.draw.line(surface, color, (0, height - 1), (width, height - 1), 1)
 
-    glow = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-    for i in range(3):
-        alpha = 40 - i * 10
-        glow_color = (color[0], color[1], color[2], alpha)
-        # Vertical glow lines
-        for k in range(cols + 1):
-            x = int(k * spacing_x)
-            pygame.draw.line(glow, glow_color, (x, 0), (x, height), 3 + i)
-        pygame.draw.line(glow, glow_color, (width - 1, 0), (width - 1, height), 3 + i)
-        # Horizontal glow lines
-        for l in range(rows + 1):
-            y = int(l * spacing_y)
-            pygame.draw.line(glow, glow_color, (0, y), (width, y), 3 + i)
-        pygame.draw.line(glow, glow_color, (0, height - 1), (width, height - 1), 3 + i)
+	glow = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+	for i in range(3):
+		alpha = 40 - i * 10
+		glow_color = (color[0], color[1], color[2], alpha)
+		# Vertical glow lines
+		for k in range(cols + 1):
+			x = int(k * spacing_x)
+			pygame.draw.line(glow, glow_color, (x, 0), (x, height), 3 + i)
+		pygame.draw.line(glow, glow_color, (width - 1, 0), (width - 1, height), 3 + i)
+		# Horizontal glow lines
+		for l in range(rows + 1):
+			y = int(l * spacing_y)
+			pygame.draw.line(glow, glow_color, (0, y), (width, y), 3 + i)
+		pygame.draw.line(glow, glow_color, (0, height - 1), (width, height - 1), 3 + i)
 
-    surface.blit(glow, (0, 0))
+	surface.blit(glow, (0, 0))
 
 # Screen setup
 info = pygame.display.Info()
@@ -305,6 +305,7 @@ def reset_game():
 	global p1_pos, p2_pos, p1_dir, p2_dir, p1_trail, p2_trail, game_over
 
 	reset_sprites()
+	clear_powerups()
 	generate_obstacles()
 
 	game_over = False
@@ -316,50 +317,110 @@ def reset_game():
 	countdown()
 
 def generate_obstacles():
-    global obstacles
-    obstacles = []
+	global obstacles
+	obstacles = []
 
-    NUM_OBSTACLES = random.randint(5, 15)
-    MAX_ATTEMPTS = 100  # Avoid infinite loops
+	NUM_OBSTACLES = random.randint(5, 15)
+	MAX_ATTEMPTS = 100  # Avoid infinite loops
 
-    while len(obstacles) < NUM_OBSTACLES:
-        attempt = 0
-        while attempt < MAX_ATTEMPTS:
-            size = random.randint(30, 60)
-            x = random.randrange(0, WIDTH - size, OBSTACLE_SIZE)
-            y = random.randrange(0, HEIGHT - size, OBSTACLE_SIZE)
+	while len(obstacles) < NUM_OBSTACLES:
+		attempt = 0
+		while attempt < MAX_ATTEMPTS:
+			size = random.randint(30, 60)
+			x = random.randrange(0, WIDTH - size, OBSTACLE_SIZE)
+			y = random.randrange(0, HEIGHT - size, OBSTACLE_SIZE)
 
-            # Avoid spawning near players
-            if (abs(x - p1_pos[0]) < 3 * OBSTACLE_SIZE and abs(y - p1_pos[1]) < 3 * OBSTACLE_SIZE) or \
-               (abs(x - p2_pos[0]) < 3 * OBSTACLE_SIZE and abs(y - p2_pos[1]) < 3 * OBSTACLE_SIZE):
-                attempt += 1
-                continue
+			# Avoid spawning near players
+			if (abs(x - p1_pos[0]) < 3 * OBSTACLE_SIZE and abs(y - p1_pos[1]) < 3 * OBSTACLE_SIZE) or \
+			   (abs(x - p2_pos[0]) < 3 * OBSTACLE_SIZE and abs(y - p2_pos[1]) < 3 * OBSTACLE_SIZE):
+				attempt += 1
+				continue
 
-            # Check for overlap with existing obstacles
-            overlap = False
-            for (ox, oy, osize) in obstacles:
-                if x < ox + osize and x + size > ox and y < oy + osize and y + size > oy:
-                    overlap = True
-                    break
+			# Check for overlap with existing obstacles
+			overlap = False
+			for (ox, oy, osize) in obstacles:
+				if x < ox + osize and x + size > ox and y < oy + osize and y + size > oy:
+					overlap = True
+					break
 
-            if not overlap:
-                obstacles.append((x, y, size))
-                break
+			if not overlap:
+				obstacles.append((x, y, size))
+				break
 
-            attempt += 1
+			attempt += 1
 
-        # If we exceeded attempts, just skip this obstacle
-        if attempt >= MAX_ATTEMPTS:
-            break
+		# If we exceeded attempts, just skip this obstacle
+		if attempt >= MAX_ATTEMPTS:
+			break
 
 def draw_obstacles():
-    for (ox, oy, size) in obstacles:
-        # Draw the black core
-        core = pygame.Rect(ox, oy, size, size)
-        pygame.draw.rect(WIN, BLACK, core)
-        
-        # Draw a thin white outline
-        pygame.draw.rect(WIN, (255, 255, 255), core, 2)  # 2 px outline
+	for (ox, oy, size) in obstacles:
+		# Draw the black core
+		core = pygame.Rect(ox, oy, size, size)
+		pygame.draw.rect(WIN, BLACK, core)
+		
+		# Draw a thin white outline
+		pygame.draw.rect(WIN, (255, 255, 255), core, 2)  # 2 px outline
+
+# --- POWER-UP SYSTEM ---
+powerups = []  # (x, y, size, type)
+POWERUP_SIZE = 20
+POWERUP_TYPES = ["freeze", "slow"]
+POWERUP_COLORS = {"freeze": (0, 200, 255), "slow": (0, 255, 100)}
+last_powerup_spawn = 0
+POWERUP_SPAWN_INTERVAL = 5000  # spawn every ~5 seconds
+
+# Player status
+p1_status = {"frozen_until": 0, "slow_until": 0}
+p2_status = {"frozen_until": 0, "slow_until": 0}
+
+def spawn_powerup():
+	# Spawn a new random power-up not overlapping obstacles.
+	global powerups
+	ptype = random.choice(POWERUP_TYPES)
+	size = POWERUP_SIZE
+
+	for _ in range(30):  # try 30 times
+		x = random.randrange(0, WIDTH - size, POWERUP_SIZE)
+		y = random.randrange(0, HEIGHT - size, POWERUP_SIZE)
+
+		# Avoid obstacles
+		overlap = any(ox <= x <= ox+os and oy <= y <= oy+os for ox, oy, os in obstacles)
+		if not overlap:
+			powerups.append((x, y, size, ptype))
+			break
+
+def draw_powerups():
+	# Draw power-ups on the grid.
+	for (x, y, size, ptype) in powerups:
+		color = POWERUP_COLORS[ptype]
+		pygame.draw.rect(WIN, color, (x, y, size, size))
+		pygame.draw.rect(WIN, (255, 255, 255), (x, y, size, size), 2)
+
+def clear_powerups():
+    # Remove all power-ups from the board.
+    global powerups
+    powerups.clear()
+
+def check_powerup_collision(pos, player):
+	# Check if a player hits a power-up.
+	global powerups
+
+	for pu in powerups[:]:
+		x, y, size, ptype = pu
+		if x <= pos[0] <= x + size and y <= pos[1] <= y + size:
+			# Apply effect
+			if ptype == "freeze":
+				if player == 1:
+					p1_status["frozen_until"] = pygame.time.get_ticks() + 3000
+				else:
+					p2_status["frozen_until"] = pygame.time.get_ticks() + 3000
+			elif ptype == "slow":
+				if player == 1:
+					p1_status["slow_until"] = pygame.time.get_ticks() + 5000
+				else:
+					p2_status["slow_until"] = pygame.time.get_ticks() + 5000
+			powerups.remove(pu)
 
 def countdown():
 	if clu.exists():
@@ -369,6 +430,7 @@ def countdown():
 	for i in range(3, 0, -1):
 		draw_tron_grid(WIN, TEAL)
 		draw_obstacles()
+		draw_powerups()
 		draw_sprites()
 		show_message(str(i))
 		pygame.display.update()
@@ -377,6 +439,7 @@ def countdown():
 	# Flash "GO!"
 	draw_tron_grid(WIN, TEAL)
 	draw_obstacles()
+	draw_powerups()
 	draw_sprites()
 	show_message("GO!")
 	pygame.display.update()
@@ -396,12 +459,13 @@ def blue_win():
 	# --- Draw final collision frame before pausing ---
 	WIN.fill(BLACK)
 	draw_tron_grid(WIN, TEAL)
-	draw_obstacles()
 	for point in p1_trail:
 		pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 	for point in p2_trail:
 		pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 	draw_sprites()
+	draw_obstacles()
+	draw_powerups()
 	draw_scoreboard()
 	pygame.display.update()
 
@@ -431,12 +495,13 @@ def orange_win():
 	# --- Draw final collision frame before pausing ---
 	WIN.fill(BLACK)
 	draw_tron_grid(WIN, TEAL)
-	draw_obstacles()
 	for point in p1_trail:
 		pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 	for point in p2_trail:
 		pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 	draw_sprites()
+	draw_obstacles()
+	draw_powerups()
 	draw_scoreboard()
 	pygame.display.update()
 
@@ -456,50 +521,176 @@ def orange_win():
 		pygame.mixer.music.play(-1)
 
 def ai_control():
-    # Simple AI for orange bike that avoids walls, trails, and obstacles.
-    global p2_dir, last_turn_time_p2
+	# Simple AI for orange bike that avoids walls, trails, and obstacles.
+	global p2_dir, last_turn_time_p2
 
-    # Time limit to prevent over-turning
-    current_time = pygame.time.get_ticks()
-    if current_time - last_turn_time_p2 < turn_cooldown:
-        return  # wait for cooldown before next turn
+	# Time limit to prevent over-turning
+	current_time = pygame.time.get_ticks()
+	# --- Power-up spawning ---
+	if current_time - last_turn_time_p2 < turn_cooldown:
+		return  # wait for cooldown before next turn
 
-    possible_dirs = [dirs["UP"], dirs["DOWN"], dirs["LEFT"], dirs["RIGHT"]]
+	possible_dirs = [dirs["UP"], dirs["DOWN"], dirs["LEFT"], dirs["RIGHT"]]
 
-    def will_collide(pos, dir_vec):
-        # Predict if moving forward will cause a collision.
-        x, y = pos
-        dx, dy = dir_vec
-        # Look 10 steps ahead
-        for i in range(1, 12):
-            nx = x + dx * i
-            ny = y + dy * i
-            if nx < 0 or nx >= WIDTH or ny < 0 or ny >= HEIGHT:
-                return True
-            if (int(nx), int(ny)) in p1_trail or (int(nx), int(ny)) in p2_trail:
-                return True
-            for (ox, oy, size) in obstacles:
-                if ox <= nx <= ox + size and oy <= ny <= oy + size:
-                    return True
-        return False
+	def will_collide(pos, dir_vec):
+		# Predict if moving forward will cause a collision.
+		x, y = pos
+		dx, dy = dir_vec
+		# Look 10 steps ahead
+		for i in range(1, 12):
+			nx = x + dx * i
+			ny = y + dy * i
+			if nx < 0 or nx >= WIDTH or ny < 0 or ny >= HEIGHT:
+				return True
+			if (int(nx), int(ny)) in p1_trail or (int(nx), int(ny)) in p2_trail:
+				return True
+			for (ox, oy, size) in obstacles:
+				if ox <= nx <= ox + size and oy <= ny <= oy + size:
+					return True
+		return False
 
-    # Prefer current direction if safe
-    if not will_collide(p2_pos, p2_dir):
-        return
+	# Prefer current direction if safe
+	if not will_collide(p2_pos, p2_dir):
+		return
 
-    # Otherwise, pick a safer turn
-    safe_dirs = [d for d in possible_dirs if not will_collide(p2_pos, d)]
-    if safe_dirs:
-        new_dir = random.choice(safe_dirs)
-        # Prevent turning back directly
-        if (p2_dir == dirs["UP"] and new_dir == dirs["DOWN"]) or \
-           (p2_dir == dirs["DOWN"] and new_dir == dirs["UP"]) or \
-           (p2_dir == dirs["LEFT"] and new_dir == dirs["RIGHT"]) or \
-           (p2_dir == dirs["RIGHT"] and new_dir == dirs["LEFT"]):
-            pass
-        else:
-            p2_dir = new_dir
-            last_turn_time_p2 = current_time
+	# Otherwise, pick a safer turn
+	safe_dirs = [d for d in possible_dirs if not will_collide(p2_pos, d)]
+	if safe_dirs:
+		new_dir = random.choice(safe_dirs)
+		# Prevent turning back directly
+		if (p2_dir == dirs["UP"] and new_dir == dirs["DOWN"]) or \
+		   (p2_dir == dirs["DOWN"] and new_dir == dirs["UP"]) or \
+		   (p2_dir == dirs["LEFT"] and new_dir == dirs["RIGHT"]) or \
+		   (p2_dir == dirs["RIGHT"] and new_dir == dirs["LEFT"]):
+			pass
+		else:
+			p2_dir = new_dir
+			last_turn_time_p2 = current_time
+
+# def ai_control():
+#     """
+#     Simple AI for orange bike:
+#     - Avoids walls, trails, and obstacles.
+#     - Seeks out the nearest power-up center dynamically.
+#     """
+#     global p2_dir, last_turn_time_p2
+
+#     current_time = pygame.time.get_ticks()
+#     if current_time - last_turn_time_p2 < turn_cooldown:
+#         return  # wait for cooldown before next turn
+
+#     possible_dirs = [dirs["UP"], dirs["DOWN"], dirs["LEFT"], dirs["RIGHT"]]
+
+#     # --- Helper: will we collide in a direction? ---
+#     def will_collide(pos, dir_vec):
+#         x, y = pos
+#         dx, dy = dir_vec
+#         for i in range(1, 12):  # look ahead 12 pixels
+#             nx = x + dx * i
+#             ny = y + dy * i
+#             if nx < 0 or nx >= WIDTH or ny < 0 or ny >= HEIGHT:
+#                 return True
+#             if (int(nx), int(ny)) in p1_trail or (int(nx), int(ny)) in p2_trail:
+#                 return True
+#             for (ox, oy, size) in obstacles:
+#                 if ox <= nx <= ox + size and oy <= ny <= oy + size:
+#                     return True
+#         return False
+
+#     # --- Find nearest power-up ---
+#     target_pu = None
+#     min_dist = float('inf')
+#     p2_center = get_front_pos(p2_pos, p2_dir, bike_width)
+#     for (x, y, size, ptype) in powerups:
+#         pu_center = (x + size // 2, y + size // 2)
+#         dist = math.hypot(pu_center[0] - p2_center[0], pu_center[1] - p2_center[1])
+#         if dist < min_dist:
+#             min_dist = dist
+#             target_pu = pu_center
+
+#     # --- Default behavior: avoid collisions ---
+#     safe_dirs = [d for d in possible_dirs if not will_collide(p2_pos, d)]
+
+#     if target_pu and safe_dirs:
+#         # Determine best direction to move toward power-up
+#         best_dir = None
+#         best_angle = float('inf')
+#         for d in safe_dirs:
+#             dx, dy = d
+#             # Vector from bike to power-up
+#             vec_to_pu = (target_pu[0] - p2_center[0], target_pu[1] - p2_center[1])
+#             angle = math.atan2(dy, dx) - math.atan2(vec_to_pu[1], vec_to_pu[0])
+#             angle = abs((angle + math.pi) % (2*math.pi) - math.pi)  # minimal angle difference
+#             if angle < best_angle:
+#                 best_angle = angle
+#                 best_dir = d
+
+#         # Prevent 180-degree reversal
+#         if (p2_dir == dirs["UP"] and best_dir == dirs["DOWN"]) or \
+#            (p2_dir == dirs["DOWN"] and best_dir == dirs["UP"]) or \
+#            (p2_dir == dirs["LEFT"] and best_dir == dirs["RIGHT"]) or \
+#            (p2_dir == dirs["RIGHT"] and best_dir == dirs["LEFT"]):
+#             best_dir = p2_dir
+
+#         if best_dir:
+#             p2_dir = best_dir
+#             last_turn_time_p2 = current_time
+
+#     elif safe_dirs:
+#         # fallback random safe turn
+#         new_dir = random.choice(safe_dirs)
+#         # prevent 180 turn
+#         if (p2_dir == dirs["UP"] and new_dir == dirs["DOWN"]) or \
+#            (p2_dir == dirs["DOWN"] and new_dir == dirs["UP"]) or \
+#            (p2_dir == dirs["LEFT"] and new_dir == dirs["RIGHT"]) or \
+#            (p2_dir == dirs["RIGHT"] and new_dir == dirs["LEFT"]):
+#             new_dir = p2_dir
+#         p2_dir = new_dir
+#         last_turn_time_p2 = current_time
+
+def step_move_player(pos, dir_vec, effective_speed, own_trail, other_trail, player_id, sprite_width=None, back_margin=4):
+    # Move the player per pixel *fractionally* and check collisions at the FRONT of the bike.
+
+    if effective_speed <= 0:
+        return pos, False
+
+    # Normalize direction vector
+    mag = math.hypot(dir_vec[0], dir_vec[1])
+    if mag == 0:
+        return pos, False
+    nx, ny = dir_vec[0] / mag, dir_vec[1] / mag
+
+    # front offset from back
+    front_length = (sprite_width or 30) - back_margin
+
+    # fractional stepping ensures smooth motion at lower speeds
+    remaining = effective_speed
+    step_size = 1.0  # pixel increment
+    while remaining > 0:
+        step = min(step_size, remaining)
+        remaining -= step
+
+        # move the back point fractionally
+        pos[0] += nx * step
+        pos[1] += ny * step
+
+        # compute current front position
+        fx = pos[0] + nx * front_length
+        fy = pos[1] + ny * front_length
+        front_int = (int(fx), int(fy))
+
+        # collision test
+        if check_collision(front_int, own_trail, other_trail):
+            if player_id == 1:
+                orange_win()
+            else:
+                blue_win()
+            return pos, True
+
+        # add the trail pixel (round to int grid)
+        own_trail.append((int(pos[0]), int(pos[1])))
+
+    return pos, False
 
 # --- Start Screen ---
 WIN.blit(background, (0, 0))
@@ -509,6 +700,9 @@ game_over = False
 while running:
 	if not game_over:
 		clock.tick(60)
+
+		effective_speed_p1 = SPEED
+		effective_speed_p2 = SPEED
 		
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
@@ -519,24 +713,30 @@ while running:
 
 		current_time = pygame.time.get_ticks()
 
-		# Player 1 (WASD)
-		if current_time - last_turn_time_p1 > turn_cooldown:
-			if keys[pygame.K_w] and p1_dir != dirs["DOWN"]:
-				p1_dir = dirs["UP"]
-				last_turn_time_p1 = current_time
-			elif keys[pygame.K_s] and p1_dir != dirs["UP"]:
-				p1_dir = dirs["DOWN"]
-				last_turn_time_p1 = current_time
-			elif keys[pygame.K_a] and p1_dir != dirs["RIGHT"]:
-				p1_dir = dirs["LEFT"]
-				last_turn_time_p1 = current_time
-			elif keys[pygame.K_d] and p1_dir != dirs["LEFT"]:
-				p1_dir = dirs["RIGHT"]
-				last_turn_time_p1 = current_time
+		if current_time - last_powerup_spawn > POWERUP_SPAWN_INTERVAL:
+			spawn_powerup()
+			last_powerup_spawn = current_time
 
-		if single_player == True:
-			ai_control()
-		else:
+		# Player 1 (WASD) — Disable turning if frozen
+		if current_time > p1_status["frozen_until"]:  # only allow turns if not frozen
+			if current_time - last_turn_time_p1 > turn_cooldown:
+				if keys[pygame.K_w] and p1_dir != dirs["DOWN"]:
+					p1_dir = dirs["UP"]
+					last_turn_time_p1 = current_time
+				elif keys[pygame.K_s] and p1_dir != dirs["UP"]:
+					p1_dir = dirs["DOWN"]
+					last_turn_time_p1 = current_time
+				elif keys[pygame.K_a] and p1_dir != dirs["RIGHT"]:
+					p1_dir = dirs["LEFT"]
+					last_turn_time_p1 = current_time
+				elif keys[pygame.K_d] and p1_dir != dirs["LEFT"]:
+					p1_dir = dirs["RIGHT"]
+					last_turn_time_p1 = current_time
+
+		# Player 2 (Arrows) — Disable turning if frozen
+		if current_time > p2_status["frozen_until"]:  # only allow turns if not frozen
+			if single_player == True:
+				ai_control()
 			if current_time - last_turn_time_p2 > turn_cooldown:
 				if keys[pygame.K_UP] and p2_dir != dirs["DOWN"]:
 					p2_dir = dirs["UP"]
@@ -551,33 +751,41 @@ while running:
 					p2_dir = dirs["RIGHT"]
 					last_turn_time_p2 = current_time
 
+		# Apply slow effects
+		if current_time < p1_status["slow_until"]:
+			effective_speed_p1 = SPEED // 2
+		if current_time < p2_status["slow_until"]:
+			effective_speed_p2 = SPEED // 2
+
+		# Apply freeze effects
+		if current_time < p1_status["frozen_until"]:
+			effective_speed_p1 = 0
+		if current_time < p2_status["frozen_until"]:
+			effective_speed_p2 = 0
+
 		# --- Predict next positions for collision ---
-		p1_next = [p1_pos[0] + p1_dir[0], p1_pos[1] + p1_dir[1]]
-		p2_next = [p2_pos[0] + p2_dir[0], p2_pos[1] + p2_dir[1]]
+		p1_next = [p1_pos[0] + p1_dir[0] * (effective_speed_p1 / SPEED), p1_pos[1] + p1_dir[1] * (effective_speed_p1 / SPEED)]
+		p2_next = [p2_pos[0] + p2_dir[0] * (effective_speed_p2 / SPEED), p2_pos[1] + p2_dir[1] * (effective_speed_p2 / SPEED)]
 
-		# Check if either bike *will* collide before moving
-		if check_collision(tuple(map(int, p1_next)), p1_trail, p2_trail):
-			orange_win()
-			continue
-		elif check_collision(tuple(map(int, p2_next)), p2_trail, p1_trail):
-			blue_win()
-			continue
-
-		# --- Safe to move ---
-		p1_pos = p1_next
-		p2_pos = p2_next
-
-		# Update trails after moving
-		p1_trail.append(tuple(p1_pos))
-		p2_trail.append(tuple(p2_pos))
+		p1_pos, collided = step_move_player(p1_pos, p1_dir, effective_speed_p1, p1_trail, p2_trail, player_id=1, sprite_width=bike_width, back_margin=4)
+		if collided:
+			# game state will already have been set by orange_win() / blue_win()
+			# skip remaining movement / processing for this frame
+			pass
+		else:
+			# Move player 2 (only if game not already ended)
+			p2_pos, collided = step_move_player(p2_pos, p2_dir, effective_speed_p2, p2_trail, p1_trail, player_id=2, sprite_width=bike_width, back_margin=4)
+			if collided:
+				pass
 
 		p1_front = get_front_pos(p1_pos, p1_dir, bike_width)
 		p2_front = get_front_pos(p2_pos, p2_dir, bike_width)
 
-		if check_collision(tuple(map(int, p1_front)), p1_trail[:-1], p2_trail):
-			orange_win()
-		elif check_collision(tuple(map(int, p2_front)), p2_trail[:-1], p1_trail):
-			blue_win()
+		# Check trail collisions
+		# if check_collision(tuple(map(int, p1_front)), p1_trail[:-1], p2_trail):
+		# 	orange_win()
+		# elif check_collision(tuple(map(int, p2_front)), p2_trail[:-1], p1_trail):
+		# 	blue_win()
 
 		# --- Bike-to-Bike Collision Check (tight hitboxes) ---
 		# Head-on collision threshold (fronts nearly touching)
@@ -590,12 +798,13 @@ while running:
 			# --- Draw final collision frame before pausing ---
 			WIN.fill(BLACK)
 			draw_tron_grid(WIN, TEAL)
-			draw_obstacles()
 			for point in p1_trail:
 				pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 			for point in p2_trail:
 				pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 			draw_sprites()
+			draw_obstacles()
+			draw_powerups()
 			draw_scoreboard()
 			pygame.display.update()
 
@@ -631,8 +840,9 @@ while running:
 				blue_win()
 				break
 
-
-
+		# --- Power-up collisions ---
+		check_powerup_collision(p1_front, 1)
+		check_powerup_collision(p2_front, 2)
 
 		# Draw layers
 		WIN.fill(BLACK)
@@ -649,6 +859,10 @@ while running:
 		draw_sprites()
 
 		draw_obstacles()
+
+		draw_powerups()
+
+		draw_scoreboard()
 
 		pygame.display.update()
 
