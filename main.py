@@ -84,25 +84,76 @@ def get_front_pos(pos_back, dir_vector, sprite_width=None, back_margin=4):
 def reset_sprites():
 	global p1_pos, p2_pos, p1_dir, p2_dir, p1_trail, p2_trail
 
+	top_left = [dirs["DOWN"], [WIDTH // 4, 35]]
+	top_right = [dirs["DOWN"], [3 * WIDTH // 4, 35]]
+	bottom_left = [dirs["UP"], [WIDTH // 4, HEIGHT - 35]]
+	bottom_right = [dirs["UP"], [3 * WIDTH // 4, HEIGHT - 35]]
+	left_top = [dirs["RIGHT"], [35, HEIGHT // 4]]
+	left_bottom = [dirs["RIGHT"], [35, 3 * HEIGHT // 4]]
+	right_top = [dirs["LEFT"], [WIDTH - 35, HEIGHT // 4]]
+	right_bottom = [dirs["LEFT"], [WIDTH - 35, 3 * HEIGHT // 4]]
+
 	pos = [
-		[dirs["DOWN"], [WIDTH // 4, 35]],
-		[dirs["DOWN"], [3 * WIDTH // 4, 35]],
-		[dirs["UP"], [WIDTH // 4, HEIGHT - 35]],
-		[dirs["UP"], [3 * WIDTH // 4, HEIGHT - 35]],
-		[dirs["RIGHT"], [35, HEIGHT // 4]],
-		[dirs["RIGHT"], [35, 3 * HEIGHT // 4]],
-		[dirs["LEFT"], [WIDTH - 35, HEIGHT // 4]],
-		[dirs["LEFT"], [WIDTH - 35, 3 * HEIGHT // 4]]
+		top_left,
+		top_right,
+		bottom_left,
+		bottom_right,
+		right_top, 
+		right_bottom,
+		left_top,
+		left_bottom
 	]
 
-	random_poses = random.sample(pos, 2)
+	p1_start = random.choice(pos)
 
+	pos.remove(p1_start)
 
-	p1_dir = random_poses[0][0]
-	p2_dir = random_poses[1][0]
+	if p1_start == top_left:
+		while True:
+			p2_start = random.choice(pos)
+			if p2_start != left_top:
+				break
+	elif p1_start == top_right:
+		while True:
+			p2_start = random.choice(pos)
+			if p2_start != right_top:
+				break
+	elif p1_start == bottom_left:
+		while True:
+			p2_start = random.choice(pos)
+			if p2_start != left_bottom:
+				break
+	elif p1_start == bottom_right:
+		while True:
+			p2_start = random.choice(pos)
+			if p2_start != right_bottom:
+				break
+	elif p1_start == right_top:
+		while True:
+			p2_start = random.choice(pos)
+			if p2_start != top_right:
+				break
+	elif p1_start == right_bottom:
+		while True:
+			p2_start = random.choice(pos)
+			if p2_start != bottom_right:
+				break
+	elif p1_start == left_top:
+		while True:
+			p2_start = random.choice(pos)
+			if p2_start != top_left:
+				break
+	elif p1_start == left_bottom:
+		while True:
+			p2_start = random.choice(pos)
+			if p2_start != bottom_left:
+				break
 
-	p1_pos = random_poses[0][1]
-	p2_pos = random_poses[1][1]
+	p1_dir = p1_start[0]
+	p1_pos = p1_start[1]
+
+	p2_dir = p2_start[0]
+	p2_pos = p2_start[1]
 
 	# Clear trails
 	p1_trail = []
@@ -475,9 +526,9 @@ def blue_win():
 		pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 	for point in p2_trail:
 		pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-	draw_sprites()
 	draw_obstacles()
 	draw_powerups()
+	draw_sprites()
 	draw_scoreboard()
 	pygame.display.update()
 
@@ -511,9 +562,9 @@ def orange_win():
 		pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 	for point in p2_trail:
 		pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-	draw_sprites()
 	draw_obstacles()
 	draw_powerups()
+	draw_sprites()
 	draw_scoreboard()
 	pygame.display.update()
 
@@ -808,9 +859,9 @@ while running:
 				pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 			for point in p2_trail:
 				pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-			draw_sprites()
 			draw_obstacles()
 			draw_powerups()
+			draw_sprites()
 			draw_scoreboard()
 			pygame.display.update()
 
@@ -850,26 +901,16 @@ while running:
 		check_powerup_collision(p1_front, 1)
 		check_powerup_collision(p2_front, 2)
 
-		# Draw layers
-		WIN.fill(BLACK)
-		draw_tron_grid(WIN, TEAL)
-
 		WIN.fill(BLACK)
 		draw_tron_grid(WIN, TEAL)
 		for point in p1_trail:
 			pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 		for point in p2_trail:
 			pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-
-		# Draw bikes
-		draw_sprites()
-
 		draw_obstacles()
-
 		draw_powerups()
-
+		draw_sprites()
 		draw_scoreboard()
-
 		pygame.display.update()
 
 	else:
