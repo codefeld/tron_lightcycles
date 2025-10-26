@@ -12,6 +12,14 @@ derezzed_sound_file = Path("derezzed_sound.mp3")
 derezzed = Path("derezzed.mp3")
 end_titles = Path("end_titles.mp3")
 the_game_has_changed = Path("the_game_has_changed.mp3")
+the_grid = Path("the_grid.mp3")
+fall = Path("fall.mp3")
+disc_wars = Path("disc_wars.mp3")
+armory = Path("armory.mp3")
+rinzler = Path("rinzler.mp3")
+adagio_for_tron = Path("adagio_for_tron.mp3")
+arena = Path("arena.mp3")
+game_music = [derezzed, fall, disc_wars, the_game_has_changed]
 
 WIDTH, HEIGHT = 900, 900
 
@@ -174,8 +182,8 @@ def main_menu():
 
 		WIN.blit(background, (0, 0))
 		show_message("TRON LIGHTCYCLES", "Press \"1\" for 1 Player or \"2\" for 2 Players")
-		if the_game_has_changed.exists():
-			pygame.mixer.music.load("the_game_has_changed.mp3")
+		if armory.exists():
+			pygame.mixer.music.load("armory.mp3")
 			pygame.mixer.music.play(-1)
 		waiting = True
 		while waiting:
@@ -359,7 +367,7 @@ def draw_sprites():
 	p2_back = (p2_pos[0], p2_pos[1])
 	blit_bike_with_front_at(WIN, orange_bike, p2_back, p2_dir, back_margin=4)
 
-	draw_scoreboard()
+	#draw_scoreboard()
 
 def draw_scoreboard():
 	blue_text = small_font.render(f"Blue: {blue_wins}", True, BLUE)
@@ -495,6 +503,7 @@ def countdown():
 		draw_obstacles()
 		draw_powerups()
 		draw_sprites()
+		draw_scoreboard()
 		show_message(str(i))
 		pygame.display.update()
 		pygame.time.delay(1000)
@@ -504,12 +513,15 @@ def countdown():
 	draw_obstacles()
 	draw_powerups()
 	draw_sprites()
+	draw_scoreboard()
 	show_message("GO!")
 	pygame.display.update()
 	pygame.time.delay(800)
-	if derezzed.exists():
+	game_song = random.choice(game_music)
+	if game_song.exists():
+		selected_song = str(game_song)
 		pygame.mixer.music.stop()
-		pygame.mixer.music.load("derezzed.mp3")
+		pygame.mixer.music.load(selected_song)
 		pygame.mixer.music.play(-1)
 
 def blue_win():
@@ -541,12 +553,14 @@ def blue_win():
 	if blue_wins >= MAX_SCORE:
 		match_over = True
 		win_text = "BLUE TEAM WINS THE MATCH!"
+		if end_titles.exists():
+			pygame.mixer.music.load("end_titles.mp3")
+			pygame.mixer.music.play(-1)
 	else:
 		win_text = "BLUE TEAM WINS!"
-		
-	if end_titles.exists():
-		pygame.mixer.music.load("end_titles.mp3")
-		pygame.mixer.music.play(-1)
+		if the_grid.exists():
+			pygame.mixer.music.load("the_grid.mp3")
+			pygame.mixer.music.play(-1)
 
 def orange_win():
 	global game_over, match_over, win_color, win_text, orange_wins
@@ -577,139 +591,184 @@ def orange_win():
 	if orange_wins >= MAX_SCORE:
 		match_over = True
 		win_text = "ORANGE TEAM WINS THE MATCH!"
+		if single_player:
+			if adagio_for_tron.exists():
+				pygame.mixer.music.load("adagio_for_tron.mp3")
+				pygame.mixer.music.play(-1)
+		else:
+			if end_titles.exists():
+				pygame.mixer.music.load("end_titles.mp3")
+				pygame.mixer.music.play(-1)
 	else:
 		win_text = "ORANGE TEAM WINS!"
-	if end_titles.exists():
-		pygame.mixer.music.load("end_titles.mp3")
-		pygame.mixer.music.play(-1)
-
-def ai_control():
-	# Simple AI for orange bike that avoids walls, trails, and obstacles.
-	global p2_dir, last_turn_time_p2
-
-	# Time limit to prevent over-turning
-	current_time = pygame.time.get_ticks()
-	# --- Power-up spawning ---
-	if current_time - last_turn_time_p2 < turn_cooldown:
-		return  # wait for cooldown before next turn
-
-	possible_dirs = [dirs["UP"], dirs["DOWN"], dirs["LEFT"], dirs["RIGHT"]]
-
-	def will_collide(pos, dir_vec):
-		# Predict if moving forward will cause a collision.
-		x, y = pos
-		dx, dy = dir_vec
-		# Look 10 steps ahead
-		for i in range(1, 12):
-			nx = x + dx * i
-			ny = y + dy * i
-			if nx < 0 or nx >= WIDTH or ny < 0 or ny >= HEIGHT:
-				return True
-			if (int(nx), int(ny)) in p1_trail or (int(nx), int(ny)) in p2_trail:
-				return True
-			for (ox, oy, size) in obstacles:
-				if ox <= nx <= ox + size and oy <= ny <= oy + size:
-					return True
-		return False
-
-	# Prefer current direction if safe
-	if not will_collide(p2_pos, p2_dir):
-		return
-
-	# Otherwise, pick a safer turn
-	safe_dirs = [d for d in possible_dirs if not will_collide(p2_pos, d)]
-	if safe_dirs:
-		new_dir = random.choice(safe_dirs)
-		# Prevent turning back directly
-		if (p2_dir == dirs["UP"] and new_dir == dirs["DOWN"]) or \
-		   (p2_dir == dirs["DOWN"] and new_dir == dirs["UP"]) or \
-		   (p2_dir == dirs["LEFT"] and new_dir == dirs["RIGHT"]) or \
-		   (p2_dir == dirs["RIGHT"] and new_dir == dirs["LEFT"]):
-			pass
+		if single_player:
+			if rinzler.exists():
+				pygame.mixer.music.load("rinzler.mp3")
+				pygame.mixer.music.play(-1)
 		else:
-			p2_dir = new_dir
-			last_turn_time_p2 = current_time
+			if the_grid.exists():
+				pygame.mixer.music.load("the_grid.mp3")
+				pygame.mixer.music.play(-1)
 
 # def ai_control():
-#     """
-#     Simple AI for orange bike:
-#     - Avoids walls, trails, and obstacles.
-#     - Seeks out the nearest power-up center dynamically.
-#     """
-#     global p2_dir, last_turn_time_p2
+# 	# Simple AI for orange bike that avoids walls, trails, and obstacles.
+# 	global p2_dir, last_turn_time_p2
 
-#     current_time = pygame.time.get_ticks()
-#     if current_time - last_turn_time_p2 < turn_cooldown:
-#         return  # wait for cooldown before next turn
+# 	# Time limit to prevent over-turning
+# 	current_time = pygame.time.get_ticks()
+# 	# --- Power-up spawning ---
+# 	if current_time - last_turn_time_p2 < turn_cooldown:
+# 		return  # wait for cooldown before next turn
 
-#     possible_dirs = [dirs["UP"], dirs["DOWN"], dirs["LEFT"], dirs["RIGHT"]]
+# 	possible_dirs = [dirs["UP"], dirs["DOWN"], dirs["LEFT"], dirs["RIGHT"]]
 
-#     # --- Helper: will we collide in a direction? ---
-#     def will_collide(pos, dir_vec):
-#         x, y = pos
-#         dx, dy = dir_vec
-#         for i in range(1, 12):  # look ahead 12 pixels
-#             nx = x + dx * i
-#             ny = y + dy * i
-#             if nx < 0 or nx >= WIDTH or ny < 0 or ny >= HEIGHT:
-#                 return True
-#             if (int(nx), int(ny)) in p1_trail or (int(nx), int(ny)) in p2_trail:
-#                 return True
-#             for (ox, oy, size) in obstacles:
-#                 if ox <= nx <= ox + size and oy <= ny <= oy + size:
-#                     return True
-#         return False
+# 	def will_collide(pos, dir_vec):
+# 		# Predict if moving forward will cause a collision.
+# 		x, y = pos
+# 		dx, dy = dir_vec
+# 		# Look 10 steps ahead
+# 		for i in range(1, 12):
+# 			nx = x + dx * i
+# 			ny = y + dy * i
+# 			if nx < 0 or nx >= WIDTH or ny < 0 or ny >= HEIGHT:
+# 				return True
+# 			if (int(nx), int(ny)) in p1_trail or (int(nx), int(ny)) in p2_trail:
+# 				return True
+# 			for (ox, oy, size) in obstacles:
+# 				if ox <= nx <= ox + size and oy <= ny <= oy + size:
+# 					return True
+# 		return False
 
-#     # --- Find nearest power-up ---
-#     target_pu = None
-#     min_dist = float('inf')
-#     p2_center = get_front_pos(p2_pos, p2_dir, bike_width)
-#     for (x, y, size, ptype) in powerups:
-#         pu_center = (x + size // 2, y + size // 2)
-#         dist = math.hypot(pu_center[0] - p2_center[0], pu_center[1] - p2_center[1])
-#         if dist < min_dist:
-#             min_dist = dist
-#             target_pu = pu_center
+# 	# Prefer current direction if safe
+# 	if not will_collide(p2_pos, p2_dir):
+# 		return
 
-#     # --- Default behavior: avoid collisions ---
-#     safe_dirs = [d for d in possible_dirs if not will_collide(p2_pos, d)]
+# 	# Otherwise, pick a safer turn
+# 	safe_dirs = [d for d in possible_dirs if not will_collide(p2_pos, d)]
+# 	if safe_dirs:
+# 		new_dir = random.choice(safe_dirs)
+# 		# Prevent turning back directly
+# 		if (p2_dir == dirs["UP"] and new_dir == dirs["DOWN"]) or \
+# 		   (p2_dir == dirs["DOWN"] and new_dir == dirs["UP"]) or \
+# 		   (p2_dir == dirs["LEFT"] and new_dir == dirs["RIGHT"]) or \
+# 		   (p2_dir == dirs["RIGHT"] and new_dir == dirs["LEFT"]):
+# 			pass
+# 		else:
+# 			p2_dir = new_dir
+# 			last_turn_time_p2 = current_time
 
-#     if target_pu and safe_dirs:
-#         # Determine best direction to move toward power-up
-#         best_dir = None
-#         best_angle = float('inf')
-#         for d in safe_dirs:
-#             dx, dy = d
-#             # Vector from bike to power-up
-#             vec_to_pu = (target_pu[0] - p2_center[0], target_pu[1] - p2_center[1])
-#             angle = math.atan2(dy, dx) - math.atan2(vec_to_pu[1], vec_to_pu[0])
-#             angle = abs((angle + math.pi) % (2*math.pi) - math.pi)  # minimal angle difference
-#             if angle < best_angle:
-#                 best_angle = angle
-#                 best_dir = d
+def ai_control():
+    # Enhanced AI for orange bike: tries to get power-ups safely
+    global p2_dir, last_turn_time_p2
 
-#         # Prevent 180-degree reversal
-#         if (p2_dir == dirs["UP"] and best_dir == dirs["DOWN"]) or \
-#            (p2_dir == dirs["DOWN"] and best_dir == dirs["UP"]) or \
-#            (p2_dir == dirs["LEFT"] and best_dir == dirs["RIGHT"]) or \
-#            (p2_dir == dirs["RIGHT"] and best_dir == dirs["LEFT"]):
-#             best_dir = p2_dir
+    current_time = pygame.time.get_ticks()
+    if current_time - last_turn_time_p2 < turn_cooldown:
+        return
 
-#         if best_dir:
-#             p2_dir = best_dir
-#             last_turn_time_p2 = current_time
+    possible_dirs = [dirs["UP"], dirs["DOWN"], dirs["LEFT"], dirs["RIGHT"]]
 
-#     elif safe_dirs:
-#         # fallback random safe turn
-#         new_dir = random.choice(safe_dirs)
-#         # prevent 180 turn
-#         if (p2_dir == dirs["UP"] and new_dir == dirs["DOWN"]) or \
-#            (p2_dir == dirs["DOWN"] and new_dir == dirs["UP"]) or \
-#            (p2_dir == dirs["LEFT"] and new_dir == dirs["RIGHT"]) or \
-#            (p2_dir == dirs["RIGHT"] and new_dir == dirs["LEFT"]):
-#             new_dir = p2_dir
-#         p2_dir = new_dir
-#         last_turn_time_p2 = current_time
+    def will_collide(pos, dir_vec, steps=12):
+        """Predicts if moving forward for 'steps' frames will cause a collision."""
+        x, y = pos
+        dx, dy = dir_vec
+        for i in range(1, steps + 1):
+            nx = x + dx * i
+            ny = y + dy * i
+            if nx < 0 or nx >= WIDTH or ny < 0 or ny >= HEIGHT:
+                return True
+            if (int(nx), int(ny)) in p1_trail or (int(nx), int(ny)) in p2_trail:
+                return True
+            for (ox, oy, size) in obstacles:
+                if ox <= nx <= ox + size and oy <= ny <= oy + size:
+                    return True
+        return False
+
+    def is_path_safe(start, goal, max_depth=100):
+        """Rough BFS to determine if a path from start to goal exists without collision."""
+        from collections import deque
+        queue = deque([start])
+        visited = set([start])
+
+        step_size = BLOCK_SIZE * 2  # coarse search resolution
+        dirs_check = [(step_size, 0), (-step_size, 0), (0, step_size), (0, -step_size)]
+
+        while queue and len(visited) < max_depth:
+            cx, cy = queue.popleft()
+
+            # close enough to goal?
+            if abs(cx - goal[0]) < POWERUP_SIZE and abs(cy - goal[1]) < POWERUP_SIZE:
+                return True
+
+            for dx, dy in dirs_check:
+                nx, ny = cx + dx, cy + dy
+                if nx < 0 or ny < 0 or nx >= WIDTH or ny >= HEIGHT:
+                    continue
+                pos_int = (int(nx), int(ny))
+                if pos_int in visited:
+                    continue
+                if pos_int in p1_trail or pos_int in p2_trail:
+                    continue
+                blocked = False
+                for (ox, oy, size) in obstacles:
+                    if ox <= nx <= ox + size and oy <= ny <= oy + size:
+                        blocked = True
+                        break
+                if not blocked:
+                    queue.append((nx, ny))
+                    visited.add(pos_int)
+        return False
+
+    # --- Step 1: Decide if any reachable power-up exists ---
+    target_powerup = None
+    if powerups:
+        # Find nearest safe one
+        min_dist = float("inf")
+        for (x, y, size, ptype) in powerups:
+            dist = math.hypot(x - p2_pos[0], y - p2_pos[1])
+            if dist < min_dist and is_path_safe((int(p2_pos[0]), int(p2_pos[1])), (x, y)):
+                min_dist = dist
+                target_powerup = (x, y)
+
+    # --- Step 2: Determine movement strategy ---
+    if target_powerup:
+        # Move roughly toward power-up but still avoid walls
+        dx = target_powerup[0] - p2_pos[0]
+        dy = target_powerup[1] - p2_pos[1]
+        prefer_dir = None
+        if abs(dx) > abs(dy):
+            prefer_dir = dirs["RIGHT"] if dx > 0 else dirs["LEFT"]
+        else:
+            prefer_dir = dirs["DOWN"] if dy > 0 else dirs["UP"]
+
+        # Check if preferred direction is safe, else fallback
+        candidate_dirs = [prefer_dir] + [d for d in possible_dirs if d != prefer_dir]
+        for d in candidate_dirs:
+            if not will_collide(p2_pos, d):
+                p2_dir = d
+                last_turn_time_p2 = current_time
+                return
+        # fallback to random safe if blocked
+        safe_dirs = [d for d in possible_dirs if not will_collide(p2_pos, d)]
+        if safe_dirs:
+            p2_dir = random.choice(safe_dirs)
+            last_turn_time_p2 = current_time
+        return
+
+    # --- Step 3: Default behavior (no power-ups or unsafe paths) ---
+    if not will_collide(p2_pos, p2_dir):
+        return
+
+    safe_dirs = [d for d in possible_dirs if not will_collide(p2_pos, d)]
+    if safe_dirs:
+        new_dir = random.choice(safe_dirs)
+        # avoid direct reversals
+        if (p2_dir == dirs["UP"] and new_dir == dirs["DOWN"]) or \
+           (p2_dir == dirs["DOWN"] and new_dir == dirs["UP"]) or \
+           (p2_dir == dirs["LEFT"] and new_dir == dirs["RIGHT"]) or \
+           (p2_dir == dirs["RIGHT"] and new_dir == dirs["LEFT"]):
+            return
+        p2_dir = new_dir
+        last_turn_time_p2 = current_time
 
 def step_move_player(pos, dir_vec, effective_speed, own_trail, other_trail, player_id, sprite_width=None, back_margin=4):
     # Move the player per pixel *fractionally* and check collisions at the FRONT of the bike.
@@ -870,8 +929,8 @@ while running:
 
 			win_text = "DRAW!"
 			win_color = TEAL
-			if end_titles.exists():
-				pygame.mixer.music.load("end_titles.mp3")
+			if arena.exists():
+				pygame.mixer.music.load("arena.mp3")
 				pygame.mixer.music.play(-1)
 		else:
 			# Side impacts: one front hitting another's body
@@ -916,7 +975,7 @@ while running:
 	else:
 	# --- GAME OVER STATE ---
 		if match_over:
-			show_message(win_text, "PRESS ESC TO QUIT", win_color)
+			show_message(win_text, "Press ESC to quit", win_color)
 			draw_scoreboard()
 			pygame.display.update()
 
@@ -928,7 +987,7 @@ while running:
 						main_menu()
 
 		else:
-			show_message(win_text, "PRESS SPACE TO PLAY AGAIN", win_color)
+			show_message(win_text, "Press SPACE to continue", win_color)
 			draw_scoreboard()
 			pygame.display.update()
 
@@ -938,6 +997,8 @@ while running:
 				elif event.type == pygame.KEYDOWN:
 					if event.key == pygame.K_SPACE:
 						reset_game()
+					elif event.key == pygame.K_ESCAPE:
+						main_menu()
 
 
 pygame.quit()
