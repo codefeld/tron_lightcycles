@@ -1,7 +1,6 @@
 import pygame
 import sys
 import math
-import time
 import random
 from pathlib import Path
 
@@ -23,7 +22,22 @@ match_over = False
 single_player = False
 
 obstacles = []
-OBSTACLE_SIZE = 20  # Try 15–30 for good visibility
+OBSTACLE_SIZE = 20
+
+game_time_offset = 0
+
+# --- POWER-UP SYSTEM ---
+powerups = []  # (x, y, size, type)
+POWERUP_SIZE = 20
+POWERUP_TYPES = ["freeze", "slow"]
+POWERUP_COLORS = {"freeze": (0, 200, 255), "slow": (0, 255, 100)}
+last_powerup_spawn = 0
+POWERUP_SPAWN_INTERVAL = 5000  # spawn every ~5 seconds
+first_powerup_spawned = False
+
+# Player status
+p1_status = {"frozen_until": 0, "slow_until": 0}
+p2_status = {"frozen_until": 0, "slow_until": 0}
 
 def blit_bike_with_front_at(screen, sprite, pos_back, dir_vector, back_margin=0):
 	dx, dy = dir_vector
@@ -90,9 +104,15 @@ def reset_sprites():
 	p1_pos = random_poses[0][1]
 	p2_pos = random_poses[1][1]
 
-	# Clear trails (fresh lists)
+	# Clear trails
 	p1_trail = []
 	p2_trail = []
+
+	# disable powerups
+	p1_status["frozen_until"] = 0
+	p2_status["frozen_until"] = 0
+	p1_status["slow_until"] = 0
+	p2_status["slow_until"] = 0
 
 def main_menu():
 	global blue_wins, orange_wins, match_over, single_player
@@ -225,7 +245,7 @@ clock = pygame.time.Clock()
 font = pygame.font.Font(None, 74)
 small_font = pygame.font.Font(None, 36)
 
-turn_cooldown = 50  # milliseconds
+turn_cooldown = 50
 last_turn_time_p1 = 0
 last_turn_time_p2 = 0
 
@@ -302,7 +322,7 @@ def draw_scoreboard():
 	WIN.blit(orange_text, (start_x + blue_text.get_width() + 50, 10))
 
 def reset_game():
-	global p1_pos, p2_pos, p1_dir, p2_dir, p1_trail, p2_trail, game_over
+	global p1_pos, p2_pos, p1_dir, p2_dir, p1_trail, p2_trail, game_over, game_time_offset, last_turn_time_p1, last_turn_time_p2, last_powerup_spawn
 
 	reset_sprites()
 	clear_powerups()
@@ -315,6 +335,10 @@ def reset_game():
 	pygame.display.update()
 
 	countdown()
+	game_time_offset = pygame.time.get_ticks()
+	last_turn_time_p1 = 0
+	last_turn_time_p2 = 0
+	last_powerup_spawn = 0
 
 def generate_obstacles():
 	global obstacles
@@ -362,18 +386,6 @@ def draw_obstacles():
 		# Draw a thin white outline
 		pygame.draw.rect(WIN, (255, 255, 255), core, 2)  # 2 px outline
 
-# --- POWER-UP SYSTEM ---
-powerups = []  # (x, y, size, type)
-POWERUP_SIZE = 20
-POWERUP_TYPES = ["freeze", "slow"]
-POWERUP_COLORS = {"freeze": (0, 200, 255), "slow": (0, 255, 100)}
-last_powerup_spawn = 0
-POWERUP_SPAWN_INTERVAL = 5000  # spawn every ~5 seconds
-
-# Player status
-p1_status = {"frozen_until": 0, "slow_until": 0}
-p2_status = {"frozen_until": 0, "slow_until": 0}
-
 def spawn_powerup():
 	# Spawn a new random power-up not overlapping obstacles.
 	global powerups
@@ -404,7 +416,7 @@ def clear_powerups():
 
 def check_powerup_collision(pos, player):
 	# Check if a player hits a power-up.
-	global powerups
+	global powerups, game_time_offset, current_time
 
 	for pu in powerups[:]:
 		x, y, size, ptype = pu
@@ -412,14 +424,14 @@ def check_powerup_collision(pos, player):
 			# Apply effect
 			if ptype == "freeze":
 				if player == 1:
-					p1_status["frozen_until"] = pygame.time.get_ticks() + 3000
+					p1_status["frozen_until"] = current_time + 3000 # pygame.time.get_ticks() - game_time_offset + 3000
 				else:
-					p2_status["frozen_until"] = pygame.time.get_ticks() + 3000
+					p2_status["frozen_until"] = current_time + 3000 # pygame.time.get_ticks() - game_time_offset + 3000
 			elif ptype == "slow":
 				if player == 1:
-					p1_status["slow_until"] = pygame.time.get_ticks() + 5000
+					p1_status["slow_until"] = current_time + 5000 # pygame.time.get_ticks() - game_time_offset + 5000
 				else:
-					p2_status["slow_until"] = pygame.time.get_ticks() + 5000
+					p2_status["slow_until"] = current_time + 5000 # pygame.time.get_ticks() - game_time_offset + 5000
 			powerups.remove(pu)
 
 def countdown():
@@ -711,7 +723,7 @@ while running:
 
 		keys = pygame.key.get_pressed()
 
-		current_time = pygame.time.get_ticks()
+		current_time = pygame.time.get_ticks() - game_time_offset
 
 		if current_time - last_powerup_spawn > POWERUP_SPAWN_INTERVAL:
 			spawn_powerup()
@@ -780,12 +792,6 @@ while running:
 
 		p1_front = get_front_pos(p1_pos, p1_dir, bike_width)
 		p2_front = get_front_pos(p2_pos, p2_dir, bike_width)
-
-		# Check trail collisions
-		# if check_collision(tuple(map(int, p1_front)), p1_trail[:-1], p2_trail):
-		# 	orange_win()
-		# elif check_collision(tuple(map(int, p2_front)), p2_trail[:-1], p1_trail):
-		# 	blue_win()
 
 		# --- Bike-to-Bike Collision Check (tight hitboxes) ---
 		# Head-on collision threshold (fronts nearly touching)
