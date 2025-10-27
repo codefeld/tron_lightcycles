@@ -35,17 +35,142 @@ OBSTACLE_SIZE = 20
 game_time_offset = 0
 
 # --- POWER-UP SYSTEM ---
-powerups = []  # (x, y, size, type)
+powerups = []
 POWERUP_SIZE = 20
-POWERUP_TYPES = ["freeze", "slow"]
-POWERUP_COLORS = {"freeze": (0, 200, 255), "slow": (0, 255, 100)}
 last_powerup_spawn = 0
 POWERUP_SPAWN_INTERVAL = 5000  # spawn every ~5 seconds
 first_powerup_spawned = False
 
-# Player status
-p1_status = {"frozen_until": 0, "slow_until": 0}
-p2_status = {"frozen_until": 0, "slow_until": 0}
+# ===== CLASSES =====
+
+class Bike:
+	"""Represents a lightcycle with position, direction, trail, and status effects."""
+
+	def __init__(self, sprite, color, name):
+		self.sprite = sprite
+		self.color = color
+		self.name = name
+		self.pos = [0, 0]  # Back position of bike
+		self.dir = (0, 0)  # Direction vector
+		self.trail = []  # List for rendering (ordered)
+		self.trail_set = set()  # Set for fast collision detection
+		self.frozen_until = 0
+		self.slow_until = 0
+		self.last_turn_time = 0
+
+	def reset_trail(self):
+		"""Clear the bike's trail."""
+		self.trail = []
+		self.trail_set = set()
+
+	def reset_status(self):
+		"""Clear all status effects."""
+		self.frozen_until = 0
+		self.slow_until = 0
+		self.last_turn_time = 0
+
+	def get_front_pos(self, sprite_width, back_margin=4):
+		"""Calculate the front position of the bike."""
+		dx, dy = self.dir
+		mag = math.hypot(dx, dy)
+		if mag == 0:
+			return self.pos
+		nx, ny = dx / mag, dy / mag
+		length = sprite_width - back_margin
+		front_x = self.pos[0] + nx * length
+		front_y = self.pos[1] + ny * length
+		return [front_x, front_y]
+
+	def add_trail_point(self, pos):
+		"""Add a position to the trail (only if different from last)."""
+		if len(self.trail) == 0 or self.trail[-1] != pos:
+			self.trail.append(pos)
+			self.trail_set.add(pos)
+
+	def is_frozen(self, current_time):
+		"""Check if bike is currently frozen."""
+		return current_time < self.frozen_until
+
+	def is_slowed(self, current_time):
+		"""Check if bike is currently slowed."""
+		return current_time < self.slow_until
+
+	def get_effective_speed(self, base_speed, current_time):
+		"""Get the effective speed considering status effects."""
+		if self.is_frozen(current_time):
+			return 0
+		if self.is_slowed(current_time):
+			return base_speed // 2
+		return base_speed
+
+	def can_turn(self, current_time, cooldown):
+		"""Check if enough time has passed since last turn."""
+		return current_time - self.last_turn_time > cooldown
+
+	def render(self, screen, back_margin=4):
+		"""Render the bike sprite on the screen."""
+		blit_bike_with_front_at(screen, self.sprite, self.pos, self.dir, back_margin)
+
+
+class Obstacle:
+	"""Represents an obstacle on the grid."""
+
+	def __init__(self, x, y, size):
+		self.x = x
+		self.y = y
+		self.size = size
+
+	def contains_point(self, x, y):
+		"""Check if a point is inside this obstacle."""
+		return self.x <= x <= self.x + self.size and self.y <= y <= self.y + self.size
+
+	def overlaps_with(self, other):
+		"""Check if this obstacle overlaps with another obstacle."""
+		return (self.x < other.x + other.size and
+		        self.x + self.size > other.x and
+		        self.y < other.y + other.size and
+		        self.y + self.size > other.y)
+
+	def is_near_position(self, pos, margin):
+		"""Check if a position is within margin distance of this obstacle."""
+		return (abs(self.x - pos[0]) < margin and abs(self.y - pos[1]) < margin)
+
+	def render(self, screen):
+		"""Render the obstacle on the screen."""
+		core = pygame.Rect(self.x, self.y, self.size, self.size)
+		pygame.draw.rect(screen, BLACK, core)
+		pygame.draw.rect(screen, (255, 255, 255), core, 2)
+
+
+class PowerUp:
+	"""Represents a power-up on the grid."""
+
+	TYPES = ["freeze", "slow"]
+	COLORS = {"freeze": (0, 200, 255), "slow": (0, 255, 100)}
+
+	def __init__(self, x, y, size, ptype):
+		self.x = x
+		self.y = y
+		self.size = size
+		self.type = ptype
+		self.color = PowerUp.COLORS[ptype]
+
+	def contains_point(self, x, y):
+		"""Check if a point is inside this power-up."""
+		return self.x <= x <= self.x + self.size and self.y <= y <= self.y + self.size
+
+	def apply_effect(self, bike, current_time):
+		"""Apply this power-up's effect to a bike."""
+		if self.type == "freeze":
+			bike.frozen_until = current_time + 3000
+		elif self.type == "slow":
+			bike.slow_until = current_time + 5000
+
+	def render(self, screen):
+		"""Render the power-up on the screen."""
+		pygame.draw.rect(screen, self.color, (self.x, self.y, self.size, self.size))
+		pygame.draw.rect(screen, (255, 255, 255), (self.x, self.y, self.size, self.size), 2)
+
 
 def blit_bike_with_front_at(screen, sprite, pos_back, dir_vector, back_margin=0):
 	dx, dy = dir_vector
@@ -55,7 +180,7 @@ def blit_bike_with_front_at(screen, sprite, pos_back, dir_vector, back_margin=0)
 	angle_deg = math.degrees(rad)
 
 	# Original sprite dimensions
-	w, h = sprite.get_width(), sprite.get_height()
+	w = sprite.get_width()
 
 	# Vector from back to center (unrotated)
 	local_center = pygame.math.Vector2((w/2 - back_margin, 0))
@@ -90,8 +215,7 @@ def get_front_pos(pos_back, dir_vector, sprite_width=None, back_margin=4):
 	return [front_x, front_y]
 
 def reset_sprites():
-	global p1_pos, p2_pos, p1_dir, p2_dir, p1_trail, p2_trail, p1_trail_set, p2_trail_set
-
+	"""Reset bike positions and trails for a new round."""
 	top_left = [dirs["DOWN"], [WIDTH // 4, 35]]
 	top_right = [dirs["DOWN"], [3 * WIDTH // 4, 35]]
 	bottom_left = [dirs["UP"], [WIDTH // 4, HEIGHT - 35]]
@@ -106,16 +230,16 @@ def reset_sprites():
 		top_right,
 		bottom_left,
 		bottom_right,
-		right_top, 
+		right_top,
 		right_bottom,
 		left_top,
 		left_bottom
 	]
 
 	p1_start = random.choice(pos)
-
 	pos.remove(p1_start)
 
+	# Ensure bikes don't start in adjacent corners
 	if p1_start == top_left:
 		while True:
 			p2_start = random.choice(pos)
@@ -157,23 +281,17 @@ def reset_sprites():
 			if p2_start != bottom_left:
 				break
 
-	p1_dir = p1_start[0]
-	p1_pos = p1_start[1]
+	# Set player 1 position and direction
+	player1.dir = p1_start[0]
+	player1.pos = p1_start[1]
+	player1.reset_trail()
+	player1.reset_status()
 
-	p2_dir = p2_start[0]
-	p2_pos = p2_start[1]
-
-	# Clear trails
-	p1_trail = []
-	p2_trail = []
-	p1_trail_set = set()
-	p2_trail_set = set()
-
-	# disable powerups
-	p1_status["frozen_until"] = 0
-	p2_status["frozen_until"] = 0
-	p1_status["slow_until"] = 0
-	p2_status["slow_until"] = 0
+	# Set player 2 position and direction
+	player2.dir = p2_start[0]
+	player2.pos = p2_start[1]
+	player2.reset_trail()
+	player2.reset_status()
 
 def main_menu():
 	global blue_wins, orange_wins, match_over, single_player
@@ -296,10 +414,14 @@ orange_bike_big = pygame.transform.flip(orange_bike_big, True, False)
 scale_factor = .05
 bike_width = int(blue_bike_big.get_width() * scale_factor)
 bike_height = int(blue_bike_big.get_height() * scale_factor)
-blue_bike = pygame.transform.scale(blue_bike_big, (bike_width, bike_height))
-orange_bike = pygame.transform.scale(orange_bike_big, (bike_width, bike_height))
+blue_bike_sprite = pygame.transform.scale(blue_bike_big, (bike_width, bike_height))
+orange_bike_sprite = pygame.transform.scale(orange_bike_big, (bike_width, bike_height))
 
-# Player state
+# Create bike instances
+player1 = Bike(blue_bike_sprite, BLUE, "Blue")
+player2 = Bike(orange_bike_sprite, ORANGE, "Orange")
+
+# Initialize bike positions
 reset_sprites()
 
 clock = pygame.time.Clock()
@@ -307,8 +429,6 @@ font = pygame.font.Font(None, 74)
 small_font = pygame.font.Font(None, 36)
 
 turn_cooldown = 50
-last_turn_time_p1 = 0
-last_turn_time_p2 = 0
 
 def show_message(text, subtext="", color=TEAL):
 	# Render text surfaces
@@ -390,11 +510,9 @@ def check_collision(pos, trail1_set, trail2_set):
 	return False
 
 def draw_sprites():
-	p1_back = (p1_pos[0], p1_pos[1])
-	blit_bike_with_front_at(WIN, blue_bike, p1_back, p1_dir, back_margin=4)
-
-	p2_back = (p2_pos[0], p2_pos[1])
-	blit_bike_with_front_at(WIN, orange_bike, p2_back, p2_dir, back_margin=4)
+	"""Render both bikes on the screen."""
+	player1.render(WIN, back_margin=4)
+	player2.render(WIN, back_margin=4)
 
 def draw_scoreboard():
 	blue_text = small_font.render(f"Blue: {blue_wins}", True, BLUE)
@@ -408,7 +526,8 @@ def draw_scoreboard():
 	WIN.blit(orange_text, (start_x + blue_text.get_width() + 50, 10))
 
 def reset_game():
-	global p1_pos, p2_pos, p1_dir, p2_dir, p1_trail, p2_trail, game_over, game_time_offset, last_turn_time_p1, last_turn_time_p2, last_powerup_spawn
+	"""Reset the game for a new round."""
+	global game_over, game_time_offset, last_powerup_spawn
 
 	reset_sprites()
 	clear_powerups()
@@ -422,11 +541,10 @@ def reset_game():
 
 	countdown()
 	game_time_offset = pygame.time.get_ticks()
-	last_turn_time_p1 = 0
-	last_turn_time_p2 = 0
 	last_powerup_spawn = 0
 
 def generate_obstacles():
+	"""Generate random obstacles avoiding player positions."""
 	global obstacles
 	obstacles = []
 
@@ -440,21 +558,20 @@ def generate_obstacles():
 			x = random.randrange(0, WIDTH - size, OBSTACLE_SIZE)
 			y = random.randrange(0, HEIGHT - size, OBSTACLE_SIZE)
 
+			# Create temp obstacle to check for collisions
+			temp_obstacle = Obstacle(x, y, size)
+
 			# Avoid spawning near players
-			if (abs(x - p1_pos[0]) < 3 * OBSTACLE_SIZE and abs(y - p1_pos[1]) < 3 * OBSTACLE_SIZE) or \
-			   (abs(x - p2_pos[0]) < 3 * OBSTACLE_SIZE and abs(y - p2_pos[1]) < 3 * OBSTACLE_SIZE):
+			if temp_obstacle.is_near_position(player1.pos, 3 * OBSTACLE_SIZE) or \
+			   temp_obstacle.is_near_position(player2.pos, 3 * OBSTACLE_SIZE):
 				attempt += 1
 				continue
 
 			# Check for overlap with existing obstacles
-			overlap = False
-			for (ox, oy, osize) in obstacles:
-				if x < ox + osize and x + size > ox and y < oy + osize and y + size > oy:
-					overlap = True
-					break
+			overlap = any(temp_obstacle.overlaps_with(obs) for obs in obstacles)
 
 			if not overlap:
-				obstacles.append((x, y, size))
+				obstacles.append(temp_obstacle)
 				break
 
 			attempt += 1
@@ -464,18 +581,14 @@ def generate_obstacles():
 			break
 
 def draw_obstacles():
-	for (ox, oy, size) in obstacles:
-		# Draw the black core
-		core = pygame.Rect(ox, oy, size, size)
-		pygame.draw.rect(WIN, BLACK, core)
-		
-		# Draw a thin white outline
-		pygame.draw.rect(WIN, (255, 255, 255), core, 2)  # 2 px outline
+	"""Render all obstacles on the screen."""
+	for obstacle in obstacles:
+		obstacle.render(WIN)
 
 def spawn_powerup():
-	# Spawn a new random power-up not overlapping obstacles.
+	"""Spawn a new random power-up not overlapping obstacles."""
 	global powerups
-	ptype = random.choice(POWERUP_TYPES)
+	ptype = random.choice(PowerUp.TYPES)
 	size = POWERUP_SIZE
 
 	for _ in range(30):  # try 30 times
@@ -483,41 +596,28 @@ def spawn_powerup():
 		y = random.randrange(0, HEIGHT - size, POWERUP_SIZE)
 
 		# Avoid obstacles
-		overlap = any(ox <= x <= ox+os and oy <= y <= oy+os for ox, oy, os in obstacles)
+		overlap = any(obs.contains_point(x, y) for obs in obstacles)
 		if not overlap:
-			powerups.append((x, y, size, ptype))
+			powerups.append(PowerUp(x, y, size, ptype))
 			break
 
 def draw_powerups():
-	# Draw power-ups on the grid.
-	for (x, y, size, ptype) in powerups:
-		color = POWERUP_COLORS[ptype]
-		pygame.draw.rect(WIN, color, (x, y, size, size))
-		pygame.draw.rect(WIN, (255, 255, 255), (x, y, size, size), 2)
+	"""Render all power-ups on the screen."""
+	for powerup in powerups:
+		powerup.render(WIN)
 
 def clear_powerups():
-    # Remove all power-ups from the board.
-    global powerups
-    powerups.clear()
+	"""Remove all power-ups from the board."""
+	global powerups
+	powerups.clear()
 
-def check_powerup_collision(pos, player):
-	# Check if a player hits a power-up.
-	global powerups, game_time_offset, current_time
+def check_powerup_collision(pos, bike, current_time):
+	"""Check if a bike hits a power-up and apply effect."""
+	global powerups
 
 	for pu in powerups[:]:
-		x, y, size, ptype = pu
-		if x <= pos[0] <= x + size and y <= pos[1] <= y + size:
-			# Apply effect
-			if ptype == "freeze":
-				if player == 1:
-					p1_status["frozen_until"] = current_time + 3000 # pygame.time.get_ticks() - game_time_offset + 3000
-				else:
-					p2_status["frozen_until"] = current_time + 3000 # pygame.time.get_ticks() - game_time_offset + 3000
-			elif ptype == "slow":
-				if player == 1:
-					p1_status["slow_until"] = current_time + 5000 # pygame.time.get_ticks() - game_time_offset + 5000
-				else:
-					p2_status["slow_until"] = current_time + 5000 # pygame.time.get_ticks() - game_time_offset + 5000
+		if pu.contains_point(pos[0], pos[1]):
+			pu.apply_effect(bike, current_time)
 			powerups.remove(pu)
 
 def countdown():
@@ -561,9 +661,9 @@ def blue_win():
 	# --- Draw final collision frame before pausing ---
 	WIN.fill(BLACK)
 	draw_tron_grid(WIN, TEAL)
-	for point in p1_trail:
+	for point in player1.trail:
 		pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-	for point in p2_trail:
+	for point in player2.trail:
 		pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 	draw_obstacles()
 	draw_powerups()
@@ -599,9 +699,9 @@ def orange_win():
 	# --- Draw final collision frame before pausing ---
 	WIN.fill(BLACK)
 	draw_tron_grid(WIN, TEAL)
-	for point in p1_trail:
+	for point in player1.trail:
 		pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-	for point in p2_trail:
+	for point in player2.trail:
 		pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 	draw_obstacles()
 	draw_powerups()
@@ -637,20 +737,16 @@ def orange_win():
 				pygame.mixer.music.load("the_grid.mp3")
 				pygame.mixer.music.play(-1)
 
-def ai_control():
-	# Simple AI for orange bike that avoids walls, trails, and obstacles.
-	global p2_dir, last_turn_time_p2
-
-	# Time limit to prevent over-turning
-	current_time = pygame.time.get_ticks()
-	# --- Power-up spawning ---
-	if current_time - last_turn_time_p2 < turn_cooldown:
-		return  # wait for cooldown before next turn
+def ai_control(current_game_time):
+	"""Simple AI for orange bike that avoids walls, trails, and obstacles."""
+	# Check turn cooldown
+	if not player2.can_turn(current_game_time, turn_cooldown):
+		return
 
 	possible_dirs = [dirs["UP"], dirs["DOWN"], dirs["LEFT"], dirs["RIGHT"]]
 
 	def will_collide(pos, dir_vec):
-		# Predict if moving forward will cause a collision.
+		"""Predict if moving forward will cause a collision."""
 		x, y = pos
 		dx, dy = dir_vec
 		# Look 12 steps ahead
@@ -661,31 +757,31 @@ def ai_control():
 			if nx < 0 or nx >= WIDTH or ny < 0 or ny >= HEIGHT:
 				return True
 			# Use set-based collision detection (O(1) instead of O(n))
-			if curr_pos in p1_trail_set or curr_pos in p2_trail_set:
+			if curr_pos in player1.trail_set or curr_pos in player2.trail_set:
 				return True
 			# Check obstacle collisions
-			for (ox, oy, size) in obstacles:
-				if ox <= nx <= ox + size and oy <= ny <= oy + size:
+			for obs in obstacles:
+				if obs.contains_point(nx, ny):
 					return True
 		return False
 
 	# Prefer current direction if safe
-	if not will_collide(p2_pos, p2_dir):
+	if not will_collide(player2.pos, player2.dir):
 		return
 
 	# Otherwise, pick a safer turn
-	safe_dirs = [d for d in possible_dirs if not will_collide(p2_pos, d)]
+	safe_dirs = [d for d in possible_dirs if not will_collide(player2.pos, d)]
 	if safe_dirs:
 		new_dir = random.choice(safe_dirs)
 		# Prevent turning back directly
-		if (p2_dir == dirs["UP"] and new_dir == dirs["DOWN"]) or \
-		   (p2_dir == dirs["DOWN"] and new_dir == dirs["UP"]) or \
-		   (p2_dir == dirs["LEFT"] and new_dir == dirs["RIGHT"]) or \
-		   (p2_dir == dirs["RIGHT"] and new_dir == dirs["LEFT"]):
+		if (player2.dir == dirs["UP"] and new_dir == dirs["DOWN"]) or \
+		   (player2.dir == dirs["DOWN"] and new_dir == dirs["UP"]) or \
+		   (player2.dir == dirs["LEFT"] and new_dir == dirs["RIGHT"]) or \
+		   (player2.dir == dirs["RIGHT"] and new_dir == dirs["LEFT"]):
 			pass
 		else:
-			p2_dir = new_dir
-			last_turn_time_p2 = current_time
+			player2.dir = new_dir
+			player2.last_turn_time = current_game_time
 
 # def ai_control():
 #     # Enhanced AI for orange bike: tries to get power-ups safely
@@ -808,55 +904,66 @@ def ai_control():
 #         p2_dir = new_dir
 #         last_turn_time_p2 = current_time
 
-def step_move_player(pos, dir_vec, effective_speed, own_trail, own_trail_set, other_trail, other_trail_set, player_id, sprite_width=None, back_margin=4):
-    # Move the player per pixel *fractionally* and check collisions at the FRONT of the bike.
+def step_move_player(bike, other_bike, effective_speed, sprite_width, back_margin=4):
+	"""Move a bike and check for collisions."""
+	if effective_speed <= 0:
+		return False
 
-    if effective_speed <= 0:
-        return pos, False
+	# Normalize direction vector
+	mag = math.hypot(bike.dir[0], bike.dir[1])
+	if mag == 0:
+		return False
+	nx, ny = bike.dir[0] / mag, bike.dir[1] / mag
 
-    # Normalize direction vector
-    mag = math.hypot(dir_vec[0], dir_vec[1])
-    if mag == 0:
-        return pos, False
-    nx, ny = dir_vec[0] / mag, dir_vec[1] / mag
+	# front offset from back
+	front_length = sprite_width - back_margin
 
-    # front offset from back
-    front_length = (sprite_width or 30) - back_margin
+	# fractional stepping ensures smooth motion at lower speeds
+	remaining = effective_speed
+	step_size = 1.0  # pixel increment
+	while remaining > 0:
+		step = min(step_size, remaining)
+		remaining -= step
 
-    # fractional stepping ensures smooth motion at lower speeds
-    remaining = effective_speed
-    step_size = 1.0  # pixel increment
-    while remaining > 0:
-        step = min(step_size, remaining)
-        remaining -= step
+		# move the back point fractionally
+		bike.pos[0] += nx * step
+		bike.pos[1] += ny * step
 
-        # move the back point fractionally
-        pos[0] += nx * step
-        pos[1] += ny * step
+		# compute current front position
+		fx = bike.pos[0] + nx * front_length
+		fy = bike.pos[1] + ny * front_length
+		front_int = (int(fx), int(fy))
 
-        # compute current front position
-        fx = pos[0] + nx * front_length
-        fy = pos[1] + ny * front_length
-        front_int = (int(fx), int(fy))
+		# Also check middle and back positions to prevent phasing through trails when turning
+		back_int = (int(bike.pos[0]), int(bike.pos[1]))
+		mid_x = bike.pos[0] + nx * (front_length / 2)
+		mid_y = bike.pos[1] + ny * (front_length / 2)
+		mid_int = (int(mid_x), int(mid_y))
 
-        # collision test (using sets for O(1) lookup)
-        if check_collision(front_int, own_trail_set, other_trail_set):
-            if player_id == 1:
-                orange_win()
-            else:
-                blue_win()
-            return pos, True
+		# collision test (using sets for O(1) lookup) - check front, middle, and back
+		for check_pos in [front_int, mid_int, back_int]:
+			if check_collision(check_pos, bike.trail_set, other_bike.trail_set):
+				# Determine winner based on which bike collided
+				if bike == player1:
+					orange_win()
+				else:
+					blue_win()
+				return True
 
-        # Add trail points for rendering and collision detection
-        # Since we check collision at every pixel, we don't need the expensive trail crossing checks
-        new_pos = (int(pos[0]), int(pos[1]))
+		# Check obstacle collisions at front, middle, and back
+		for obs in obstacles:
+			if obs.contains_point(fx, fy) or obs.contains_point(mid_x, mid_y) or obs.contains_point(bike.pos[0], bike.pos[1]):
+				if bike == player1:
+					orange_win()
+				else:
+					blue_win()
+				return True
 
-        # Only add to trail list if position changed (avoid duplicates)
-        if len(own_trail) == 0 or own_trail[-1] != new_pos:
-            own_trail.append(new_pos)
-            own_trail_set.add(new_pos)
+		# Add trail points for rendering and collision detection
+		new_pos = (int(bike.pos[0]), int(bike.pos[1]))
+		bike.add_trail_point(new_pos)
 
-    return pos, False
+	return False
 
 # --- Start Screen ---
 WIN.blit(background, (0, 0))
@@ -867,9 +974,6 @@ while running:
 	if not game_over:
 		clock.tick(60)
 
-		effective_speed_p1 = SPEED
-		effective_speed_p2 = SPEED
-		
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				pygame.quit()
@@ -884,68 +988,51 @@ while running:
 			last_powerup_spawn = current_time
 
 		# Player 1 (WASD) — Disable turning if frozen
-		if current_time > p1_status["frozen_until"]:  # only allow turns if not frozen
-			if current_time - last_turn_time_p1 > turn_cooldown:
-				if keys[pygame.K_w] and p1_dir != dirs["DOWN"]:
-					p1_dir = dirs["UP"]
-					last_turn_time_p1 = current_time
-				elif keys[pygame.K_s] and p1_dir != dirs["UP"]:
-					p1_dir = dirs["DOWN"]
-					last_turn_time_p1 = current_time
-				elif keys[pygame.K_a] and p1_dir != dirs["RIGHT"]:
-					p1_dir = dirs["LEFT"]
-					last_turn_time_p1 = current_time
-				elif keys[pygame.K_d] and p1_dir != dirs["LEFT"]:
-					p1_dir = dirs["RIGHT"]
-					last_turn_time_p1 = current_time
+		if not player1.is_frozen(current_time):
+			if player1.can_turn(current_time, turn_cooldown):
+				if keys[pygame.K_w] and player1.dir != dirs["DOWN"]:
+					player1.dir = dirs["UP"]
+					player1.last_turn_time = current_time
+				elif keys[pygame.K_s] and player1.dir != dirs["UP"]:
+					player1.dir = dirs["DOWN"]
+					player1.last_turn_time = current_time
+				elif keys[pygame.K_a] and player1.dir != dirs["RIGHT"]:
+					player1.dir = dirs["LEFT"]
+					player1.last_turn_time = current_time
+				elif keys[pygame.K_d] and player1.dir != dirs["LEFT"]:
+					player1.dir = dirs["RIGHT"]
+					player1.last_turn_time = current_time
 
-		# Player 2 (Arrows) — Disable turning if frozen
-		if current_time > p2_status["frozen_until"]:  # only allow turns if not frozen
-			if single_player == True:
-				ai_control()
-			if current_time - last_turn_time_p2 > turn_cooldown:
-				if keys[pygame.K_UP] and p2_dir != dirs["DOWN"]:
-					p2_dir = dirs["UP"]
-					last_turn_time_p2 = current_time
-				elif keys[pygame.K_DOWN] and p2_dir != dirs["UP"]:
-					p2_dir = dirs["DOWN"]
-					last_turn_time_p2 = current_time
-				elif keys[pygame.K_LEFT] and p2_dir != dirs["RIGHT"]:
-					p2_dir = dirs["LEFT"]
-					last_turn_time_p2 = current_time
-				elif keys[pygame.K_RIGHT] and p2_dir != dirs["LEFT"]:
-					p2_dir = dirs["RIGHT"]
-					last_turn_time_p2 = current_time
+		# Player 2 (Arrows or AI) — Disable turning if frozen
+		if not player2.is_frozen(current_time):
+			if single_player:
+				ai_control(current_time)
+			if player2.can_turn(current_time, turn_cooldown):
+				if keys[pygame.K_UP] and player2.dir != dirs["DOWN"]:
+					player2.dir = dirs["UP"]
+					player2.last_turn_time = current_time
+				elif keys[pygame.K_DOWN] and player2.dir != dirs["UP"]:
+					player2.dir = dirs["DOWN"]
+					player2.last_turn_time = current_time
+				elif keys[pygame.K_LEFT] and player2.dir != dirs["RIGHT"]:
+					player2.dir = dirs["LEFT"]
+					player2.last_turn_time = current_time
+				elif keys[pygame.K_RIGHT] and player2.dir != dirs["LEFT"]:
+					player2.dir = dirs["RIGHT"]
+					player2.last_turn_time = current_time
 
-		# Apply slow effects
-		if current_time < p1_status["slow_until"]:
-			effective_speed_p1 = SPEED // 2
-		if current_time < p2_status["slow_until"]:
-			effective_speed_p2 = SPEED // 2
+		# Get effective speeds considering status effects
+		effective_speed_p1 = player1.get_effective_speed(SPEED, current_time)
+		effective_speed_p2 = player2.get_effective_speed(SPEED, current_time)
 
-		# Apply freeze effects
-		if current_time < p1_status["frozen_until"]:
-			effective_speed_p1 = 0
-		if current_time < p2_status["frozen_until"]:
-			effective_speed_p2 = 0
-
-		# --- Predict next positions for collision ---
-		p1_next = [p1_pos[0] + p1_dir[0] * (effective_speed_p1 / SPEED), p1_pos[1] + p1_dir[1] * (effective_speed_p1 / SPEED)]
-		p2_next = [p2_pos[0] + p2_dir[0] * (effective_speed_p2 / SPEED), p2_pos[1] + p2_dir[1] * (effective_speed_p2 / SPEED)]
-
-		p1_pos, collided = step_move_player(p1_pos, p1_dir, effective_speed_p1, p1_trail, p1_trail_set, p2_trail, p2_trail_set, player_id=1, sprite_width=bike_width, back_margin=4)
-		if collided:
-			# game state will already have been set by orange_win() / blue_win()
-			# skip remaining movement / processing for this frame
-			pass
-		else:
+		# Move both bikes
+		collided1 = step_move_player(player1, player2, effective_speed_p1, bike_width, back_margin=4)
+		if not collided1:
 			# Move player 2 (only if game not already ended)
-			p2_pos, collided = step_move_player(p2_pos, p2_dir, effective_speed_p2, p2_trail, p2_trail_set, p1_trail, p1_trail_set, player_id=2, sprite_width=bike_width, back_margin=4)
-			if collided:
-				pass
+			collided2 = step_move_player(player2, player1, effective_speed_p2, bike_width, back_margin=4)
 
-		p1_front = get_front_pos(p1_pos, p1_dir, bike_width)
-		p2_front = get_front_pos(p2_pos, p2_dir, bike_width)
+		p1_front = player1.get_front_pos(bike_width)
+		p2_front = player2.get_front_pos(bike_width)
 
 		# --- Bike-to-Bike Collision Check (tight hitboxes) ---
 		# Head-on collision threshold (fronts nearly touching)
@@ -958,9 +1045,9 @@ while running:
 			# --- Draw final collision frame before pausing ---
 			WIN.fill(BLACK)
 			draw_tron_grid(WIN, TEAL)
-			for point in p1_trail:
+			for point in player1.trail:
 				pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-			for point in p2_trail:
+			for point in player2.trail:
 				pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 			draw_obstacles()
 			draw_powerups()
@@ -982,33 +1069,22 @@ while running:
 			hit_margin_x = bike_width * 0.4
 			hit_margin_y = bike_height * 0.4
 
-			if (abs(p1_front[0] - p2_pos[0]) < hit_margin_x and abs(p1_front[1] - p2_pos[1]) < hit_margin_y):
+			if (abs(p1_front[0] - player2.pos[0]) < hit_margin_x and abs(p1_front[1] - player2.pos[1]) < hit_margin_y):
 				orange_win()
 
-			elif (abs(p2_front[0] - p1_pos[0]) < hit_margin_x and abs(p2_front[1] - p1_pos[1]) < hit_margin_y):
+			elif (abs(p2_front[0] - player1.pos[0]) < hit_margin_x and abs(p2_front[1] - player1.pos[1]) < hit_margin_y):
 				blue_win()
-
-		# Check obstacle collisions
-		# Player 1 obstacle collision
-		for (ox, oy, size) in obstacles:
-			if ox <= p1_front[0] <= ox + size and oy <= p1_front[1] <= oy + size:
-				orange_win()
-				break
-
-		for (ox, oy, size) in obstacles:
-			if ox <= p2_front[0] <= ox + size and oy <= p2_front[1] <= oy + size:
-				blue_win()
-				break
 
 		# --- Power-up collisions ---
-		check_powerup_collision(p1_front, 1)
-		check_powerup_collision(p2_front, 2)
+		check_powerup_collision(p1_front, player1, current_time)
+		check_powerup_collision(p2_front, player2, current_time)
 
+		# Render everything
 		WIN.fill(BLACK)
 		draw_tron_grid(WIN, TEAL)
-		for point in p1_trail:
+		for point in player1.trail:
 			pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-		for point in p2_trail:
+		for point in player2.trail:
 			pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 		draw_obstacles()
 		draw_powerups()
