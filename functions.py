@@ -130,7 +130,7 @@ def reset_sprites():
 	player2.reset_status()
 
 def main_menu():
-	global blue_wins, orange_wins, match_over, single_player
+	global p1_wins, p2_wins, match_over, single_player
 
 	menu_running = True
 
@@ -150,22 +150,20 @@ def main_menu():
 				if event.type == pygame.KEYDOWN:
 					if event.key == pygame.K_1:
 						single_player = True
-						blue_wins = 0
-						orange_wins = 0
+						p1_wins = 0
+						p2_wins = 0
 						match_over = False
 						menu_running = False
 						waiting = False
 						theme_menu()
-						#reset_game()
 					elif event.key == pygame.K_2:
 						single_player = False
-						blue_wins = 0
-						orange_wins = 0
+						p1_wins = 0
+						p2_wins = 0
 						match_over = False
 						menu_running = False
 						waiting = False
 						theme_menu()
-						#reset_game()
 					elif event.key == pygame.K_ESCAPE:
 						pygame.quit()
 						sys.exit()
@@ -177,7 +175,7 @@ def theme_menu():
 
 	while theme_menu_running:
 		WIN.blit(background, (0, 0))
-		show_message("SELECT A THEME", "Press \"1\" for \"'82\" or \"2\" for \"LEGACY\"")
+		show_message("SELECT A THEME", "Press \"1\" for \"82\", \"2\" for \"LEGACY\", or 3 for \"ARES\"")
 		waiting = True
 		while waiting:
 			for event in pygame.event.get():
@@ -199,6 +197,12 @@ def theme_menu():
 						theme_menu_running = False
 						waiting = False
 						reset_game()
+					elif event.key == pygame.K_3:
+						theme = "ARES"
+						BLUE = (0, 255, 255)
+						theme_menu_running = False
+						waiting = False
+						reset_game()
 					elif event.key == pygame.K_ESCAPE:
 						pygame.quit()
 						sys.exit()
@@ -210,6 +214,9 @@ def draw_tron_grid(surface, desired_spacing=40):
 	elif theme == "82":
 		color = WHITE
 		surface.fill((0, 0, 20))
+	elif theme == "ARES":
+		color = RED
+		surface.fill((16, 0, 0))
 
 	width = surface.get_width()
 	height = surface.get_height()
@@ -338,22 +345,28 @@ def draw_sprites():
 	player2.render(WIN, blit_bike_with_front_at, back_margin=4)
 
 def draw_scoreboard():
-	blue_text = small_font.render(f"Blue: {blue_wins}", True, BLUE)
-	orange_text = small_font.render(f"Orange: {orange_wins}", True, ORANGE)
+	p1_text = small_font.render(f"Blue: {p1_wins}", True, BLUE)
+	if theme == "ARES":
+		p2_text = small_font.render(f"Red: {p2_wins}", True, RED)
+	else:
+		p2_text = small_font.render(f"Orange: {p2_wins}", True, ORANGE)
 
 	# Space them evenly at the top center
-	total_width = blue_text.get_width() + orange_text.get_width() + 50
+	total_width = p1_text.get_width() + p2_text.get_width() + 50
 	start_x = WIDTH // 2 - total_width // 2
 
-	WIN.blit(blue_text, (start_x, 10))
-	WIN.blit(orange_text, (start_x + blue_text.get_width() + 50, 10))
+	WIN.blit(p1_text, (start_x, 10))
+	WIN.blit(p2_text, (start_x + p1_text.get_width() + 50, 10))
 
 def reset_game():
 	"""Reset the game for a new round."""
 	global game_over, game_time_offset, last_powerup_spawn, player1, player2
 
 	player1 = Bike(blue_bike_sprite, BLUE, "Blue")
-	player2 = Bike(orange_bike_sprite, ORANGE, "Orange")
+	if theme == "ARES":
+		player2 = Bike(red_bike_sprite, RED, "Red")
+	else:
+		player2 = Bike(orange_bike_sprite, ORANGE, "Orange")
 
 	reset_sprites()
 	clear_powerups()
@@ -487,10 +500,16 @@ def check_trail_powerup_collisions(current_time):
 				break
 
 def countdown():
-	if clu.exists():
-		pygame.mixer.music.stop()
-		pygame.mixer.music.load("clu.mp3")
-		pygame.mixer.music.play(-1)
+	if theme == "ARES":
+		if init.exists():
+			pygame.mixer.music.stop()
+			pygame.mixer.music.load("init.mp3")
+			pygame.mixer.music.play(-1)
+	else:
+		if clu.exists():
+			pygame.mixer.music.stop()
+			pygame.mixer.music.load("clu.mp3")
+			pygame.mixer.music.play(-1)
 	for i in range(3, 0, -1):
 		WIN.fill(BLACK)
 		draw_tron_grid(WIN)
@@ -498,7 +517,12 @@ def countdown():
 		draw_powerups()
 		draw_sprites()
 		draw_scoreboard()
-		show_message(str(i))
+		if theme == "ARES":
+			show_message(str(i), "", RED)
+		elif theme == "LEGACY":
+			show_message(str(i))
+		elif theme == "82":
+			show_message(str(i), "", WHITE)
 		pygame.display.update()
 		pygame.time.delay(1000)
 
@@ -509,18 +533,28 @@ def countdown():
 	draw_powerups()
 	draw_sprites()
 	draw_scoreboard()
-	show_message("GO!")
+	if theme == "ARES":
+		show_message("GO!", "", RED)
+	elif theme == "LEGACY":
+		show_message("GO!")
+	elif theme == "82":
+		show_message("GO!", "", WHITE)
 	pygame.display.update()
 	pygame.time.delay(800)
-	game_song = random.choice(game_music)
-	if game_song.exists():
+	if theme == "ARES":
+		if infiltrator.exists():
+			pygame.mixer.music.stop()
+			pygame.mixer.music.load("infiltrator.mp3")
+			pygame.mixer.music.play(-1)
+	else:
+		game_song = random.choice(game_music_legacy)
 		selected_song = str(game_song)
 		pygame.mixer.music.stop()
 		pygame.mixer.music.load(selected_song)
 		pygame.mixer.music.play(-1)
 
-def blue_win():
-	global game_over, match_over, win_color, win_text, blue_wins
+def p1_win():
+	global game_over, match_over, win_color, win_text, p1_wins
 	if derezzed_sound_file.exists():
 		pygame.mixer.music.stop()
 		derezzed_sound.play()
@@ -532,7 +566,10 @@ def blue_win():
 	for point in player1.trail:
 		pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 	for point in player2.trail:
-		pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+		if theme == "ARES":
+			pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
+		else:
+			pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 	draw_obstacles()
 	draw_powerups()
 	draw_sprites()
@@ -542,71 +579,108 @@ def blue_win():
 	# Small pause to show the collision frame
 	pygame.time.delay(1800)
 
-	blue_wins += 1
+	p1_wins += 1
 	win_color = BLUE
 	# Check for match victory
-	if blue_wins >= MAX_SCORE:
+	if p1_wins >= MAX_SCORE:
 		match_over = True
 		win_text = "TEAM BLUE WINS THE MATCH!"
-		if end_titles.exists():
-			pygame.mixer.music.load("end_titles.mp3")
-			pygame.mixer.music.play(-1)
-	else:
-		win_text = "TEAM BLUE WINS!"
-		if the_grid.exists():
-			pygame.mixer.music.load("the_grid.mp3")
-			pygame.mixer.music.play(-1)
-
-def orange_win():
-	global game_over, match_over, win_color, win_text, orange_wins
-	if derezzed_sound_file.exists():
-		pygame.mixer.music.stop()
-		derezzed_sound.play()
-	game_over = True
-
-	# --- Draw final collision frame before pausing ---
-	WIN.fill(BLACK)
-	draw_tron_grid(WIN)
-	for point in player1.trail:
-		pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-	for point in player2.trail:
-		pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-	draw_obstacles()
-	draw_powerups()
-	draw_sprites()
-	draw_scoreboard()
-	pygame.display.update()
-
-	# Small pause to show the collision frame
-	pygame.time.delay(1800)
-
-	orange_wins += 1
-	win_color = ORANGE
-	# Check for match victory
-	if orange_wins >= MAX_SCORE:
-		match_over = True
-		win_text = "TEAM ORANGE WINS THE MATCH!"
-		if single_player:
-			if adagio_for_tron.exists():
-				pygame.mixer.music.load("adagio_for_tron.mp3")
+		if theme == "ARES":
+			if a_question_of_trust.exists():
+				pygame.mixer.music.load("a_question_of_trust.mp3")
 				pygame.mixer.music.play(-1)
 		else:
 			if end_titles.exists():
 				pygame.mixer.music.load("end_titles.mp3")
 				pygame.mixer.music.play(-1)
 	else:
-		win_text = "TEAM ORANGE WINS!"
-		if single_player:
-			if rinzler.exists():
-				pygame.mixer.music.load("rinzler.mp3")
+		win_text = "TEAM BLUE WINS!"
+		if theme == "ARES":
+			if a_question_of_trust.exists():
+				pygame.mixer.music.load("a_question_of_trust.mp3")
 				pygame.mixer.music.play(-1)
 		else:
 			if the_grid.exists():
 				pygame.mixer.music.load("the_grid.mp3")
 				pygame.mixer.music.play(-1)
 
+def p2_win():
+	global game_over, match_over, win_color, win_text, p2_wins
+	if derezzed_sound_file.exists():
+		pygame.mixer.music.stop()
+		derezzed_sound.play()
+	game_over = True
+
+	# --- Draw final collision frame before pausing ---
+	WIN.fill(BLACK)
+	draw_tron_grid(WIN)
+	for point in player1.trail:
+		pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+	for point in player2.trail:
+		if theme == "ARES":
+			pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
+		else:
+			pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+	draw_obstacles()
+	draw_powerups()
+	draw_sprites()
+	draw_scoreboard()
+	pygame.display.update()
+
+	# Small pause to show the collision frame
+	pygame.time.delay(1800)
+
+	p2_wins += 1
+	if theme == "ARES":
+		win_color = RED
+	else:
+		win_color = ORANGE
+	# Check for match victory
+	if p2_wins >= MAX_SCORE:
+		match_over = True
+		if theme == "ARES":
+			win_text = "TEAM RED WINS THE MATCH!"
+		else:
+			win_text = "TEAM ORANGE WINS THE MATCH!"
+		if single_player:
+			if theme == "ARES":
+				if echoes.exists():
+					pygame.mixer.music.load("echoes.mp3")
+					pygame.mixer.music.play(-1)
+			else:
+				if adagio_for_tron.exists():
+					pygame.mixer.music.load("adagio_for_tron.mp3")
+					pygame.mixer.music.play(-1)
+		else:
+			if theme == "ARES":
+				if a_question_of_trust.exists():
+					pygame.mixer.music.load("a_question_of_trust.mp3")
+					pygame.mixer.music.play(-1)
+			else:
+				if end_titles.exists():
+					pygame.mixer.music.load("end_titles.mp3")
+					pygame.mixer.music.play(-1)
+	else:
+		if theme == "ARES":
+			win_text = "TEAM RED WINS!"
+		else:
+			win_text = "TEAM ORANGE WINS!"
+		if theme == "ARES" and single_player:
+				if expendable.exists():
+					pygame.mixer.music.load("100%_expendable.mp3")
+					pygame.mixer.music.play(-1)
+		else:
+			if theme == "ARES":
+				if a_question_of_trust.exists():
+					pygame.mixer.music.load("a_question_of_trust.mp3")
+					pygame.mixer.music.play(-1)
+			else:
+				if rinzler.exists():
+					pygame.mixer.music.load("rinzler.mp3")
+					pygame.mixer.music.play(-1)
+
 def ai_control(current_game_time):
-	"""AI for orange bike that avoids collisions and seeks power-ups."""
+	"""AI for p2 bike that avoids collisions and seeks power-ups."""
 	# Check turn cooldown
 	if not player2.can_turn(current_game_time, turn_cooldown):
 		return
@@ -755,18 +829,18 @@ def step_move_player(bike, other_bike, effective_speed, sprite_width, back_margi
 			if check_collision(check_pos, bike.trail_set, other_bike.trail_set):
 				# Determine winner based on which bike collided
 				if bike == player1:
-					orange_win()
+					p2_win()
 				else:
-					blue_win()
+					p1_win()
 				return True
 
 		# Check obstacle collisions at front, middle, and back
 		for obs in obstacles:
 			if obs.contains_point(fx, fy) or obs.contains_point(mid_x, mid_y) or obs.contains_point(bike.pos[0], bike.pos[1]):
 				if bike == player1:
-					orange_win()
+					p2_win()
 				else:
-					blue_win()
+					p1_win()
 				return True
 
 		# Add trail points for rendering and collision detection
@@ -862,7 +936,10 @@ def run_game():
 				for point in player1.trail:
 					pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 				for point in player2.trail:
-					pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+					if theme == "ARES":
+						pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
+					else:
+						pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 				draw_obstacles()
 				draw_powerups()
 				draw_sprites()
@@ -884,10 +961,10 @@ def run_game():
 				hit_margin_y = bike_height * 0.4
 
 				if (abs(p1_front[0] - player2.pos[0]) < hit_margin_x and abs(p1_front[1] - player2.pos[1]) < hit_margin_y):
-					orange_win()
+					p2_win()
 
 				elif (abs(p2_front[0] - player1.pos[0]) < hit_margin_x and abs(p2_front[1] - player1.pos[1]) < hit_margin_y):
-					blue_win()
+					p1_win()
 
 			# --- Power-up collisions ---
 			check_powerup_collision(p1_front, player1, current_time)
@@ -900,7 +977,10 @@ def run_game():
 			for point in player1.trail:
 				pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 			for point in player2.trail:
-				pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+				if theme == "ARES":
+					pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
+				else:
+					pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 			draw_obstacles()
 			draw_powerups()
 			draw_sprites()

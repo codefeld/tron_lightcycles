@@ -22,7 +22,12 @@ armory = Path("armory.mp3")
 rinzler = Path("rinzler.mp3")
 adagio_for_tron = Path("adagio_for_tron.mp3")
 arena = Path("arena.mp3")
-game_music = [derezzed, fall, disc_wars, the_game_has_changed]
+init = Path("init.mp3")
+infiltrator = Path("infiltrator.mp3")
+a_question_of_trust = Path("a_question_of_trust.mp3")
+expendable = Path("100%_expendable.mp3")
+echoes = Path("echoes.mp3")
+game_music_legacy = [derezzed, fall, disc_wars, the_game_has_changed]
 
 WIDTH, HEIGHT = 900, 900
 
@@ -33,6 +38,7 @@ BLACK = (0, 0, 0)
 GRID_COLOR = (20, 20, 30)
 BLUE = (0, 255, 255)
 ORANGE = (255, 150, 0)
+RED = (255, 0, 0)
 TEAL = (0, 180, 150)
 WHITE = (255, 255, 255)
 
@@ -78,13 +84,16 @@ dirs = {
 # Load sprites
 blue_bike_big = pygame.image.load("blue_cycle.png").convert_alpha()
 orange_bike_big = pygame.image.load("orange_cycle.png").convert_alpha()
+red_bike_big = pygame.image.load("red_cycle.png").convert_alpha()
 blue_bike_big = pygame.transform.flip(blue_bike_big, True, False)
 orange_bike_big = pygame.transform.flip(orange_bike_big, True, False)
+red_bike_big = pygame.transform.flip(red_bike_big, True, False)
 scale_factor = .05
 bike_width = int(blue_bike_big.get_width() * scale_factor)
 bike_height = int(blue_bike_big.get_height() * scale_factor)
 blue_bike_sprite = pygame.transform.scale(blue_bike_big, (bike_width, bike_height))
 orange_bike_sprite = pygame.transform.scale(orange_bike_big, (bike_width, bike_height))
+red_bike_sprite = pygame.transform.scale(red_bike_big, (bike_width, bike_height))
 
 # Create bike instances
 player1 = ""

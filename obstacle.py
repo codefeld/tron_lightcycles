@@ -34,3 +34,6 @@ class Obstacle:
 		elif theme == "82":
 			pygame.draw.rect(screen, (13, 54, 77), core)
 			pygame.draw.rect(screen, (113, 0, 0), core, 2)
+		elif theme == "ARES":
+			pygame.draw.rect(screen, (0, 0, 0), core)
+			pygame.draw.rect(screen, (255, 255, 255), core, 2)
