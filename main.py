@@ -29,6 +29,7 @@ expendable = Path("100%_expendable.mp3")
 echoes = Path("echoes.mp3")
 this_changes_everything = Path("this_changes_everything.mp3")
 target_identified = Path("target_identified.mp3")
+new_directive = Path("new_directive.mp3")
 game_music_legacy = [derezzed, fall, disc_wars, the_game_has_changed]
 game_music_ares = [infiltrator, target_identified]
 

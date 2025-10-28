@@ -583,7 +583,7 @@ def p1_win():
 		match_over = True
 		win_text = "TEAM BLUE WINS THE MATCH!"
 		if theme == "ARES":
-			if a_question_of_trust.exists():
+			if new_directive.exists():
 				pygame.mixer.music.load("a_question_of_trust.mp3")
 				pygame.mixer.music.play(-1)
 		else:
@@ -650,8 +650,8 @@ def p2_win():
 					pygame.mixer.music.play(-1)
 		else:
 			if theme == "ARES":
-				if a_question_of_trust.exists():
-					pygame.mixer.music.load("a_question_of_trust.mp3")
+				if new_directive.exists():
+					pygame.mixer.music.load("new_directive.mp3")
 					pygame.mixer.music.play(-1)
 			else:
 				if end_titles.exists():
