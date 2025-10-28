@@ -584,7 +584,7 @@ def p1_win():
 		win_text = "TEAM BLUE WINS THE MATCH!"
 		if theme == "ARES":
 			if new_directive.exists():
-				pygame.mixer.music.load("a_question_of_trust.mp3")
+				pygame.mixer.music.load("new_directive.mp3")
 				pygame.mixer.music.play(-1)
 		else:
 			if end_titles.exists():
@@ -892,19 +892,20 @@ def run_game():
 			if not player2.is_frozen(current_time):
 				if single_player:
 					ai_control(current_time)
-				if player2.can_turn(current_time, turn_cooldown):
-					if keys[pygame.K_UP] and player2.dir != dirs["DOWN"]:
-						player2.dir = dirs["UP"]
-						player2.last_turn_time = current_time
-					elif keys[pygame.K_DOWN] and player2.dir != dirs["UP"]:
-						player2.dir = dirs["DOWN"]
-						player2.last_turn_time = current_time
-					elif keys[pygame.K_LEFT] and player2.dir != dirs["RIGHT"]:
-						player2.dir = dirs["LEFT"]
-						player2.last_turn_time = current_time
-					elif keys[pygame.K_RIGHT] and player2.dir != dirs["LEFT"]:
-						player2.dir = dirs["RIGHT"]
-						player2.last_turn_time = current_time
+				else:
+					if player2.can_turn(current_time, turn_cooldown):
+						if keys[pygame.K_UP] and player2.dir != dirs["DOWN"]:
+							player2.dir = dirs["UP"]
+							player2.last_turn_time = current_time
+						elif keys[pygame.K_DOWN] and player2.dir != dirs["UP"]:
+							player2.dir = dirs["DOWN"]
+							player2.last_turn_time = current_time
+						elif keys[pygame.K_LEFT] and player2.dir != dirs["RIGHT"]:
+							player2.dir = dirs["LEFT"]
+							player2.last_turn_time = current_time
+						elif keys[pygame.K_RIGHT] and player2.dir != dirs["LEFT"]:
+							player2.dir = dirs["RIGHT"]
+							player2.last_turn_time = current_time
 
 			# Get effective speeds considering status effects
 			effective_speed_p1 = player1.get_effective_speed(SPEED, current_time)
