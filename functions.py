@@ -542,16 +542,13 @@ def countdown():
 	pygame.display.update()
 	pygame.time.delay(800)
 	if theme == "ARES":
-		if infiltrator.exists():
-			pygame.mixer.music.stop()
-			pygame.mixer.music.load("infiltrator.mp3")
-			pygame.mixer.music.play(-1)
+		game_song = random.choice(game_music_ares)
 	else:
 		game_song = random.choice(game_music_legacy)
-		selected_song = str(game_song)
-		pygame.mixer.music.stop()
-		pygame.mixer.music.load(selected_song)
-		pygame.mixer.music.play(-1)
+	selected_song = str(game_song)
+	pygame.mixer.music.stop()
+	pygame.mixer.music.load(selected_song)
+	pygame.mixer.music.play(-1)
 
 def p1_win():
 	global game_over, match_over, win_color, win_text, p1_wins
@@ -952,13 +949,19 @@ def run_game():
 				win_text = "DRAW!"
 				if theme == "ARES":
 					win_color = DARKER_RED
+					if this_changes_everything.exists():
+						pygame.mixer.music.load("this_changes_everything.mp3")
+						pygame.mixer.music.play(-1)
 				elif theme == "LEGACY":
 					win_color = TEAL
+					if arena.exists():
+						pygame.mixer.music.load("arena.mp3")
+						pygame.mixer.music.play(-1)
 				else:
 					win_color = WHITE
-				if arena.exists():
-					pygame.mixer.music.load("arena.mp3")
-					pygame.mixer.music.play(-1)
+					if arena.exists():
+						pygame.mixer.music.load("arena.mp3")
+						pygame.mixer.music.play(-1)
 			else:
 				# Side impacts: one front hitting another's body
 				# (tighter box — about 40% of the sprite area)
