@@ -4,6 +4,9 @@ import random
 import sys
 from main import *
 
+from obstacle import Obstacle
+from powerup import PowerUp
+
 
 def blit_bike_with_front_at(screen, sprite, pos_back, dir_vector, back_margin=0):
 	dx, dy = dir_vector
@@ -152,7 +155,8 @@ def main_menu():
 						match_over = False
 						menu_running = False
 						waiting = False
-						reset_game()
+						theme_menu()
+						#reset_game()
 					elif event.key == pygame.K_2:
 						single_player = False
 						blue_wins = 0
@@ -160,13 +164,48 @@ def main_menu():
 						match_over = False
 						menu_running = False
 						waiting = False
+						theme_menu()
+						#reset_game()
+					elif event.key == pygame.K_ESCAPE:
+						pygame.quit()
+						sys.exit()
+
+def theme_menu():
+	global theme
+
+	theme_menu_running = True
+
+	while theme_menu_running:
+		WIN.blit(background, (0, 0))
+		show_message("SELECT A THEME", "Press \"1\" for \"'82\" or \"2\" for \"LEGACY\"")
+		waiting = True
+		while waiting:
+			for event in pygame.event.get():
+				if event.type == pygame.QUIT:
+					pygame.quit()
+					sys.exit()
+				if event.type == pygame.KEYDOWN:
+					if event.key == pygame.K_1:
+						theme = "82"
+						theme_menu_running = False
+						waiting = False
+						reset_game()
+					elif event.key == pygame.K_2:
+						theme = "LEGACY"
+						theme_menu_running = False
+						waiting = False
 						reset_game()
 					elif event.key == pygame.K_ESCAPE:
 						pygame.quit()
 						sys.exit()
 
-def draw_tron_grid(surface, color, desired_spacing=40):
-	surface.fill((0, 0, 16))  # dark navy background
+def draw_tron_grid(surface, desired_spacing=40):
+	if theme == "LEGACY":
+		color = TEAL
+		surface.fill((0, 0, 16))
+	elif theme == "82":
+		color = WHITE
+		surface.fill((0, 0, 20))
 
 	width = surface.get_width()
 	height = surface.get_height()
@@ -363,7 +402,7 @@ def generate_obstacles():
 def draw_obstacles():
 	"""Render all obstacles on the screen."""
 	for obstacle in obstacles:
-		obstacle.render(WIN)
+		obstacle.render(WIN, theme)
 
 def spawn_powerup():
 	"""Spawn a new random power-up not overlapping obstacles or trails."""
@@ -446,7 +485,7 @@ def countdown():
 		pygame.mixer.music.load("clu.mp3")
 		pygame.mixer.music.play(-1)
 	for i in range(3, 0, -1):
-		draw_tron_grid(WIN, TEAL)
+		draw_tron_grid(WIN)
 		draw_obstacles()
 		draw_powerups()
 		draw_sprites()
@@ -456,7 +495,7 @@ def countdown():
 		pygame.time.delay(1000)
 
 	# Flash "GO!"
-	draw_tron_grid(WIN, TEAL)
+	draw_tron_grid(WIN)
 	draw_obstacles()
 	draw_powerups()
 	draw_sprites()
@@ -480,7 +519,7 @@ def blue_win():
 
 	# --- Draw final collision frame before pausing ---
 	WIN.fill(BLACK)
-	draw_tron_grid(WIN, TEAL)
+	draw_tron_grid(WIN)
 	for point in player1.trail:
 		pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 	for point in player2.trail:
@@ -518,7 +557,7 @@ def orange_win():
 
 	# --- Draw final collision frame before pausing ---
 	WIN.fill(BLACK)
-	draw_tron_grid(WIN, TEAL)
+	draw_tron_grid(WIN)
 	for point in player1.trail:
 		pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 	for point in player2.trail:
@@ -810,7 +849,7 @@ def run_game():
 
 				# --- Draw final collision frame before pausing ---
 				WIN.fill(BLACK)
-				draw_tron_grid(WIN, TEAL)
+				draw_tron_grid(WIN)
 				for point in player1.trail:
 					pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 				for point in player2.trail:
@@ -848,7 +887,7 @@ def run_game():
 
 			# Render everything
 			WIN.fill(BLACK)
-			draw_tron_grid(WIN, TEAL)
+			draw_tron_grid(WIN)
 			for point in player1.trail:
 				pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 			for point in player2.trail:

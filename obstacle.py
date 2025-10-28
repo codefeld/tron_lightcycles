@@ -1,6 +1,6 @@
 """Obstacle class for TRON Lightcycles game."""
 import pygame
-
+from main import *
 
 class Obstacle:
 	"""Represents an obstacle on the grid."""
@@ -25,8 +25,12 @@ class Obstacle:
 		"""Check if a position is within margin distance of this obstacle."""
 		return (abs(self.x - pos[0]) < margin and abs(self.y - pos[1]) < margin)
 
-	def render(self, screen):
+	def render(self, screen, theme):
 		"""Render the obstacle on the screen."""
 		core = pygame.Rect(self.x, self.y, self.size, self.size)
-		pygame.draw.rect(screen, (0, 0, 0), core)
-		pygame.draw.rect(screen, (255, 255, 255), core, 2)
+		if theme == "LEGACY":
+			pygame.draw.rect(screen, (0, 0, 0), core)
+			pygame.draw.rect(screen, (255, 255, 255), core, 2)
+		elif theme == "82":
+			pygame.draw.rect(screen, (13, 54, 77), core)
+			pygame.draw.rect(screen, (113, 0, 0), core, 2)

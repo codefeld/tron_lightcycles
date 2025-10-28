@@ -2,8 +2,8 @@ import pygame
 from pathlib import Path
 
 from bike import Bike
-from obstacle import Obstacle
-from powerup import PowerUp
+# from obstacle import Obstacle
+# from powerup import PowerUp
 
 from functions import *
 
@@ -32,12 +32,15 @@ GRID_COLOR = (20, 20, 30)
 BLUE = (0, 255, 255)
 ORANGE = (255, 150, 0)
 TEAL = (0, 180, 150)
+WHITE = (255, 255, 255)
 
 blue_wins = 0
 orange_wins = 0
 MAX_SCORE = 5
 match_over = False
 single_player = False
+
+theme = ""
 
 obstacles = []
 OBSTACLE_SIZE = 20
