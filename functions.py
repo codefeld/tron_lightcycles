@@ -171,7 +171,7 @@ def main_menu():
 						sys.exit()
 
 def theme_menu():
-	global theme
+	global theme, BLUE, ORANGE
 
 	theme_menu_running = True
 
@@ -187,11 +187,15 @@ def theme_menu():
 				if event.type == pygame.KEYDOWN:
 					if event.key == pygame.K_1:
 						theme = "82"
+						BLUE = (1, 99, 199)
+						ORANGE = (197, 92, 1)
 						theme_menu_running = False
 						waiting = False
 						reset_game()
 					elif event.key == pygame.K_2:
 						theme = "LEGACY"
+						BLUE = (0, 255, 255)
+						ORANGE = (255, 150, 0)
 						theme_menu_running = False
 						waiting = False
 						reset_game()
@@ -346,7 +350,10 @@ def draw_scoreboard():
 
 def reset_game():
 	"""Reset the game for a new round."""
-	global game_over, game_time_offset, last_powerup_spawn
+	global game_over, game_time_offset, last_powerup_spawn, player1, player2
+
+	player1 = Bike(blue_bike_sprite, BLUE, "Blue")
+	player2 = Bike(orange_bike_sprite, ORANGE, "Orange")
 
 	reset_sprites()
 	clear_powerups()
@@ -485,6 +492,7 @@ def countdown():
 		pygame.mixer.music.load("clu.mp3")
 		pygame.mixer.music.play(-1)
 	for i in range(3, 0, -1):
+		WIN.fill(BLACK)
 		draw_tron_grid(WIN)
 		draw_obstacles()
 		draw_powerups()
@@ -495,6 +503,7 @@ def countdown():
 		pygame.time.delay(1000)
 
 	# Flash "GO!"
+	WIN.fill(BLACK)
 	draw_tron_grid(WIN)
 	draw_obstacles()
 	draw_powerups()

@@ -26,6 +26,8 @@ game_music = [derezzed, fall, disc_wars, the_game_has_changed]
 
 WIDTH, HEIGHT = 900, 900
 
+theme = ""
+
 # Colors
 BLACK = (0, 0, 0)
 GRID_COLOR = (20, 20, 30)
@@ -39,8 +41,6 @@ orange_wins = 0
 MAX_SCORE = 5
 match_over = False
 single_player = False
-
-theme = ""
 
 obstacles = []
 OBSTACLE_SIZE = 20
@@ -87,8 +87,8 @@ blue_bike_sprite = pygame.transform.scale(blue_bike_big, (bike_width, bike_heigh
 orange_bike_sprite = pygame.transform.scale(orange_bike_big, (bike_width, bike_height))
 
 # Create bike instances
-player1 = Bike(blue_bike_sprite, BLUE, "Blue")
-player2 = Bike(orange_bike_sprite, ORANGE, "Orange")
+player1 = ""
+player2 = ""
 
 clock = pygame.time.Clock()
 font = pygame.font.Font(None, 74)
