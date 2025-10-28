@@ -27,6 +27,7 @@ infiltrator = Path("infiltrator.mp3")
 a_question_of_trust = Path("a_question_of_trust.mp3")
 expendable = Path("100%_expendable.mp3")
 echoes = Path("echoes.mp3")
+this_changes_everything = Path("this_changes_everything.mp3")
 game_music_legacy = [derezzed, fall, disc_wars, the_game_has_changed]
 
 WIDTH, HEIGHT = 900, 900
@@ -39,6 +40,8 @@ GRID_COLOR = (20, 20, 30)
 BLUE = (0, 255, 255)
 ORANGE = (255, 150, 0)
 RED = (255, 0, 0)
+DARKER_RED = (200, 0, 0)
+DARKEST_RED = (150, 0, 0)
 TEAL = (0, 180, 150)
 WHITE = (255, 255, 255)
 

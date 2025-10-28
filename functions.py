@@ -175,7 +175,7 @@ def theme_menu():
 
 	while theme_menu_running:
 		WIN.blit(background, (0, 0))
-		show_message("SELECT A THEME", "Press \"1\" for \"82\", \"2\" for \"LEGACY\", or 3 for \"ARES\"")
+		show_message("SELECT A THEME", "Press \"1\" for \"82\", \"2\" for \"LEGACY\", or \"3\" for \"ARES\"")
 		waiting = True
 		while waiting:
 			for event in pygame.event.get():
@@ -215,7 +215,7 @@ def draw_tron_grid(surface, desired_spacing=40):
 		color = WHITE
 		surface.fill((0, 0, 20))
 	elif theme == "ARES":
-		color = RED
+		color = DARKEST_RED
 		surface.fill((16, 0, 0))
 
 	width = surface.get_width()
@@ -518,7 +518,7 @@ def countdown():
 		draw_sprites()
 		draw_scoreboard()
 		if theme == "ARES":
-			show_message(str(i), "", RED)
+			show_message(str(i), "", DARKER_RED)
 		elif theme == "LEGACY":
 			show_message(str(i))
 		elif theme == "82":
@@ -534,7 +534,7 @@ def countdown():
 	draw_sprites()
 	draw_scoreboard()
 	if theme == "ARES":
-		show_message("GO!", "", RED)
+		show_message("GO!", "", DARKER_RED)
 	elif theme == "LEGACY":
 		show_message("GO!")
 	elif theme == "82":
@@ -950,7 +950,12 @@ def run_game():
 				pygame.time.delay(1800)
 
 				win_text = "DRAW!"
-				win_color = TEAL
+				if theme == "ARES":
+					win_color = DARKER_RED
+				elif theme == "LEGACY":
+					win_color = TEAL
+				else:
+					win_color = WHITE
 				if arena.exists():
 					pygame.mixer.music.load("arena.mp3")
 					pygame.mixer.music.play(-1)
@@ -990,8 +995,20 @@ def run_game():
 		else:
 			# --- GAME OVER STATE ---
 			if match_over:
-				show_message(win_text, "Press ESC to quit", win_color)
+				WIN.fill(BLACK)
+				draw_tron_grid(WIN)
+				for point in player1.trail:
+					pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+				for point in player2.trail:
+					if theme == "ARES":
+						pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
+					else:
+						pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+				draw_obstacles()
+				draw_powerups()
+				draw_sprites()
 				draw_scoreboard()
+				show_message(win_text, "Press ESC to quit", win_color)
 				pygame.display.update()
 
 				for event in pygame.event.get():
@@ -1002,8 +1019,20 @@ def run_game():
 							main_menu()
 
 			else:
-				show_message(win_text, "Press SPACE to continue", win_color)
+				WIN.fill(BLACK)
+				draw_tron_grid(WIN)
+				for point in player1.trail:
+					pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+				for point in player2.trail:
+					if theme == "ARES":
+						pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
+					else:
+						pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+				draw_obstacles()
+				draw_powerups()
+				draw_sprites()
 				draw_scoreboard()
+				show_message(win_text, "Press SPACE to continue", win_color)
 				pygame.display.update()
 
 				for event in pygame.event.get():
