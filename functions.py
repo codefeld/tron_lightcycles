@@ -340,9 +340,9 @@ def generate_obstacles():
 			# Create temp obstacle to check for collisions
 			temp_obstacle = Obstacle(x, y, size)
 
-			# Avoid spawning near players
-			if temp_obstacle.is_near_position(player1.pos, 3 * OBSTACLE_SIZE) or \
-			   temp_obstacle.is_near_position(player2.pos, 3 * OBSTACLE_SIZE):
+			# Avoid spawning near players (150 pixel margin)
+			if temp_obstacle.is_near_position(player1.pos, 150) or \
+			   temp_obstacle.is_near_position(player2.pos, 150):
 				attempt += 1
 				continue
 
@@ -365,7 +365,7 @@ def draw_obstacles():
 		obstacle.render(WIN)
 
 def spawn_powerup():
-	"""Spawn a new random power-up not overlapping obstacles."""
+	"""Spawn a new random power-up not overlapping obstacles or trails."""
 	global powerups
 	ptype = random.choice(PowerUp.TYPES)
 	size = POWERUP_SIZE
@@ -376,6 +376,17 @@ def spawn_powerup():
 
 		# Avoid obstacles
 		overlap = any(obs.contains_point(x, y) for obs in obstacles)
+
+		# Avoid trails - check if powerup overlaps with any trail positions
+		if not overlap:
+			for trail_pos in player1.trail + player2.trail:
+				tx, ty = trail_pos
+				# Check if powerup rectangle overlaps with trail block
+				if (x < tx + BLOCK_SIZE and x + size > tx and
+				    y < ty + BLOCK_SIZE and y + size > ty):
+					overlap = True
+					break
+
 		if not overlap:
 			powerups.append(PowerUp(x, y, size, ptype))
 			break
@@ -398,6 +409,35 @@ def check_powerup_collision(pos, bike, current_time):
 		if pu.contains_point(pos[0], pos[1]):
 			pu.apply_effect(bike, current_time)
 			powerups.remove(pu)
+
+def check_trail_powerup_collisions(current_time):
+	"""Check if any trails cross over power-ups."""
+	global powerups
+
+	for pu in powerups[:]:
+		# Check if player1's trail crosses this power-up
+		for trail_pos in player1.trail:
+			tx, ty = trail_pos
+			# Check if trail block overlaps with power-up
+			if (tx < pu.x + pu.size and tx + BLOCK_SIZE > pu.x and
+			    ty < pu.y + pu.size and ty + BLOCK_SIZE > pu.y):
+				pu.apply_effect(player1, current_time)
+				powerups.remove(pu)
+				break
+
+		# Check if still exists (might have been removed by player1)
+		if pu not in powerups:
+			continue
+
+		# Check if player2's trail crosses this power-up
+		for trail_pos in player2.trail:
+			tx, ty = trail_pos
+			# Check if trail block overlaps with power-up
+			if (tx < pu.x + pu.size and tx + BLOCK_SIZE > pu.x and
+			    ty < pu.y + pu.size and ty + BLOCK_SIZE > pu.y):
+				pu.apply_effect(player2, current_time)
+				powerups.remove(pu)
+				break
 
 def countdown():
 	if clu.exists():
@@ -517,19 +557,19 @@ def orange_win():
 				pygame.mixer.music.play(-1)
 
 def ai_control(current_game_time):
-	"""Simple AI for orange bike that avoids walls, trails, and obstacles."""
+	"""AI for orange bike that avoids collisions and seeks power-ups."""
 	# Check turn cooldown
 	if not player2.can_turn(current_game_time, turn_cooldown):
 		return
 
 	possible_dirs = [dirs["UP"], dirs["DOWN"], dirs["LEFT"], dirs["RIGHT"]]
 
-	def will_collide(pos, dir_vec):
+	def will_collide(pos, dir_vec, steps=12):
 		"""Predict if moving forward will cause a collision."""
 		x, y = pos
 		dx, dy = dir_vec
-		# Look 12 steps ahead
-		for i in range(1, 13):
+		# Look ahead specified steps
+		for i in range(1, steps + 1):
 			nx = x + dx * i
 			ny = y + dy * i
 			curr_pos = (int(nx), int(ny))
@@ -544,11 +584,74 @@ def ai_control(current_game_time):
 					return True
 		return False
 
-	# Prefer current direction if safe
+	def get_direction_to_powerup(bike_pos, powerup):
+		"""Calculate which direction moves toward a power-up."""
+		bx, by = bike_pos
+		px, py = powerup.x + powerup.size // 2, powerup.y + powerup.size // 2
+
+		dx = px - bx
+		dy = py - by
+
+		# Determine primary and secondary directions
+		directions = []
+		if abs(dx) > abs(dy):
+			# Horizontal movement is more important
+			if dx > 0:
+				directions.append(dirs["RIGHT"])
+			else:
+				directions.append(dirs["LEFT"])
+			if dy > 0:
+				directions.append(dirs["DOWN"])
+			elif dy < 0:
+				directions.append(dirs["UP"])
+		else:
+			# Vertical movement is more important
+			if dy > 0:
+				directions.append(dirs["DOWN"])
+			else:
+				directions.append(dirs["UP"])
+			if dx > 0:
+				directions.append(dirs["RIGHT"])
+			elif dx < 0:
+				directions.append(dirs["LEFT"])
+
+		return directions
+
+	# Find nearest power-up
+	nearest_powerup = None
+	min_distance = float('inf')
+	if powerups:
+		for powerup in powerups:
+			px, py = powerup.x + powerup.size // 2, powerup.y + powerup.size // 2
+			distance = math.hypot(px - player2.pos[0], py - player2.pos[1])
+			if distance < min_distance:
+				min_distance = distance
+				nearest_powerup = powerup
+
+	# Try to move toward power-up if one exists and is reasonably close
+	if nearest_powerup and min_distance < 300:
+		target_dirs = get_direction_to_powerup(player2.pos, nearest_powerup)
+
+		# Check if we can safely move toward the power-up
+		for target_dir in target_dirs:
+			# Don't turn 180 degrees
+			if (player2.dir == dirs["UP"] and target_dir == dirs["DOWN"]) or \
+			   (player2.dir == dirs["DOWN"] and target_dir == dirs["UP"]) or \
+			   (player2.dir == dirs["LEFT"] and target_dir == dirs["RIGHT"]) or \
+			   (player2.dir == dirs["RIGHT"] and target_dir == dirs["LEFT"]):
+				continue
+
+			# Check if this direction is safe
+			if not will_collide(player2.pos, target_dir, steps=15):
+				player2.dir = target_dir
+				player2.last_turn_time = current_game_time
+				return
+
+	# If current direction is safe, keep going
 	if not will_collide(player2.pos, player2.dir):
 		return
 
-	# Otherwise, pick a safer turn
+	# Otherwise, pick a safer turn (normal collision avoidance)
 	safe_dirs = [d for d in possible_dirs if not will_collide(player2.pos, d)]
 	if safe_dirs:
 		new_dir = random.choice(safe_dirs)
@@ -740,6 +843,7 @@ def run_game():
 			# --- Power-up collisions ---
 			check_powerup_collision(p1_front, player1, current_time)
 			check_powerup_collision(p2_front, player2, current_time)
+			check_trail_powerup_collisions(current_time)
 
 			# Render everything
 			WIN.fill(BLACK)

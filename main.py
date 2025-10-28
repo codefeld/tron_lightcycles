@@ -1,7 +1,4 @@
 import pygame
-import sys
-import math
-import random
 from pathlib import Path
 
 from bike import Bike
