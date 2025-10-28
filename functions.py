@@ -1,6 +1,7 @@
 import math
 import pygame
 import random
+import sys
 from main import *
 
 
