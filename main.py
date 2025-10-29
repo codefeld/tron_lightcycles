@@ -10,6 +10,10 @@ from functions import *
 pygame.init()
 pygame.mixer.init()
 
+weve_got_company = Path("weve_got_company.mp3")
+ring_game_and_escape1 = Path("ring_game_and_escape1.mp3")
+ring_game_and_escape2 = Path("ring_game_and_escape2.mp3")
+
 clu = Path("clu.mp3")
 derezzed_sound_file = Path("derezzed_sound.mp3")
 derezzed = Path("derezzed.mp3")
@@ -22,6 +26,7 @@ armory = Path("armory.mp3")
 rinzler = Path("rinzler.mp3")
 adagio_for_tron = Path("adagio_for_tron.mp3")
 arena = Path("arena.mp3")
+
 init = Path("init.mp3")
 infiltrator = Path("infiltrator.mp3")
 a_question_of_trust = Path("a_question_of_trust.mp3")
@@ -30,6 +35,7 @@ echoes = Path("echoes.mp3")
 this_changes_everything = Path("this_changes_everything.mp3")
 target_identified = Path("target_identified.mp3")
 new_directive = Path("new_directive.mp3")
+
 game_music_legacy = [derezzed, fall, disc_wars, the_game_has_changed]
 game_music_ares = [infiltrator, target_identified]
 

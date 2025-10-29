@@ -207,58 +207,106 @@ def theme_menu():
 						pygame.quit()
 						sys.exit()
 
-def draw_tron_grid(surface, desired_spacing=40):
+def draw_squircle(surface, center_x, center_y, size, color, roundness=0.7):
+	"""Draw a rounded rectangle."""
+	# Calculate corner radius based on roundness parameter
+	# roundness controls how rounded the corners are (0 = square, 1 = very round)
+	corner_radius = int(size * roundness * 0.5)
+
+	# Calculate top-left position from center
+	x = center_x - size / 2
+	y = center_y - size / 2
+
+	# Create rectangle
+	rect = pygame.Rect(x, y, size, size)
+
+	# Draw rounded rectangle outline
+	pygame.draw.rect(surface, color, rect, width=1, border_radius=corner_radius)
+
+def draw_squircle_grid(surface, squircle_size=30, spacing=40, roundness=0.7):
+	"""Draw a background grid of squircles."""
 	if theme == "LEGACY":
-		color = TEAL
-		surface.fill((0, 0, 16))
-	elif theme == "82":
-		color = WHITE
-		surface.fill((0, 0, 20))
+		bg_color = (0, 0, 16)
+		squircle_color = TEAL
 	elif theme == "ARES":
-		color = DARKEST_RED
-		surface.fill((16, 0, 0))
+		bg_color = (20, 0, 0)
+		squircle_color = DARKEST_RED
+
+	surface.fill(bg_color)
 
 	width = surface.get_width()
 	height = surface.get_height()
 
-	# Compute number of full cells that fit
-	cols = width // desired_spacing
-	rows = height // desired_spacing
+	# Create a transparent layer for squircles
+	squircle_layer = pygame.Surface((width, height), pygame.SRCALPHA)
 
-	# Adjust spacing so grid fits exactly
-	spacing_x = width / cols if cols > 0 else width
-	spacing_y = height / rows if rows > 0 else height
+	# Calculate grid dimensions
+	cols = width // spacing
+	rows = height // spacing
 
-	# Draw vertical lines including the final right line
-	for i in range(cols + 1):
-		x = int(i * spacing_x)
-		pygame.draw.line(surface, color, (x, 0), (x, height), 1)
-	# Ensure a final line at the very right edge
-	pygame.draw.line(surface, color, (width - 1, 0), (width - 1, height), 1)
+	# Center the grid
+	offset_x = (width - (cols * spacing)) / 2
+	offset_y = (height - (rows * spacing)) / 2
 
-	# Draw horizontal lines including the final bottom line
-	for j in range(rows + 1):
-		y = int(j * spacing_y)
-		pygame.draw.line(surface, color, (0, y), (width, y), 1)
-	# Ensure a final line at the very bottom edge
-	pygame.draw.line(surface, color, (0, height - 1), (width, height - 1), 1)
+	# Draw squircles in a grid pattern
+	for row in range(rows + 1):
+		for col in range(cols + 1):
+			center_x = offset_x + col * spacing
+			center_y = offset_y + row * spacing
 
-	glow = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-	for i in range(3):
-		alpha = 40 - i * 10
-		glow_color = (color[0], color[1], color[2], alpha)
-		# Vertical glow lines
-		for k in range(cols + 1):
-			x = int(k * spacing_x)
-			pygame.draw.line(glow, glow_color, (x, 0), (x, height), 3 + i)
-		pygame.draw.line(glow, glow_color, (width - 1, 0), (width - 1, height), 3 + i)
-		# Horizontal glow lines
-		for l in range(rows + 1):
-			y = int(l * spacing_y)
-			pygame.draw.line(glow, glow_color, (0, y), (width, y), 3 + i)
-		pygame.draw.line(glow, glow_color, (0, height - 1), (width, height - 1), 3 + i)
+			draw_squircle(squircle_layer, center_x, center_y, squircle_size, squircle_color, roundness)
 
-	surface.blit(glow, (0, 0))
+	# Blit the squircle layer onto the main surface
+	surface.blit(squircle_layer, (0, 0))
+
+def draw_tron_grid(surface, desired_spacing=40):
+	if theme == "LEGACY" or theme == "ARES":
+		draw_squircle_grid(WIN, 90, 120, .1)
+	elif theme == "82":
+		color = WHITE
+		surface.fill((0, 0, 20))
+
+		width = surface.get_width()
+		height = surface.get_height()
+
+		# Compute number of full cells that fit
+		cols = width // desired_spacing
+		rows = height // desired_spacing
+
+		# Adjust spacing so grid fits exactly
+		spacing_x = width / cols if cols > 0 else width
+		spacing_y = height / rows if rows > 0 else height
+
+		# Draw vertical lines including the final right line
+		for i in range(cols + 1):
+			x = int(i * spacing_x)
+			pygame.draw.line(surface, color, (x, 0), (x, height), 1)
+		# Ensure a final line at the very right edge
+		pygame.draw.line(surface, color, (width - 1, 0), (width - 1, height), 1)
+
+		# Draw horizontal lines including the final bottom line
+		for j in range(rows + 1):
+			y = int(j * spacing_y)
+			pygame.draw.line(surface, color, (0, y), (width, y), 1)
+		# Ensure a final line at the very bottom edge
+		pygame.draw.line(surface, color, (0, height - 1), (width, height - 1), 1)
+
+		glow = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+		for i in range(3):
+			alpha = 40 - i * 10
+			glow_color = (color[0], color[1], color[2], alpha)
+			# Vertical glow lines
+			for k in range(cols + 1):
+				x = int(k * spacing_x)
+				pygame.draw.line(glow, glow_color, (x, 0), (x, height), 3 + i)
+			pygame.draw.line(glow, glow_color, (width - 1, 0), (width - 1, height), 3 + i)
+			# Horizontal glow lines
+			for l in range(rows + 1):
+				y = int(l * spacing_y)
+				pygame.draw.line(glow, glow_color, (0, y), (width, y), 3 + i)
+			pygame.draw.line(glow, glow_color, (0, height - 1), (width, height - 1), 3 + i)
+
+		surface.blit(glow, (0, 0))
 
 def show_message(text, subtext="", color=TEAL):
 	# Render text surfaces
@@ -387,7 +435,7 @@ def generate_obstacles():
 	global obstacles
 	obstacles = []
 
-	NUM_OBSTACLES = random.randint(5, 15)
+	NUM_OBSTACLES = random.randint(10, 15)
 	MAX_ATTEMPTS = 100  # Avoid infinite loops
 
 	while len(obstacles) < NUM_OBSTACLES:
@@ -505,10 +553,15 @@ def countdown():
 			pygame.mixer.music.stop()
 			pygame.mixer.music.load("init.mp3")
 			pygame.mixer.music.play(-1)
-	else:
+	elif theme == "LEGACY":
 		if clu.exists():
 			pygame.mixer.music.stop()
 			pygame.mixer.music.load("clu.mp3")
+			pygame.mixer.music.play(-1)
+	elif theme == "82":
+		if ring_game_and_escape1.exists():
+			pygame.mixer.music.stop()
+			pygame.mixer.music.load("ring_game_and_escape1.mp3")
 			pygame.mixer.music.play(-1)
 	for i in range(3, 0, -1):
 		WIN.fill(BLACK)
@@ -543,12 +596,21 @@ def countdown():
 	pygame.time.delay(800)
 	if theme == "ARES":
 		game_song = random.choice(game_music_ares)
+		selected_song = str(game_song)
+		pygame.mixer.music.stop()
+		pygame.mixer.music.load(selected_song)
+		pygame.mixer.music.play(-1)
+	elif theme == "82":
+		if ring_game_and_escape2.exists():
+			pygame.mixer.music.stop()
+			pygame.mixer.music.load("ring_game_and_escape2.mp3")
+			pygame.mixer.music.play(-1)
 	else:
 		game_song = random.choice(game_music_legacy)
-	selected_song = str(game_song)
-	pygame.mixer.music.stop()
-	pygame.mixer.music.load(selected_song)
-	pygame.mixer.music.play(-1)
+		selected_song = str(game_song)
+		pygame.mixer.music.stop()
+		pygame.mixer.music.load(selected_song)
+		pygame.mixer.music.play(-1)
 
 def p1_win():
 	global game_over, match_over, win_color, win_text, p1_wins
@@ -702,6 +764,18 @@ def ai_control(current_game_time):
 			for obs in obstacles:
 				if obs.contains_point(nx, ny):
 					return True
+
+			# Check for head-on collision with player1
+			# Calculate where player1 will be in i steps
+			p1_dx, p1_dy = player1.dir
+			p1_future_x = player1.pos[0] + p1_dx * i
+			p1_future_y = player1.pos[1] + p1_dy * i
+
+			# If bikes will be close to each other, it's a collision risk
+			distance = math.hypot(nx - p1_future_x, ny - p1_future_y)
+			if distance < 30:  # Within collision range
+				return True
+
 		return False
 
 	def get_direction_to_powerup(bike_pos, powerup):
@@ -737,6 +811,26 @@ def ai_control(current_game_time):
 
 		return directions
 
+	def is_powerup_reachable(bike_pos, powerup):
+		"""Check if power-up is reachable by testing if we can get closer to it."""
+		target_dirs = get_direction_to_powerup(bike_pos, powerup)
+
+		# Check if ANY of the directions toward the power-up are safe
+		for target_dir in target_dirs:
+			# Don't turn 180 degrees from current direction
+			if (player2.dir == dirs["UP"] and target_dir == dirs["DOWN"]) or \
+			   (player2.dir == dirs["DOWN"] and target_dir == dirs["UP"]) or \
+			   (player2.dir == dirs["LEFT"] and target_dir == dirs["RIGHT"]) or \
+			   (player2.dir == dirs["RIGHT"] and target_dir == dirs["LEFT"]):
+				continue
+
+			# If this direction is safe, power-up is potentially reachable
+			if not will_collide(bike_pos, target_dir, steps=15):
+				return True
+
+		# No safe route found toward the power-up
+		return False
+
 	# Find nearest power-up
 	nearest_powerup = None
 	min_distance = float('inf')
@@ -748,8 +842,8 @@ def ai_control(current_game_time):
 				min_distance = distance
 				nearest_powerup = powerup
 
-	# Try to move toward power-up if one exists and is reasonably close
-	if nearest_powerup and min_distance < 300:
+	# Try to move toward power-up if one exists, is reasonably close, AND is reachable
+	if nearest_powerup and min_distance < 300 and is_powerup_reachable(player2.pos, nearest_powerup):
 		target_dirs = get_direction_to_powerup(player2.pos, nearest_powerup)
 
 		# Check if we can safely move toward the power-up
@@ -771,18 +865,69 @@ def ai_control(current_game_time):
 	if not will_collide(player2.pos, player2.dir):
 		return
 
-	# Otherwise, pick a safer turn (normal collision avoidance)
+	# Otherwise, pick the safest turn (evaluate all safe directions)
+	def evaluate_direction_safety(direction, max_steps=50):
+		"""Calculate how many steps the AI can safely move in a direction."""
+		x, y = player2.pos
+		dx, dy = direction
+		steps = 0
+
+		for i in range(1, max_steps + 1):
+			nx = x + dx * i
+			ny = y + dy * i
+
+			# Check if this position is safe
+			if nx < 0 or nx >= WIDTH or ny < 0 or ny >= HEIGHT:
+				break
+
+			curr_pos = (int(nx), int(ny))
+			if curr_pos in player1.trail_set or curr_pos in player2.trail_set:
+				break
+
+			# Check obstacles
+			collision_with_obstacle = False
+			for obs in obstacles:
+				if obs.contains_point(nx, ny):
+					collision_with_obstacle = True
+					break
+
+			if collision_with_obstacle:
+				break
+
+			# Check bike collision
+			p1_dx, p1_dy = player1.dir
+			p1_future_x = player1.pos[0] + p1_dx * i
+			p1_future_y = player1.pos[1] + p1_dy * i
+			if math.hypot(nx - p1_future_x, ny - p1_future_y) < 30:
+				break
+
+			steps = i
+
+		return steps
+
 	safe_dirs = [d for d in possible_dirs if not will_collide(player2.pos, d)]
+
+	# Filter out 180-degree turns
+	safe_dirs = [d for d in safe_dirs if not (
+		(player2.dir == dirs["UP"] and d == dirs["DOWN"]) or
+		(player2.dir == dirs["DOWN"] and d == dirs["UP"]) or
+		(player2.dir == dirs["LEFT"] and d == dirs["RIGHT"]) or
+		(player2.dir == dirs["RIGHT"] and d == dirs["LEFT"])
+	)]
+
 	if safe_dirs:
-		new_dir = random.choice(safe_dirs)
-		# Prevent turning back directly
-		if (player2.dir == dirs["UP"] and new_dir == dirs["DOWN"]) or \
-		   (player2.dir == dirs["DOWN"] and new_dir == dirs["UP"]) or \
-		   (player2.dir == dirs["LEFT"] and new_dir == dirs["RIGHT"]) or \
-		   (player2.dir == dirs["RIGHT"] and new_dir == dirs["LEFT"]):
-			pass
-		else:
-			player2.dir = new_dir
+		# Evaluate safety of each direction and pick the safest
+		best_dir = None
+		best_safety = -1
+
+		for direction in safe_dirs:
+			safety = evaluate_direction_safety(direction)
+			if safety > best_safety:
+				best_safety = safety
+				best_dir = direction
+
+		if best_dir:
+			player2.dir = best_dir
 			player2.last_turn_time = current_game_time
 
 def step_move_player(bike, other_bike, effective_speed, sprite_width, back_margin=4):
