@@ -139,7 +139,7 @@ def main_menu():
 		WIN.blit(background, (0, 0))
 		show_message("TRON LIGHTCYCLES", "Press \"1\" for 1 Player or \"2\" for 2 Players")
 		if armory.exists():
-			pygame.mixer.music.load("armory.mp3")
+			pygame.mixer.music.load("music/armory.mp3")
 			pygame.mixer.music.play(-1)
 		waiting = True
 		while waiting:
@@ -185,8 +185,8 @@ def theme_menu():
 				if event.type == pygame.KEYDOWN:
 					if event.key == pygame.K_1:
 						theme = "82"
-						BLUE = (1, 99, 199)
-						ORANGE = (197, 92, 1)
+						BLUE = (9, 114, 220)
+						ORANGE = (202, 93, 0)
 						theme_menu_running = False
 						waiting = False
 						reset_game()
@@ -551,17 +551,17 @@ def countdown():
 	if theme == "ARES":
 		if init.exists():
 			pygame.mixer.music.stop()
-			pygame.mixer.music.load("init.mp3")
+			pygame.mixer.music.load("music/init.mp3")
 			pygame.mixer.music.play(-1)
 	elif theme == "LEGACY":
 		if clu.exists():
 			pygame.mixer.music.stop()
-			pygame.mixer.music.load("clu.mp3")
+			pygame.mixer.music.load("music/clu.mp3")
 			pygame.mixer.music.play(-1)
 	elif theme == "82":
 		if ring_game_and_escape1.exists():
 			pygame.mixer.music.stop()
-			pygame.mixer.music.load("ring_game_and_escape1.mp3")
+			pygame.mixer.music.load("music/ring_game_and_escape1.mp3")
 			pygame.mixer.music.play(-1)
 	for i in range(3, 0, -1):
 		WIN.fill(BLACK)
@@ -603,7 +603,7 @@ def countdown():
 	elif theme == "82":
 		if ring_game_and_escape2.exists():
 			pygame.mixer.music.stop()
-			pygame.mixer.music.load("ring_game_and_escape2.mp3")
+			pygame.mixer.music.load("music/ring_game_and_escape2.mp3")
 			pygame.mixer.music.play(-1)
 	else:
 		game_song = random.choice(game_music_legacy)
@@ -614,9 +614,14 @@ def countdown():
 
 def p1_win():
 	global game_over, match_over, win_color, win_text, p1_wins
-	if derezzed_sound_file.exists():
-		pygame.mixer.music.stop()
-		derezzed_sound.play()
+	if theme == "82":
+		if derezzed_sound_82_file.exists():
+			pygame.mixer.music.stop()
+			derezzed_sound_82.play()
+	else:
+		if derezzed_sound_file.exists():
+			pygame.mixer.music.stop()
+			derezzed_sound.play()
 	game_over = True
 
 	# --- Draw final collision frame before pausing ---
@@ -636,7 +641,10 @@ def p1_win():
 	pygame.display.update()
 
 	# Small pause to show the collision frame
-	pygame.time.delay(1800)
+	if theme == "82":
+		pygame.time.delay(2600)
+	else:
+		pygame.time.delay(1800)
 
 	p1_wins += 1
 	win_color = BLUE
@@ -646,28 +654,41 @@ def p1_win():
 		win_text = "TEAM BLUE WINS THE MATCH!"
 		if theme == "ARES":
 			if new_directive.exists():
-				pygame.mixer.music.load("new_directive.mp3")
+				pygame.mixer.music.load("music/new_directive.mp3")
 				pygame.mixer.music.play(-1)
-		else:
+		elif theme == "LEGACY":
 			if end_titles.exists():
-				pygame.mixer.music.load("end_titles.mp3")
+				pygame.mixer.music.load("music/end_titles.mp3")
+				pygame.mixer.music.play(-1)
+		elif theme == "82":
+			if ending_titles2.exists():
+				pygame.mixer.music.load("music/ending_titles2.mp3")
 				pygame.mixer.music.play(-1)
 	else:
 		win_text = "TEAM BLUE WINS!"
 		if theme == "ARES":
 			if a_question_of_trust.exists():
-				pygame.mixer.music.load("a_question_of_trust.mp3")
+				pygame.mixer.music.load("music/a_question_of_trust.mp3")
 				pygame.mixer.music.play(-1)
-		else:
+		elif theme == "LEGACY":
 			if the_grid.exists():
-				pygame.mixer.music.load("the_grid.mp3")
+				pygame.mixer.music.load("music/the_grid.mp3")
+				pygame.mixer.music.play(-1)
+		elif theme == "82":
+			if ending_titles1.exists():
+				pygame.mixer.music.load("music/ending_titles1.mp3")
 				pygame.mixer.music.play(-1)
 
 def p2_win():
 	global game_over, match_over, win_color, win_text, p2_wins
-	if derezzed_sound_file.exists():
-		pygame.mixer.music.stop()
-		derezzed_sound.play()
+	if theme == "82":
+		if derezzed_sound_82_file.exists():
+			pygame.mixer.music.stop()
+			derezzed_sound_82.play()
+	else:
+		if derezzed_sound_file.exists():
+			pygame.mixer.music.stop()
+			derezzed_sound.play()
 	game_over = True
 
 	# --- Draw final collision frame before pausing ---
@@ -687,7 +708,10 @@ def p2_win():
 	pygame.display.update()
 
 	# Small pause to show the collision frame
-	pygame.time.delay(1800)
+	if theme == "82":
+		pygame.time.delay(2600)
+	else:
+		pygame.time.delay(1800)
 
 	p2_wins += 1
 	if theme == "ARES":
@@ -704,38 +728,59 @@ def p2_win():
 		if single_player:
 			if theme == "ARES":
 				if echoes.exists():
-					pygame.mixer.music.load("echoes.mp3")
+					pygame.mixer.music.load("music/echoes.mp3")
 					pygame.mixer.music.play(-1)
-			else:
+			elif theme == "LEGACY":
 				if adagio_for_tron.exists():
-					pygame.mixer.music.load("adagio_for_tron.mp3")
+					pygame.mixer.music.load("music/adagio_for_tron.mp3")
+					pygame.mixer.music.play(-1)
+			elif theme == "82":
+				if sea_of_simulation.exists():
+					pygame.mixer.music.load("music/sea_of_simulation.mp3")
 					pygame.mixer.music.play(-1)
 		else:
 			if theme == "ARES":
 				if new_directive.exists():
-					pygame.mixer.music.load("new_directive.mp3")
+					pygame.mixer.music.load("music/new_directive.mp3")
 					pygame.mixer.music.play(-1)
-			else:
+			elif theme == "LEGACY":
 				if end_titles.exists():
-					pygame.mixer.music.load("end_titles.mp3")
+					pygame.mixer.music.load("music/end_titles.mp3")
+					pygame.mixer.music.play(-1)
+			elif theme == "82":
+				if ending_titles2.exists():
+					pygame.mixer.music.load("music/ending_titles2.mp3")
 					pygame.mixer.music.play(-1)
 	else:
 		if theme == "ARES":
 			win_text = "TEAM RED WINS!"
 		else:
 			win_text = "TEAM ORANGE WINS!"
-		if theme == "ARES" and single_player:
+		if single_player:
+			if theme == "ARES":
 				if expendable.exists():
-					pygame.mixer.music.load("100%_expendable.mp3")
+					pygame.mixer.music.load("music/100%_expendable.mp3")
+					pygame.mixer.music.play(-1)
+			elif theme == "LEGACY":
+				if rinzler.exists():
+					pygame.mixer.music.load("music/rinzler.mp3")
+					pygame.mixer.music.play(-1)
+			elif theme == "82":
+				if weve_got_company.exists():
+					pygame.mixer.music.load("music/weve_got_company.mp3")
 					pygame.mixer.music.play(-1)
 		else:
 			if theme == "ARES":
 				if a_question_of_trust.exists():
-					pygame.mixer.music.load("a_question_of_trust.mp3")
+					pygame.mixer.music.load("music/a_question_of_trust.mp3")
 					pygame.mixer.music.play(-1)
-			else:
-				if rinzler.exists():
-					pygame.mixer.music.load("rinzler.mp3")
+			elif theme == "LEGACY":
+				if the_grid.exists():
+					pygame.mixer.music.load("music/the_grid.mp3")
+					pygame.mixer.music.play(-1)
+			elif theme == "82":
+				if ending_titles1.exists():
+					pygame.mixer.music.load("music/ending_titles1.mp3")
 					pygame.mixer.music.play(-1)
 
 def ai_control(current_game_time):
@@ -1068,9 +1113,14 @@ def run_game():
 			# --- Bike-to-Bike Collision Check (tight hitboxes) ---
 			# Head-on collision threshold (fronts nearly touching)
 			if math.hypot(p1_front[0] - p2_front[0], p1_front[1] - p2_front[1]) < bike_width * 0.25:
-				if derezzed_sound_file.exists():
-					pygame.mixer.music.stop()
-					derezzed_sound.play()
+				if theme == "82":
+					if derezzed_sound_82_file.exists():
+						pygame.mixer.music.stop()
+						derezzed_sound_82.play()
+				else:
+					if derezzed_sound_file.exists():
+						pygame.mixer.music.stop()
+						derezzed_sound.play()
 				game_over = True
 
 				# --- Draw final collision frame before pausing ---
@@ -1090,23 +1140,26 @@ def run_game():
 				pygame.display.update()
 
 				# Small pause to show the collision frame
-				pygame.time.delay(1800)
+				if theme == "82":
+					pygame.time.delay(2600)
+				else:
+					pygame.time.delay(1800)
 
 				win_text = "DRAW!"
 				if theme == "ARES":
 					win_color = DARKER_RED
 					if this_changes_everything.exists():
-						pygame.mixer.music.load("this_changes_everything.mp3")
+						pygame.mixer.music.load("music/this_changes_everything.mp3")
 						pygame.mixer.music.play(-1)
 				elif theme == "LEGACY":
 					win_color = TEAL
 					if arena.exists():
-						pygame.mixer.music.load("arena.mp3")
+						pygame.mixer.music.load("music/arena.mp3")
 						pygame.mixer.music.play(-1)
 				else:
 					win_color = WHITE
 					if arena.exists():
-						pygame.mixer.music.load("arena.mp3")
+						pygame.mixer.music.load("music/arena.mp3")
 						pygame.mixer.music.play(-1)
 			else:
 				# Side impacts: one front hitting another's body

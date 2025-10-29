@@ -10,31 +10,35 @@ from functions import *
 pygame.init()
 pygame.mixer.init()
 
-weve_got_company = Path("weve_got_company.mp3")
-ring_game_and_escape1 = Path("ring_game_and_escape1.mp3")
-ring_game_and_escape2 = Path("ring_game_and_escape2.mp3")
+derezzed_sound_82_file = Path("music/derezzed_sound_82.mp3")
+weve_got_company = Path("music/weve_got_company.mp3")
+ring_game_and_escape1 = Path("music/ring_game_and_escape1.mp3")
+ring_game_and_escape2 = Path("music/ring_game_and_escape2.mp3")
+sea_of_simulation = Path("music/sea_of_simulation.mp3")
+ending_titles1 = Path("music/ending_titles1.mp3")
+ending_titles2 = Path("music/ending_titles2.mp3")
 
-clu = Path("clu.mp3")
-derezzed_sound_file = Path("derezzed_sound.mp3")
-derezzed = Path("derezzed.mp3")
-end_titles = Path("end_titles.mp3")
-the_game_has_changed = Path("the_game_has_changed.mp3")
-the_grid = Path("the_grid.mp3")
-fall = Path("fall.mp3")
-disc_wars = Path("disc_wars.mp3")
-armory = Path("armory.mp3")
-rinzler = Path("rinzler.mp3")
-adagio_for_tron = Path("adagio_for_tron.mp3")
-arena = Path("arena.mp3")
+clu = Path("music/clu.mp3")
+derezzed_sound_file = Path("music/derezzed_sound.mp3")
+derezzed = Path("music/derezzed.mp3")
+end_titles = Path("music/end_titles.mp3")
+the_game_has_changed = Path("music/the_game_has_changed.mp3")
+the_grid = Path("music/the_grid.mp3")
+fall = Path("music/fall.mp3")
+disc_wars = Path("music/disc_wars.mp3")
+armory = Path("music/armory.mp3")
+rinzler = Path("music/rinzler.mp3")
+adagio_for_tron = Path("music/adagio_for_tron.mp3")
+arena = Path("music/arena.mp3")
 
-init = Path("init.mp3")
-infiltrator = Path("infiltrator.mp3")
-a_question_of_trust = Path("a_question_of_trust.mp3")
-expendable = Path("100%_expendable.mp3")
-echoes = Path("echoes.mp3")
-this_changes_everything = Path("this_changes_everything.mp3")
-target_identified = Path("target_identified.mp3")
-new_directive = Path("new_directive.mp3")
+init = Path("music/init.mp3")
+infiltrator = Path("music/infiltrator.mp3")
+a_question_of_trust = Path("music/a_question_of_trust.mp3")
+expendable = Path("music/100%_expendable.mp3")
+echoes = Path("music/echoes.mp3")
+this_changes_everything = Path("music/this_changes_everything.mp3")
+target_identified = Path("music/target_identified.mp3")
+new_directive = Path("music/new_directive.mp3")
 
 game_music_legacy = [derezzed, fall, disc_wars, the_game_has_changed]
 game_music_ares = [infiltrator, target_identified]
@@ -84,7 +88,10 @@ SPEED = 5
 BLOCK_SIZE = 5
 
 if derezzed_sound_file.exists():
-	derezzed_sound = pygame.mixer.Sound("derezzed_sound.mp3")
+	derezzed_sound = pygame.mixer.Sound("music/derezzed_sound.mp3")
+
+if derezzed_sound_82_file.exists():
+	derezzed_sound_82 = pygame.mixer.Sound("music/derezzed_sound_82.mp3")
 
 dirs = {
 	"UP": (0, -SPEED),
