@@ -9,8 +9,17 @@ from functions import *
 
 pygame.init()
 pygame.mixer.init()
+pygame.mixer.set_num_channels(5)
+
+turn_channel = pygame.mixer.Channel(0)
+derezz_channel = pygame.mixer.Channel(0)
+
+turn_channel.set_volume(0.5)
+
+derezz_channel.set_volume(1)
 
 derezzed_sound_82_file = Path("music/derezzed_sound_82.mp3")
+turn_sound_82_file = Path("music/turn_sound_82.mp3")
 weve_got_company = Path("music/weve_got_company.mp3")
 ring_game_and_escape1 = Path("music/ring_game_and_escape1.mp3")
 ring_game_and_escape2 = Path("music/ring_game_and_escape2.mp3")
@@ -39,6 +48,8 @@ echoes = Path("music/echoes.mp3")
 this_changes_everything = Path("music/this_changes_everything.mp3")
 target_identified = Path("music/target_identified.mp3")
 new_directive = Path("music/new_directive.mp3")
+building_better_worlds = Path("music/building_better_worlds.mp3")
+in_the_image_of = Path("music/in_the_image_of.mp3")
 
 game_music_legacy = [derezzed, fall, disc_wars, the_game_has_changed]
 game_music_ares = [infiltrator, target_identified]
@@ -55,6 +66,7 @@ ORANGE = (255, 150, 0)
 RED = (255, 0, 0)
 DARKER_RED = (200, 0, 0)
 DARKEST_RED = (150, 0, 0)
+LIGHT_RED = (255, 50, 50)
 TEAL = (0, 180, 150)
 WHITE = (255, 255, 255)
 
@@ -79,7 +91,7 @@ first_powerup_spawned = False
 # Screen setup
 info = pygame.display.Info()
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
-background = pygame.image.load("grid.jpg")
+background = pygame.image.load("images/grid.jpg")
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 pygame.display.set_caption("TRON Lightcycles")
 
@@ -93,6 +105,9 @@ if derezzed_sound_file.exists():
 if derezzed_sound_82_file.exists():
 	derezzed_sound_82 = pygame.mixer.Sound("music/derezzed_sound_82.mp3")
 
+if turn_sound_82_file.exists():
+	turn_sound_82 = pygame.mixer.Sound("music/turn_sound_82.mp3")
+
 dirs = {
 	"UP": (0, -SPEED),
 	"DOWN": (0, SPEED),
@@ -101,18 +116,50 @@ dirs = {
 }
 
 # Load sprites
-blue_bike_big = pygame.image.load("blue_cycle.png").convert_alpha()
-orange_bike_big = pygame.image.load("orange_cycle.png").convert_alpha()
-red_bike_big = pygame.image.load("red_cycle.png").convert_alpha()
-blue_bike_big = pygame.transform.flip(blue_bike_big, True, False)
-orange_bike_big = pygame.transform.flip(orange_bike_big, True, False)
-red_bike_big = pygame.transform.flip(red_bike_big, True, False)
-scale_factor = .05
-bike_width = int(blue_bike_big.get_width() * scale_factor)
-bike_height = int(blue_bike_big.get_height() * scale_factor)
-blue_bike_sprite = pygame.transform.scale(blue_bike_big, (bike_width, bike_height))
-orange_bike_sprite = pygame.transform.scale(orange_bike_big, (bike_width, bike_height))
-red_bike_sprite = pygame.transform.scale(red_bike_big, (bike_width, bike_height))
+# blue_bike_big = pygame.image.load("images/blue_cycle.png").convert_alpha()
+# orange_bike_big = pygame.image.load("images/orange_cycle.png").convert_alpha()
+# red_bike_big = pygame.image.load("images/red_cycle.png").convert_alpha()
+
+# blue_bike_big = pygame.transform.flip(blue_bike_big, True, False)
+# orange_bike_big = pygame.transform.flip(orange_bike_big, True, False)
+# red_bike_big = pygame.transform.flip(red_bike_big, True, False)
+
+# scale_factor = .05
+# bike_width = int(blue_bike_big.get_width() * scale_factor)
+# bike_height = int(blue_bike_big.get_height() * scale_factor)
+
+# blue_bike_sprite = pygame.transform.scale(blue_bike_big, (bike_width, bike_height))
+# orange_bike_sprite = pygame.transform.scale(orange_bike_big, (bike_width, bike_height))
+# red_bike_sprite = pygame.transform.scale(red_bike_big, (bike_width, bike_height))
+
+blue_82_big = pygame.image.load("images/blue_lightcycle_82.png").convert_alpha()
+blue_82_big = pygame.transform.flip(blue_82_big, True, False)
+orange_82_big = pygame.image.load("images/orange_lightcycle_82.png").convert_alpha()
+orange_82_big = pygame.transform.flip(orange_82_big, True, False)
+
+blue_legacy_big = pygame.image.load("images/blue_lightcycle_legacy.png").convert_alpha()
+blue_legacy_big = pygame.transform.flip(blue_legacy_big, True, False)
+orange_legacy_big = pygame.image.load("images/orange_lightcycle_legacy.png").convert_alpha()
+orange_legacy_big = pygame.transform.flip(orange_legacy_big, True, False)
+
+red_ares_big = pygame.image.load("images/red_lightcycle_ares.png").convert_alpha()
+red_ares_big = pygame.transform.flip(red_ares_big, True, False)
+
+scale_factor_82 = .05
+width_82 = int(blue_82_big.get_width() * scale_factor_82)
+height_82 = int(blue_82_big.get_height() * scale_factor_82)
+
+legacy_scale_factor = .04
+legacy_width = int(blue_legacy_big.get_width() * legacy_scale_factor)
+legacy_height = int(blue_legacy_big.get_height() * legacy_scale_factor)
+
+blue_82_sprite = pygame.transform.scale(blue_82_big, (width_82, height_82))
+orange_82_sprite = pygame.transform.scale(orange_82_big, (width_82, height_82))
+
+blue_legacy_sprite = pygame.transform.scale(blue_legacy_big, (legacy_width, legacy_height))
+orange_legacy_sprite = pygame.transform.scale(orange_legacy_big, (legacy_width, legacy_height))
+
+red_ares_sprite = pygame.transform.scale(red_ares_big, (legacy_width, legacy_height))
 
 # Create bike instances
 player1 = ""
