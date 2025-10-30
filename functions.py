@@ -1276,48 +1276,80 @@ def step_move_player(bike, other_bike, effective_speed, sprite_width, sprite_hei
 	# Helper function to check if a position would cause collision
 	def would_collide(test_x, test_y):
 		"""Check if moving to position (test_x, test_y) would cause a collision."""
-		# Calculate bike center at test position
-		back_center_x = test_x + 2
-		back_center_y = test_y + 2
-
-		local_center = pygame.math.Vector2((sprite_width/2 - back_margin, 0))
-		rotated_center = local_center.rotate(-angle_deg)
-
-		center_x = back_center_x + rotated_center.x
-		center_y = back_center_y + rotated_center.y
-
 		# Check wall collisions (using front position)
 		fx = test_x + nx * front_length
 		fy = test_y + ny * front_length
 		if fx < 0 or fx >= WIDTH or fy < 0 or fy >= HEIGHT:
 			return True
 
-		# Expand trail/obstacle rectangles so collision is detected at edge contact
-		# Trail blocks are BLOCK_SIZE (5px). To detect collision when hitbox edge touches
-		# trail edge (not center), we need to inflate by half the trail size
-		# This way the expanded trail reaches to where the bike's edge would be
-		inflation = BLOCK_SIZE // 2  # Half trail size on each side for edge detection
+		# Calculate front hitbox position
+		# The front hitbox is a small rectangle at the tip of the bike
+		# positioned at 85% of the bike's length from the back
+		front_offset = sprite_width * 0.85
+		front_center_x = test_x + 2 + nx * front_offset
+		front_center_y = test_y + 2 + ny * front_offset
+
+		# Front hitbox dimensions - small rectangle at the tip
+		# Width is 15% of bike length, height is full bike width
+		front_hitbox_width = sprite_width * 0.25
+		front_hitbox_height = tight_height
+
+		# Also calculate body hitbox for turn collision detection
+		# The body extends from the back position
+		back_margin = 4
+		body_center_offset = sprite_width / 2 - back_margin
+		body_center_x = test_x + 2 + nx * body_center_offset
+		body_center_y = test_y + 2 + ny * body_center_offset
+		body_width = sprite_width * 0.9
+		body_height = tight_height
+
+		# Create a broad-phase AABB for the front of the bike to quickly reject distant objects
+		# This optimization dramatically improves performance with long trails
+		front_aabb = pygame.Rect(0, 0, front_hitbox_width + 20, front_hitbox_height + 20)
+		front_aabb.center = (front_center_x, front_center_y)
+
+		# Also create a broad-phase AABB for the body
+		body_aabb_broad = pygame.Rect(0, 0, body_width + 20, body_height + 20)
+		body_aabb_broad.center = (body_center_x, body_center_y)
 
 		# Check other bike's trail (all positions)
+		# No inflation - hitboxes must actually touch
 		for trail_pos in other_bike.trail:
 			trail_rect = pygame.Rect(trail_pos[0], trail_pos[1], BLOCK_SIZE, BLOCK_SIZE)
-			trail_rect.inflate_ip(inflation * 2, inflation * 2)  # Expand by inflation on all sides
-			if rotated_rect_intersects_rect(center_x, center_y, tight_width, tight_height, angle_deg, trail_rect):
-				return True
+			# Quick AABB rejection test - skip expensive rotated rect check if not close
+			# Check both front and body AABBs
+			if front_aabb.colliderect(trail_rect):
+				# Check if front hitbox intersects trail
+				if rotated_rect_intersects_rect(front_center_x, front_center_y, front_hitbox_width, front_hitbox_height, angle_deg, trail_rect):
+					return True
+			if body_aabb_broad.colliderect(trail_rect):
+				# Also check if body hitbox intersects trail (important for turns)
+				if rotated_rect_intersects_rect(body_center_x, body_center_y, body_width, body_height, angle_deg, trail_rect):
+					return True
 
 		# Check own trail (skip recent positions to avoid false collisions)
 		own_trail_to_check = bike.trail[:-TRAIL_SAFETY_MARGIN] if len(bike.trail) > TRAIL_SAFETY_MARGIN else []
 		for trail_pos in own_trail_to_check:
 			trail_rect = pygame.Rect(trail_pos[0], trail_pos[1], BLOCK_SIZE, BLOCK_SIZE)
-			trail_rect.inflate_ip(inflation * 2, inflation * 2)  # Expand by inflation on all sides
-			if rotated_rect_intersects_rect(center_x, center_y, tight_width, tight_height, angle_deg, trail_rect):
-				return True
+			# Quick AABB rejection test - skip expensive rotated rect check if not close
+			# Check both front and body AABBs
+			if front_aabb.colliderect(trail_rect):
+				# Check if front hitbox intersects trail
+				if rotated_rect_intersects_rect(front_center_x, front_center_y, front_hitbox_width, front_hitbox_height, angle_deg, trail_rect):
+					return True
+			if body_aabb_broad.colliderect(trail_rect):
+				# Also check if body hitbox intersects trail (important for turns)
+				if rotated_rect_intersects_rect(body_center_x, body_center_y, body_width, body_height, angle_deg, trail_rect):
+					return True
 
 		# Check obstacle collisions
 		for obs in obstacles:
 			obs_rect = pygame.Rect(obs.x, obs.y, obs.size, obs.size)
-			obs_rect.inflate_ip(inflation * 2, inflation * 2)  # Expand by inflation on all sides
-			if rotated_rect_intersects_rect(center_x, center_y, tight_width, tight_height, angle_deg, obs_rect):
+			# Quick AABB rejection test - skip expensive rotated rect check if not close
+			if not front_aabb.colliderect(obs_rect):
+				continue
+			# Check if front hitbox intersects obstacle
+			if rotated_rect_intersects_rect(front_center_x, front_center_y, front_hitbox_width, front_hitbox_height, angle_deg, obs_rect):
 				return True
 
 		return False
@@ -1469,24 +1501,29 @@ def run_game():
 			p1_front = player1.get_front_pos(sprite_w)
 			p2_front = player2.get_front_pos(sprite_w)
 
-			# Check bike-to-bike collision using rotated rectangles
-			# Calculate center positions and angles for both bikes
+			# Check bike-to-bike collision - front hitbox vs full body
+			# Rule: If the front of a bike touches any part of another bike, the bike whose front is touching loses
 			dx1, dy1 = player1.dir
 			mag1 = math.hypot(dx1, dy1)
 			dx2, dy2 = player2.dir
 			mag2 = math.hypot(dx2, dy2)
 
 			bikes_collided = False
+			collision_winner = None  # Will be set to player who wins, or None for draw
+
 			if mag1 > 0 and mag2 > 0:  # Both bikes are moving
+				# Normalize direction vectors
+				nx1, ny1 = dx1 / mag1, dy1 / mag1
+				nx2, ny2 = dx2 / mag2, dy2 / mag2
+
 				# Calculate rotation angles
 				rad1 = math.atan2(-dy1, dx1)
 				angle1_deg = math.degrees(rad1)
 				rad2 = math.atan2(-dy2, dx2)
 				angle2_deg = math.degrees(rad2)
 
-				# Calculate sprite centers
+				# Calculate full body hitbox centers for both bikes
 				back_margin = 4
-
 				back_center_x1 = player1.pos[0] + 2
 				back_center_y1 = player1.pos[1] + 2
 				back_center_x2 = player2.pos[0] + 2
@@ -1502,74 +1539,109 @@ def run_game():
 				center_x2 = back_center_x2 + rotated_center2.x
 				center_y2 = back_center_y2 + rotated_center2.y
 
-				# Use tight hitboxes (90% to ensure immediate detection when hitboxes touch)
-				tight_width = sprite_w * 0.9
-				tight_height = sprite_h * 0.9
+				# Full body hitboxes (90% of sprite size)
+				full_body_width = sprite_w * 0.9
+				full_body_height = sprite_h * 0.9
 
-				# Check collision between two rotated rectangles
-				# Create AABBs for both bikes
-				p1_aabb = pygame.Rect(0, 0, tight_width, tight_height)
-				p1_aabb.center = (center_x1, center_y1)
-				p2_aabb = pygame.Rect(0, 0, tight_width, tight_height)
-				p2_aabb.center = (center_x2, center_y2)
+				# Calculate front hitbox positions (at 85% of bike length)
+				front_offset = sprite_w * 0.85
+				front1_x = player1.pos[0] + 2 + nx1 * front_offset
+				front1_y = player1.pos[1] + 2 + ny1 * front_offset
+				front2_x = player2.pos[0] + 2 + nx2 * front_offset
+				front2_y = player2.pos[1] + 2 + ny2 * front_offset
 
-				# Check if either rotated rectangle intersects the other's AABB
-				# This ensures immediate collision when hitboxes make contact
-				if rotated_rect_intersects_rect(center_x1, center_y1, tight_width, tight_height, angle1_deg, p2_aabb):
+				# Front hitbox dimensions - small rectangle at the tip
+				front_hitbox_width = sprite_w * 0.25
+				front_hitbox_height = sprite_h * 0.9
+
+				# Create AABBs for full bodies
+				p1_body_aabb = pygame.Rect(0, 0, full_body_width, full_body_height)
+				p1_body_aabb.center = (center_x1, center_y1)
+				p2_body_aabb = pygame.Rect(0, 0, full_body_width, full_body_height)
+				p2_body_aabb.center = (center_x2, center_y2)
+
+				# Check if player1's front touches player2's body
+				p1_front_hits_p2 = rotated_rect_intersects_rect(front1_x, front1_y, front_hitbox_width, front_hitbox_height, angle1_deg, p2_body_aabb)
+
+				# Check if player2's front touches player1's body
+				p2_front_hits_p1 = rotated_rect_intersects_rect(front2_x, front2_y, front_hitbox_width, front_hitbox_height, angle2_deg, p1_body_aabb)
+
+				if p1_front_hits_p2 and p2_front_hits_p1:
+					# Both fronts hit - head-on collision, it's a draw
 					bikes_collided = True
-				elif rotated_rect_intersects_rect(center_x2, center_y2, tight_width, tight_height, angle2_deg, p1_aabb):
+					collision_winner = None
+				elif p1_front_hits_p2:
+					# Player1's front hit player2's body - player1 loses
 					bikes_collided = True
+					collision_winner = player2
+				elif p2_front_hits_p1:
+					# Player2's front hit player1's body - player2 loses
+					bikes_collided = True
+					collision_winner = player1
 
 			if bikes_collided:
-				if theme == "82":
-					if derezzed_sound_82_file.exists():
-						pygame.mixer.music.stop()
-						turn_channel.stop()
-						derezz_channel.play(derezzed_sound_82)
-				else:
-					if derezzed_sound_file.exists():
-						pygame.mixer.music.stop()
-						derezz_channel.play(derezzed_sound)
-				game_over = True
-
-				# --- Draw final collision frame before pausing ---
-				WIN.fill(BLACK)
-				draw_tron_grid(WIN)
-				for point in player1.trail:
-					pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-				for point in player2.trail:
-					if theme == "ARES":
-						pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
+				# Determine outcome based on who won
+				if collision_winner is None:
+					# Head-on collision - draw
+					# Play collision sound for draw
+					if theme == "82":
+						if derezzed_sound_82_file.exists():
+							pygame.mixer.music.stop()
+							turn_channel.stop()
+							derezz_channel.play(derezzed_sound_82)
 					else:
-						pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-				draw_obstacles()
-				draw_powerups()
-				draw_sprites()
-				draw_scoreboard()
-				pygame.display.update()
+						if derezzed_sound_file.exists():
+							pygame.mixer.music.stop()
+							derezz_channel.play(derezzed_sound)
 
-				# Small pause to show the collision frame
-				if theme == "82":
-					pygame.time.delay(2600)
-				else:
-					pygame.time.delay(1800)
+					game_over = True
 
-				win_text = "DRAW!"
-				if theme == "ARES":
-					win_color = DARKER_RED
-					if this_changes_everything.exists():
-						pygame.mixer.music.load("music/this_changes_everything.mp3")
-						pygame.mixer.music.play(-1)
-				elif theme == "LEGACY":
-					win_color = TEAL
-					if arena.exists():
-						pygame.mixer.music.load("music/arena.mp3")
-						pygame.mixer.music.play(-1)
-				else:
-					win_color = WHITE
-					if arena.exists():
-						pygame.mixer.music.load("music/arena.mp3")
-						pygame.mixer.music.play(-1)
+					# --- Draw final collision frame before pausing ---
+					WIN.fill(BLACK)
+					draw_tron_grid(WIN)
+					for point in player1.trail:
+						pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+					for point in player2.trail:
+						if theme == "ARES":
+							pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
+						else:
+							pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+					draw_obstacles()
+					draw_powerups()
+					draw_sprites()
+					draw_scoreboard()
+					pygame.display.update()
+
+					# Small pause to show the collision frame
+					if theme == "82":
+						pygame.time.delay(2600)
+					else:
+						pygame.time.delay(1800)
+
+					win_text = "DRAW!"
+					if theme == "ARES":
+						win_color = DARKER_RED
+						if this_changes_everything.exists():
+							pygame.mixer.music.load("music/this_changes_everything.mp3")
+							pygame.mixer.music.play(-1)
+					elif theme == "LEGACY":
+						win_color = TEAL
+						if arena.exists():
+							pygame.mixer.music.load("music/arena.mp3")
+							pygame.mixer.music.play(-1)
+					else:
+						win_color = WHITE
+						if arena.exists():
+							pygame.mixer.music.load("music/arena.mp3")
+							pygame.mixer.music.play(-1)
+				elif collision_winner == player2:
+					# Player1's front hit player2 - player2 wins
+					# p2_win() will handle sound, drawing, and music
+					p2_win()
+				elif collision_winner == player1:
+					# Player2's front hit player1 - player1 wins
+					# p1_win() will handle sound, drawing, and music
+					p1_win()
 
 			# --- Power-up collisions ---
 			check_powerup_collision(p1_front, player1, current_time)
