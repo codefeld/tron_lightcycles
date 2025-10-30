@@ -1,5 +1,6 @@
 import pygame
 from pathlib import Path
+import os
 
 from bike import Bike
 # from obstacle import Obstacle
@@ -26,6 +27,7 @@ ring_game_and_escape2 = Path("music/ring_game_and_escape2.mp3")
 sea_of_simulation = Path("music/sea_of_simulation.mp3")
 ending_titles1 = Path("music/ending_titles1.mp3")
 ending_titles2 = Path("music/ending_titles2.mp3")
+tower_music = Path("music/tower_music.mp3")
 
 clu = Path("music/clu.mp3")
 derezzed_sound_file = Path("music/derezzed_sound.mp3")
@@ -166,8 +168,20 @@ player1 = ""
 player2 = ""
 
 clock = pygame.time.Clock()
-font = pygame.font.Font(None, 74)
-small_font = pygame.font.Font(None, 36)
+
+tron_font = os.path.join("fonts", "TRON.ttf")
+
+transrobotics = os.path.join("fonts", "SFTransRobotics.ttf")
+
+tr2n = os.path.join("fonts", "TR2N.ttf")
+
+orbitron_bold = os.path.join("fonts", "Orbitron-Bold.ttf")
+orbitron_regular = os.path.join("fonts", "Orbitron-Medium.ttf")
+
+tron_ares = os.path.join("fonts", "TronAres.ttf")
+
+font = pygame.font.Font(orbitron_bold, 50)
+small_font = pygame.font.Font(orbitron_regular, 20)
 
 turn_cooldown = 50
 

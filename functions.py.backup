@@ -134,7 +134,6 @@ def reset_sprites():
 	player2.reset_trail()
 	player2.reset_status()
 
-def main_menu():
 	global p1_wins, p2_wins, match_over, single_player, font, small_font
 
 	font = pygame.font.Font(tr2n, 75)
@@ -197,8 +196,6 @@ def theme_menu():
 						BLUE = (1, 1, 254)
 						ORANGE = (255, 126, 0)
 						WHITE = (200, 200, 200)
-						font = pygame.font.Font(tron_font, 50)
-						small_font = pygame.font.Font(transrobotics, 20)
 						theme_menu_running = False
 						waiting = False
 						reset_game()
@@ -207,8 +204,6 @@ def theme_menu():
 						BLUE = (2, 255, 255)
 						ORANGE = (254, 148, 0)
 						WHITE = (255, 255, 255)
-						font = pygame.font.Font(tr2n, 75)
-						small_font = pygame.font.Font(orbitron_regular, 20)
 						theme_menu_running = False
 						waiting = False
 						reset_game()
@@ -216,8 +211,6 @@ def theme_menu():
 						theme = "ARES"
 						BLUE = (0, 255, 255)
 						WHITE = (255, 255, 255)
-						font = pygame.font.Font(tron_ares, 50)
-						small_font = pygame.font.Font(orbitron_regular, 20)
 						theme_menu_running = False
 						waiting = False
 						reset_game()
@@ -276,30 +269,6 @@ def draw_squircle_grid(surface, squircle_size=30, spacing=40, roundness=0.7):
 
 	# Blit the squircle layer onto the main surface
 	surface.blit(squircle_layer, (0, 0))
-
-def draw_rotated_rect_debug(surface, color, center_x, center_y, width, height, angle_deg, line_width=2):
-	"""Draw a rotated rectangle outline for debugging hitboxes."""
-	import math
-	half_w = width / 2
-	half_h = height / 2
-	corners = [
-		(-half_w, -half_h),
-		(half_w, -half_h),
-		(half_w, half_h),
-		(-half_w, half_h)
-	]
-
-	angle_rad = math.radians(angle_deg)
-	cos_a = math.cos(angle_rad)
-	sin_a = math.sin(angle_rad)
-
-	rotated_corners = []
-	for x, y in corners:
-		rotated_x = x * cos_a - y * sin_a
-		rotated_y = x * sin_a + y * cos_a
-		rotated_corners.append((center_x + rotated_x, center_y + rotated_y))
-
-	pygame.draw.polygon(surface, color, rotated_corners, line_width)
 
 def draw_tron_grid(surface, desired_spacing=40):
 	if theme == "LEGACY" or theme == "ARES":
@@ -532,80 +501,6 @@ def rotated_rect_intersects_rect(center_x, center_y, width, height, angle_deg, r
 
 	return True  # No separating axis found, rectangles intersect
 
-def rotated_rects_intersect(center1_x, center1_y, width1, height1, angle1_deg,
-                              center2_x, center2_y, width2, height2, angle2_deg):
-	"""Check if two rotated rectangles intersect using Separating Axis Theorem (SAT).
-
-	Args:
-		center1_x, center1_y: Center of first rotated rectangle
-		width1, height1: Dimensions of first rotated rectangle
-		angle1_deg: Rotation angle of first rectangle in degrees
-		center2_x, center2_y: Center of second rotated rectangle
-		width2, height2: Dimensions of second rotated rectangle
-		angle2_deg: Rotation angle of second rectangle in degrees
-
-	Returns:
-		True if rectangles intersect, False otherwise
-	"""
-	import math
-
-	def get_corners(center_x, center_y, width, height, angle_deg):
-		"""Get the four corners of a rotated rectangle."""
-		half_w = width / 2
-		half_h = height / 2
-		corners = [
-			(-half_w, -half_h),
-			(half_w, -half_h),
-			(half_w, half_h),
-			(-half_w, half_h)
-		]
-
-		angle_rad = math.radians(angle_deg)
-		cos_a = math.cos(angle_rad)
-		sin_a = math.sin(angle_rad)
-
-		rotated_corners = []
-		for x, y in corners:
-			rotated_x = x * cos_a - y * sin_a + center_x
-			rotated_y = x * sin_a + y * cos_a + center_y
-			rotated_corners.append((rotated_x, rotated_y))
-		return rotated_corners
-
-	# Get corners of both rectangles
-	corners1 = get_corners(center1_x, center1_y, width1, height1, angle1_deg)
-	corners2 = get_corners(center2_x, center2_y, width2, height2, angle2_deg)
-
-	# Get axes to test (perpendicular to edges of both rectangles)
-	axes = []
-	for corners in [corners1, corners2]:
-		for i in range(4):
-			p1 = corners[i]
-			p2 = corners[(i + 1) % 4]
-			edge = (p2[0] - p1[0], p2[1] - p1[1])
-			# Normal to the edge (perpendicular)
-			normal = (-edge[1], edge[0])
-			mag = math.hypot(normal[0], normal[1])
-			if mag > 0:
-				axes.append((normal[0] / mag, normal[1] / mag))
-
-	# For each axis, project both rectangles and check for overlap
-	for axis in axes:
-		# Project first rectangle corners onto axis
-		proj1 = [corner[0] * axis[0] + corner[1] * axis[1] for corner in corners1]
-		min1 = min(proj1)
-		max1 = max(proj1)
-
-		# Project second rectangle corners onto axis
-		proj2 = [corner[0] * axis[0] + corner[1] * axis[1] for corner in corners2]
-		min2 = min(proj2)
-		max2 = max(proj2)
-
-		# Check for gap (no overlap)
-		if max1 < min2 or max2 < min1:
-			return False  # Separating axis found, no collision
-
-	return True  # No separating axis found, rectangles intersect
-
 def draw_bike_glow(bike, alpha=80):
 	"""Draw a faint oval glow underneath a bike."""
 	import math
@@ -748,71 +643,6 @@ def draw_sprites():
 
 	player1.render(WIN, blit_bike_with_front_at, back_margin=4)
 	player2.render(WIN, blit_bike_with_front_at, back_margin=4)
-
-def draw_debug_hitboxes():
-	"""Draw debug visualization showing outline of entire sprite."""
-	import math
-
-	if theme == "LEGACY" or theme == "ARES":
-		sprite_width = legacy_width
-		sprite_height = legacy_height
-	else:  # 82 theme
-		sprite_width = width_82
-		sprite_height = height_82
-
-	back_margin = 4  # Same as used in blit_bike_with_front_at
-
-	# Player 1 sprite outline
-	p1_x, p1_y = player1.pos
-	p1_dir = player1.dir
-	p1_angle = math.degrees(math.atan2(p1_dir[1], p1_dir[0]))
-
-	# Back center (center of 5x5 trail block)
-	back_center_x = p1_x + 2
-	back_center_y = p1_y + 2
-
-	# Normalize direction
-	p1_mag = math.sqrt(p1_dir[0]**2 + p1_dir[1]**2)
-	if p1_mag > 0:
-		p1_nx = p1_dir[0] / p1_mag
-		p1_ny = p1_dir[1] / p1_mag
-	else:
-		p1_nx, p1_ny = 1, 0
-
-	# Calculate sprite center (matching blit_bike_with_front_at logic)
-	center_offset = sprite_width / 2 - back_margin
-	sprite_center_x = back_center_x + p1_nx * center_offset
-	sprite_center_y = back_center_y + p1_ny * center_offset
-
-	# Draw full sprite outline in cyan
-	draw_rotated_rect_debug(WIN, (0, 255, 255), sprite_center_x, sprite_center_y,
-	                        sprite_width, sprite_height, p1_angle, line_width=2)
-
-	# Player 2 sprite outline
-	p2_x, p2_y = player2.pos
-	p2_dir = player2.dir
-	p2_angle = math.degrees(math.atan2(p2_dir[1], p2_dir[0]))
-
-	# Back center
-	back_center_x = p2_x + 2
-	back_center_y = p2_y + 2
-
-	# Normalize direction
-	p2_mag = math.sqrt(p2_dir[0]**2 + p2_dir[1]**2)
-	if p2_mag > 0:
-		p2_nx = p2_dir[0] / p2_mag
-		p2_ny = p2_dir[1] / p2_mag
-	else:
-		p2_nx, p2_ny = 1, 0
-
-	# Calculate sprite center
-	sprite_center_x = back_center_x + p2_nx * center_offset
-	sprite_center_y = back_center_y + p2_ny * center_offset
-
-	# Draw full sprite outline in cyan
-	draw_rotated_rect_debug(WIN, (0, 255, 255), sprite_center_x, sprite_center_y,
-	                        sprite_width, sprite_height, p2_angle, line_width=2)
-
 
 def draw_scoreboard():
 	p1_text = small_font.render(f"Blue: {p1_wins}", True, BLUE)
@@ -1559,15 +1389,13 @@ def step_move_player(bike, other_bike, effective_speed, sprite_width, sprite_hei
 
 def run_game():
 	"""Main game loop."""
-	global game_over, win_text, win_color, game_time_offset, last_powerup_spawn, show_ui_overlay, show_debug_hitboxes
+	global game_over, win_text, win_color, game_time_offset, last_powerup_spawn
 
 	# --- Start Screen ---
 	WIN.blit(background, (0, 0))
 	main_menu()
 	running = True
 	game_over = False
-	show_ui_overlay = True  # Toggle for showing/hiding win message and scoreboard
-	show_debug_hitboxes = False  # Toggle for debug hitbox visualization
 	while running:
 		if not game_over:
 			clock.tick(60)
@@ -1576,9 +1404,6 @@ def run_game():
 				if event.type == pygame.QUIT:
 					pygame.quit()
 					sys.exit()
-				elif event.type == pygame.KEYDOWN:
-					if event.key == pygame.K_h:
-						show_debug_hitboxes = not show_debug_hitboxes
 
 			keys = pygame.key.get_pressed()
 
@@ -1592,31 +1417,31 @@ def run_game():
 			if not player1.is_frozen(current_time):
 				if player1.can_turn(current_time, turn_cooldown):
 					if keys[pygame.K_w] and player1.dir != dirs["DOWN"] and player1.dir != dirs["UP"]:
-						# if theme == "82":
-						# 	if turn_sound_82_file.exists():
-						# 		turn_channel.stop()
-						# 		turn_channel.play(turn_sound_82)
+						if theme == "82":
+							if turn_sound_82_file.exists():
+								turn_channel.stop()
+								turn_channel.play(turn_sound_82)
 						player1.dir = dirs["UP"]
 						player1.last_turn_time = current_time
 					elif keys[pygame.K_s] and player1.dir != dirs["UP"] and player1.dir != dirs["DOWN"]:
-						# if theme == "82":
-						# 	if turn_sound_82_file.exists():
-						# 		turn_channel.stop()
-						# 		turn_channel.play(turn_sound_82)
+						if theme == "82":
+							if turn_sound_82_file.exists():
+								turn_channel.stop()
+								turn_channel.play(turn_sound_82)
 						player1.dir = dirs["DOWN"]
 						player1.last_turn_time = current_time
 					elif keys[pygame.K_a] and player1.dir != dirs["RIGHT"] and player1.dir != dirs["LEFT"]:
-						# if theme == "82":
-						# 	if turn_sound_82_file.exists():
-						# 		turn_channel.stop()
-						# 		turn_channel.play(turn_sound_82)
+						if theme == "82":
+							if turn_sound_82_file.exists():
+								turn_channel.stop()
+								turn_channel.play(turn_sound_82)
 						player1.dir = dirs["LEFT"]
 						player1.last_turn_time = current_time
 					elif keys[pygame.K_d] and player1.dir != dirs["LEFT"] and player1.dir != dirs["RIGHT"]:
-						# if theme == "82":
-						# 	if turn_sound_82_file.exists():
-						# 		turn_channel.stop()
-						# 		turn_channel.play(turn_sound_82)
+						if theme == "82":
+							if turn_sound_82_file.exists():
+								turn_channel.stop()
+								turn_channel.play(turn_sound_82)
 						player1.dir = dirs["RIGHT"]
 						player1.last_turn_time = current_time
 
@@ -1632,31 +1457,31 @@ def run_game():
 						if keys[pygame.K_UP] and player2.dir != dirs["DOWN"] and player2.dir != dirs["UP"]:
 							player2.dir = dirs["UP"]
 							player2.last_turn_time = current_time
-							# if theme == "82":
-								# if turn_sound_82_file.exists():
-								# 	turn_channel.stop()
-								# 	turn_channel.play(turn_sound_82)
+							if theme == "82":
+								if turn_sound_82_file.exists():
+									turn_channel.stop()
+									turn_channel.play(turn_sound_82)
 						elif keys[pygame.K_DOWN] and player2.dir != dirs["UP"] and player2.dir != dirs["DOWN"]:
 							player2.dir = dirs["DOWN"]
 							player2.last_turn_time = current_time
-							# if theme == "82":
-								# if turn_sound_82_file.exists():
-								# 	turn_channel.stop()
-								# 	turn_channel.play(turn_sound_82)
+							if theme == "82":
+								if turn_sound_82_file.exists():
+									turn_channel.stop()
+									turn_channel.play(turn_sound_82)
 						elif keys[pygame.K_LEFT] and player2.dir != dirs["RIGHT"] and player2.dir != dirs["LEFT"]:
 							player2.dir = dirs["LEFT"]
 							player2.last_turn_time = current_time
-							# if theme == "82":
-								# if turn_sound_82_file.exists():
-								# 	turn_channel.stop()
-								# 	turn_channel.play(turn_sound_82)
+							if theme == "82":
+								if turn_sound_82_file.exists():
+									turn_channel.stop()
+									turn_channel.play(turn_sound_82)
 						elif keys[pygame.K_RIGHT] and player2.dir != dirs["LEFT"] and player2.dir != dirs["RIGHT"]:
 							player2.dir = dirs["RIGHT"]
 							player2.last_turn_time = current_time
-							# if theme == "82":
-								# if turn_sound_82_file.exists():
-								# 	turn_channel.stop()
-								# 	turn_channel.play(turn_sound_82)
+							if theme == "82":
+								if turn_sound_82_file.exists():
+									turn_channel.stop()
+									turn_channel.play(turn_sound_82)
 
 			# Get effective speeds considering status effects
 			effective_speed_p1 = player1.get_effective_speed(SPEED, current_time)
@@ -1679,98 +1504,147 @@ def run_game():
 			p1_front = player1.get_front_pos(sprite_w)
 			p2_front = player2.get_front_pos(sprite_w)
 
-			# Check bike-to-bike collision - simply check if the sprite hitboxes overlap
+			# Check bike-to-bike collision - front hitbox vs full body
+			# Rule: If the front of a bike touches any part of another bike, the bike whose front is touching loses
 			dx1, dy1 = player1.dir
 			mag1 = math.hypot(dx1, dy1)
 			dx2, dy2 = player2.dir
 			mag2 = math.hypot(dx2, dy2)
 
 			bikes_collided = False
+			collision_winner = None  # Will be set to player who wins, or None for draw
 
 			if mag1 > 0 and mag2 > 0:  # Both bikes are moving
+				# Normalize direction vectors
+				nx1, ny1 = dx1 / mag1, dy1 / mag1
+				nx2, ny2 = dx2 / mag2, dy2 / mag2
+
 				# Calculate rotation angles
 				rad1 = math.atan2(-dy1, dx1)
 				angle1_deg = math.degrees(rad1)
 				rad2 = math.atan2(-dy2, dx2)
 				angle2_deg = math.degrees(rad2)
 
-				# Calculate sprite centers for both bikes
+				# Calculate full body hitbox centers for both bikes
 				back_margin = 4
 				back_center_x1 = player1.pos[0] + 2
 				back_center_y1 = player1.pos[1] + 2
 				back_center_x2 = player2.pos[0] + 2
 				back_center_y2 = player2.pos[1] + 2
 
-				# Normalize direction vectors
-				nx1, ny1 = dx1 / mag1, dy1 / mag1
-				nx2, ny2 = dx2 / mag2, dy2 / mag2
+				local_center1 = pygame.math.Vector2((sprite_w/2 - back_margin, 0))
+				rotated_center1 = local_center1.rotate(-angle1_deg)
+				center_x1 = back_center_x1 + rotated_center1.x
+				center_y1 = back_center_y1 + rotated_center1.y
 
-				# Calculate sprite center offset (matching blit_bike_with_front_at logic)
-				center_offset = sprite_w / 2 - back_margin
-				center_x1 = back_center_x1 + nx1 * center_offset
-				center_y1 = back_center_y1 + ny1 * center_offset
-				center_x2 = back_center_x2 + nx2 * center_offset
-				center_y2 = back_center_y2 + ny2 * center_offset
+				local_center2 = pygame.math.Vector2((sprite_w/2 - back_margin, 0))
+				rotated_center2 = local_center2.rotate(-angle2_deg)
+				center_x2 = back_center_x2 + rotated_center2.x
+				center_y2 = back_center_y2 + rotated_center2.y
 
-				# Check if the two sprite hitboxes intersect
-				bikes_collided = rotated_rects_intersect(
-					center_x1, center_y1, sprite_w, sprite_h, angle1_deg,
-					center_x2, center_y2, sprite_w, sprite_h, angle2_deg
-				)
+				# Full body hitboxes (90% of sprite size)
+				full_body_width = sprite_w * 0.9
+				full_body_height = sprite_h * 0.9
+
+				# Calculate front hitbox positions (at 85% of bike length)
+				front_offset = sprite_w * 0.85
+				front1_x = player1.pos[0] + 2 + nx1 * front_offset
+				front1_y = player1.pos[1] + 2 + ny1 * front_offset
+				front2_x = player2.pos[0] + 2 + nx2 * front_offset
+				front2_y = player2.pos[1] + 2 + ny2 * front_offset
+
+				# Front hitbox dimensions - small rectangle at the tip
+				front_hitbox_width = sprite_w * 0.25
+				front_hitbox_height = sprite_h * 0.9
+
+				# Create AABBs for full bodies
+				p1_body_aabb = pygame.Rect(0, 0, full_body_width, full_body_height)
+				p1_body_aabb.center = (center_x1, center_y1)
+				p2_body_aabb = pygame.Rect(0, 0, full_body_width, full_body_height)
+				p2_body_aabb.center = (center_x2, center_y2)
+
+				# Check if player1's front touches player2's body
+				p1_front_hits_p2 = rotated_rect_intersects_rect(front1_x, front1_y, front_hitbox_width, front_hitbox_height, angle1_deg, p2_body_aabb)
+
+				# Check if player2's front touches player1's body
+				p2_front_hits_p1 = rotated_rect_intersects_rect(front2_x, front2_y, front_hitbox_width, front_hitbox_height, angle2_deg, p1_body_aabb)
+
+				if p1_front_hits_p2 and p2_front_hits_p1:
+					# Both fronts hit - head-on collision, it's a draw
+					bikes_collided = True
+					collision_winner = None
+				elif p1_front_hits_p2:
+					# Player1's front hit player2's body - player1 loses
+					bikes_collided = True
+					collision_winner = player2
+				elif p2_front_hits_p1:
+					# Player2's front hit player1's body - player2 loses
+					bikes_collided = True
+					collision_winner = player1
 
 			if bikes_collided:
-				# Bike hitboxes overlapped - it's a draw
-				# Play collision sound for draw
-				if theme == "82":
-					if derezzed_sound_82_file.exists():
-						pygame.mixer.music.stop()
-						turn_channel.stop()
-						derezz_channel.play(derezzed_sound_82)
-				else:
-					if derezzed_sound_file.exists():
-						pygame.mixer.music.stop()
-						derezz_channel.play(derezzed_sound)
-
-				game_over = True
-
-				# --- Draw final collision frame before pausing ---
-				WIN.fill(BLACK)
-				draw_tron_grid(WIN)
-				for point in player1.trail:
-					pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-				for point in player2.trail:
-					if theme == "ARES":
-						pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
+				# Determine outcome based on who won
+				if collision_winner is None:
+					# Head-on collision - draw
+					# Play collision sound for draw
+					if theme == "82":
+						if derezzed_sound_82_file.exists():
+							pygame.mixer.music.stop()
+							turn_channel.stop()
+							derezz_channel.play(derezzed_sound_82)
 					else:
-						pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-				draw_obstacles()
-				draw_powerups()
-				draw_sprites()
-				draw_scoreboard()
-				pygame.display.update()
+						if derezzed_sound_file.exists():
+							pygame.mixer.music.stop()
+							derezz_channel.play(derezzed_sound)
 
-				# Small pause to show the collision frame
-				if theme == "82":
-					pygame.time.delay(2600)
-				else:
-					pygame.time.delay(1800)
+					game_over = True
 
-				win_text = "DRAW!"
-				if theme == "ARES":
-					win_color = DARKER_RED
-					if this_changes_everything.exists():
-						pygame.mixer.music.load("music/this_changes_everything.mp3")
-						pygame.mixer.music.play(-1)
-				elif theme == "LEGACY":
-					win_color = TEAL
-					if arena.exists():
-						pygame.mixer.music.load("music/arena.mp3")
-						pygame.mixer.music.play(-1)
-				else:
-					win_color = WHITE
-					if arena.exists():
-						pygame.mixer.music.load("music/arena.mp3")
-						pygame.mixer.music.play(-1)
+					# --- Draw final collision frame before pausing ---
+					WIN.fill(BLACK)
+					draw_tron_grid(WIN)
+					for point in player1.trail:
+						pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+					for point in player2.trail:
+						if theme == "ARES":
+							pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
+						else:
+							pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+					draw_obstacles()
+					draw_powerups()
+					draw_sprites()
+					draw_scoreboard()
+					pygame.display.update()
+
+					# Small pause to show the collision frame
+					if theme == "82":
+						pygame.time.delay(2600)
+					else:
+						pygame.time.delay(1800)
+
+					win_text = "DRAW!"
+					if theme == "ARES":
+						win_color = DARKER_RED
+						if this_changes_everything.exists():
+							pygame.mixer.music.load("music/this_changes_everything.mp3")
+							pygame.mixer.music.play(-1)
+					elif theme == "LEGACY":
+						win_color = TEAL
+						if arena.exists():
+							pygame.mixer.music.load("music/arena.mp3")
+							pygame.mixer.music.play(-1)
+					else:
+						win_color = WHITE
+						if arena.exists():
+							pygame.mixer.music.load("music/arena.mp3")
+							pygame.mixer.music.play(-1)
+				elif collision_winner == player2:
+					# Player1's front hit player2 - player2 wins
+					# p2_win() will handle sound, drawing, and music
+					p2_win()
+				elif collision_winner == player1:
+					# Player2's front hit player1 - player1 wins
+					# p1_win() will handle sound, drawing, and music
+					p1_win()
 
 			# --- Power-up collisions ---
 			check_powerup_collision(p1_front, player1, current_time)
@@ -1790,8 +1664,6 @@ def run_game():
 			draw_obstacles()
 			draw_powerups()
 			draw_sprites()
-			if show_debug_hitboxes:
-				draw_debug_hitboxes()
 			draw_scoreboard()
 			pygame.display.update()
 
@@ -1810,11 +1682,8 @@ def run_game():
 				draw_obstacles()
 				draw_powerups()
 				draw_sprites()
-				if show_debug_hitboxes:
-					draw_debug_hitboxes()
-				if show_ui_overlay:
-					draw_scoreboard()
-					show_message(win_text, "Press ESC to quit | SHIFT to toggle UI", win_color)
+				draw_scoreboard()
+				show_message(win_text, "Press ESC to quit", win_color)
 				pygame.display.update()
 
 				for event in pygame.event.get():
@@ -1823,8 +1692,6 @@ def run_game():
 					elif event.type == pygame.KEYDOWN:
 						if event.key == pygame.K_ESCAPE:
 							main_menu()
-						elif event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
-							show_ui_overlay = not show_ui_overlay
 
 			else:
 				WIN.fill(BLACK)
@@ -1839,11 +1706,8 @@ def run_game():
 				draw_obstacles()
 				draw_powerups()
 				draw_sprites()
-				if show_debug_hitboxes:
-					draw_debug_hitboxes()
-				if show_ui_overlay:
-					draw_scoreboard()
-					show_message(win_text, "Press SPACE to continue | SHIFT to toggle UI", win_color)
+				draw_scoreboard()
+				show_message(win_text, "Press SPACE to continue", win_color)
 				pygame.display.update()
 
 				for event in pygame.event.get():
@@ -1852,10 +1716,7 @@ def run_game():
 					elif event.type == pygame.KEYDOWN:
 						if event.key == pygame.K_SPACE:
 							reset_game()
-							show_ui_overlay = True  # Reset UI overlay for next round
 						elif event.key == pygame.K_ESCAPE:
 							main_menu()
-						elif event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
-							show_ui_overlay = not show_ui_overlay
 
 	pygame.quit()
