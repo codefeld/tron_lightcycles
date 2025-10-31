@@ -1,6 +1,7 @@
 import pygame
 from pathlib import Path
 import os
+import random
 
 from bike import Bike
 # from obstacle import Obstacle
@@ -28,6 +29,7 @@ sea_of_simulation = Path("music/sea_of_simulation.mp3")
 ending_titles1 = Path("music/ending_titles1.mp3")
 ending_titles2 = Path("music/ending_titles2.mp3")
 tower_music = Path("music/tower_music.mp3")
+tron_theme = Path("music/tron_theme.mp3")
 
 clu = Path("music/clu.mp3")
 derezzed_sound_file = Path("music/derezzed_sound.mp3")
@@ -37,7 +39,8 @@ the_game_has_changed = Path("music/the_game_has_changed.mp3")
 the_grid = Path("music/the_grid.mp3")
 fall = Path("music/fall.mp3")
 disc_wars = Path("music/disc_wars.mp3")
-armory = Path("music/armory.mp3")
+#armory = Path("music/armory.mp3")
+recognizer = Path("music/recognizer.mp3")
 rinzler = Path("music/rinzler.mp3")
 adagio_for_tron = Path("music/adagio_for_tron.mp3")
 arena = Path("music/arena.mp3")
@@ -52,13 +55,19 @@ target_identified = Path("music/target_identified.mp3")
 new_directive = Path("music/new_directive.mp3")
 building_better_worlds = Path("music/building_better_worlds.mp3")
 in_the_image_of = Path("music/in_the_image_of.mp3")
+what_have_you_done = Path("music/what_have_you_done.mp3")
+# daemonize = Path("music/daemonize.mp3")
 
 game_music_legacy = [derezzed, fall, disc_wars, the_game_has_changed]
 game_music_ares = [infiltrator, target_identified]
 
 WIDTH, HEIGHT = 900, 900
 
-theme = ""
+themes = ["82", "LEGACY", "ARES"]
+
+theme = random.choice(themes)
+
+message_color = ""
 
 # Colors
 BLACK = (0, 0, 0)
@@ -71,6 +80,7 @@ DARKEST_RED = (150, 0, 0)
 LIGHT_RED = (255, 50, 50)
 TEAL = (0, 180, 150)
 WHITE = (255, 255, 255)
+LIGHT_GRAY = (200, 200, 200)
 
 blue_wins = 0
 orange_wins = 0
@@ -87,15 +97,19 @@ game_time_offset = 0
 powerups = []
 POWERUP_SIZE = 20
 last_powerup_spawn = 0
-POWERUP_SPAWN_INTERVAL = 5000  # spawn every ~5 seconds
+POWERUP_SPAWN_INTERVAL = 3000
 first_powerup_spawned = False
 
 # Screen setup
 info = pygame.display.Info()
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
-background = pygame.image.load("images/grid.jpg")
-background = pygame.transform.scale(background, (WIDTH, HEIGHT))
-pygame.display.set_caption("TRON Lightcycles")
+background_82 = pygame.image.load("images/tron_82_grid_background.jpg")
+background_82 = pygame.transform.scale(background_82, (WIDTH, HEIGHT))
+legacy_background = pygame.image.load("images/tron_legacy_grid.png")
+legacy_background = pygame.transform.scale(legacy_background, (WIDTH, HEIGHT))
+ares_background = pygame.image.load("images/tron_ares_grid.png")
+ares_background = pygame.transform.scale(ares_background, (WIDTH, HEIGHT))
+pygame.display.set_caption("TRON: Lightcycles")
 
 # Player settings
 SPEED = 5
@@ -180,10 +194,7 @@ orbitron_regular = os.path.join("fonts", "Orbitron-Medium.ttf")
 
 tron_ares = os.path.join("fonts", "TronAres.ttf")
 
-font = pygame.font.Font(orbitron_bold, 50)
-small_font = pygame.font.Font(orbitron_regular, 20)
-
-turn_cooldown = 50
+turn_cooldown = 50 
 
 if __name__ == '__main__':
 	run_game()

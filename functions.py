@@ -135,21 +135,108 @@ def reset_sprites():
 	player2.reset_status()
 
 def main_menu():
-	global p1_wins, p2_wins, match_over, single_player, font, small_font
+	global p1_wins, p2_wins, match_over, single_player, font, small_font, message_color
 
-	font = pygame.font.Font(tr2n, 75)
-	small_font = pygame.font.Font(orbitron_regular, 20)
+	if theme == "82":
+		font = pygame.font.Font(tron_font, 50)
+		small_font = pygame.font.Font(transrobotics, 20)
+		message_color = (255, 255, 255)
+	elif theme == "LEGACY":
+		font = pygame.font.Font(tr2n, 75)
+		small_font = pygame.font.Font(orbitron_regular, 20)
+		message_color = (0, 255, 255)
+	elif theme == "ARES":
+		font = pygame.font.Font(tron_ares, 50)
+		small_font = pygame.font.Font(orbitron_regular, 20)
+		message_color = (255, 0, 0)
+
 	global p1_wins, p2_wins, match_over, single_player
 
 	menu_running = True
 
 	while menu_running:
 
-		WIN.blit(background, (0, 0))
-		show_message("TRON LIGHTCYCLES", "Press \"1\" for 1 Player or \"2\" for 2 Players")
-		if armory.exists():
-			pygame.mixer.music.load("music/armory.mp3")
-			pygame.mixer.music.play(-1)
+		if theme == "82":
+			WIN.blit(background_82, (0, 0))
+			if tron_theme.exists():
+				pygame.mixer.music.load("music/tron_theme.mp3")
+				pygame.mixer.music.play(-1)
+		elif theme == "LEGACY":
+			WIN.blit(legacy_background, (0, 0))
+			if recognizer.exists():
+				pygame.mixer.music.load("music/recognizer.mp3")
+				pygame.mixer.music.play(-1)
+		elif theme == "ARES":
+			WIN.blit(ares_background, (0, 0))
+			if what_have_you_done.exists():
+				pygame.mixer.music.load("music/what_have_you_done.mp3")
+				pygame.mixer.music.play(-1)
+		# Custom title screen rendering with large "TRON" on separate line
+		# For 82 theme, use tron_logo.png image; for others, use text
+		if theme == "82":
+			# Load and display the TRON logo image
+			tron_logo_path = Path("images/tron_logo.png")
+			if tron_logo_path.exists():
+				tron_logo_img = pygame.image.load("images/tron_logo.png")
+				# Scale the logo to a reasonable size (e.g., width of 400px)
+				logo_width = 400
+				logo_height = int(tron_logo_img.get_height() * (logo_width / tron_logo_img.get_width()))
+				tron_title = pygame.transform.scale(tron_logo_img, (logo_width, logo_height))
+			else:
+				# Fallback to text if image doesn't exist
+				large_font = pygame.font.Font(tron_font, 100)
+				tron_title = large_font.render("TRON", True, message_color)
+		elif theme == "LEGACY":
+			large_font = pygame.font.Font(tr2n, 200)
+			tron_title = large_font.render("TRON", True, message_color)
+		elif theme == "ARES":
+			large_font = pygame.font.Font(tron_ares, 150)
+			tron_title = large_font.render("TRON", True, message_color)
+
+		# Render other title components
+		# For 82 theme, render "LIGHTCYCLES" with gray fill and dark red outline (like obstacles)
+		if theme == "82":
+			# Create text with outline effect
+			outline_color = (113, 0, 0)  # Dark red outline (same as obstacle outline)
+			fill_color = (13, 54, 77)  # Gray fill
+
+			# Render outline (draw text multiple times with offset)
+			outline_surfaces = []
+			for dx, dy in [(-2, -2), (-2, 2), (2, -2), (2, 2), (-2, 0), (2, 0), (0, -2), (0, 2)]:
+				outline_surfaces.append((font.render("LIGHTCYCLES", True, outline_color), (dx, dy)))
+
+			# Create a surface large enough to hold the text with outline
+			base_text = font.render("LIGHTCYCLES", True, fill_color)
+			text_width = base_text.get_width() + 8
+			text_height = base_text.get_height() + 8
+			lightcycles_title = pygame.Surface((text_width, text_height), pygame.SRCALPHA)
+
+			# Draw outline
+			for outline_surf, (dx, dy) in outline_surfaces:
+				lightcycles_title.blit(outline_surf, (4 + dx, 4 + dy))
+
+			# Draw main text on top
+			lightcycles_title.blit(base_text, (4, 4))
+		else:
+			lightcycles_title = font.render("LIGHTCYCLES", True, message_color)
+
+		instruction_text = small_font.render("Press \"1\" for 1 Player or \"2\" for 2 Players", True, (180, 180, 180))
+
+		# Calculate positions (centered)
+		tron_x = (WIDTH - tron_title.get_width()) // 2
+		tron_y = HEIGHT // 3
+
+		lightcycles_x = (WIDTH - lightcycles_title.get_width()) // 2
+		lightcycles_y = tron_y + tron_title.get_height() + 20
+
+		instruction_x = (WIDTH - instruction_text.get_width()) // 2
+		instruction_y = lightcycles_y + lightcycles_title.get_height() + 30
+
+		# Draw the title elements
+		WIN.blit(tron_title, (tron_x, tron_y))
+		WIN.blit(lightcycles_title, (lightcycles_x, lightcycles_y))
+		WIN.blit(instruction_text, (instruction_x, instruction_y))
+		pygame.display.flip()
 		waiting = True
 		while waiting:
 			for event in pygame.event.get():
@@ -183,8 +270,13 @@ def theme_menu():
 	theme_menu_running = True
 
 	while theme_menu_running:
-		WIN.blit(background, (0, 0))
-		show_message("SELECT A THEME", "Press \"1\" for \"82\", \"2\" for \"LEGACY\", or \"3\" for \"ARES\"")
+		if theme == "82":
+			WIN.blit(background_82, (0, 0))
+		elif theme == "LEGACY":
+			WIN.blit(legacy_background, (0, 0))
+		elif theme == "ARES":
+			WIN.blit(ares_background, (0, 0))
+		show_message("SELECT A THEME", "Press \"1\" for \"82\", \"2\" for \"LEGACY\", or \"3\" for \"ARES\"", message_color)
 		waiting = True
 		while waiting:
 			for event in pygame.event.get():
@@ -194,7 +286,7 @@ def theme_menu():
 				if event.type == pygame.KEYDOWN:
 					if event.key == pygame.K_1:
 						theme = "82"
-						BLUE = (1, 1, 254)
+						BLUE = (0, 106, 203)
 						ORANGE = (255, 126, 0)
 						WHITE = (200, 200, 200)
 						font = pygame.font.Font(tron_font, 50)
@@ -247,7 +339,7 @@ def draw_squircle_grid(surface, squircle_size=30, spacing=40, roundness=0.7):
 		bg_color = (0, 0, 16)
 		squircle_color = TEAL
 	elif theme == "ARES":
-		bg_color = (20, 0, 0)
+		bg_color = (10, 0, 0)
 		squircle_color = DARKEST_RED
 
 	surface.fill(bg_color)
@@ -306,7 +398,7 @@ def draw_tron_grid(surface, desired_spacing=40):
 		draw_squircle_grid(WIN, 90, 120, .1)
 	elif theme == "82":
 		color = WHITE
-		surface.fill((0, 0, 20))
+		surface.fill((0, 0, 25))
 
 		width = surface.get_width()
 		height = surface.get_height()
@@ -351,44 +443,89 @@ def draw_tron_grid(surface, desired_spacing=40):
 		surface.blit(glow, (0, 0))
 
 def show_message(text, subtext="", color=TEAL):
-	# Render text surfaces
-	title = font.render(text, True, color)
-	if subtext != "":
-		subtitle = small_font.render(subtext, True, (180, 180, 180))
-
 	# Add padding around the text
 	padding_x = 20
 	padding_y = 15
 	spacing = 10  # vertical space between title and subtitle
 
-	# Determine box width & height based on text sizes
-	if subtext != "":
-		box_width = max(title.get_width(), subtitle.get_width()) + 2 * padding_x
-		box_height = title.get_height() + subtitle.get_height() + 2 * padding_y + spacing
+	# Maximum width for text (screen width minus padding and some margin)
+	max_text_width = WIDTH - 2 * padding_x - 40
+
+	# Check if text needs to be split into two lines
+	title = font.render(text, True, color)
+	text_lines = []
+
+	if title.get_width() > max_text_width:
+		# Split text into two lines at a word boundary
+		words = text.split()
+
+		# Find the longest line1 that fits, ensuring line2 also fits
+		best_split = 1
+		for i in range(1, len(words)):
+			line1 = " ".join(words[:i])
+			line2 = " ".join(words[i:])
+
+			line1_render = font.render(line1, True, color)
+			line2_render = font.render(line2, True, color)
+
+			# Both lines must fit within max_text_width
+			if line1_render.get_width() <= max_text_width and line2_render.get_width() <= max_text_width:
+				best_split = i
+			else:
+				# If line1 is too wide, we've gone too far
+				if line1_render.get_width() > max_text_width:
+					break
+
+		line1 = " ".join(words[:best_split])
+		line2 = " ".join(words[best_split:])
+		text_lines = [line1, line2]
 	else:
-		box_width = title.get_width() + 2 * padding_x
-		box_height = title.get_height() + 2 * padding_y
+		text_lines = [text]
+
+	# Render text surfaces
+	title_surfaces = [font.render(line, True, color) for line in text_lines]
+
+	if subtext != "":
+		subtitle = small_font.render(subtext, True, (180, 180, 180))
+
+	# Determine box width & height based on text sizes
+	max_title_width = max(surf.get_width() for surf in title_surfaces)
+	total_title_height = sum(surf.get_height() for surf in title_surfaces) + spacing * (len(title_surfaces) - 1)
+
+	if subtext != "":
+		box_width = max(max_title_width, subtitle.get_width()) + 2 * padding_x
+		box_height = total_title_height + subtitle.get_height() + 2 * padding_y + spacing
+	else:
+		box_width = max_title_width + 2 * padding_x
+		box_height = total_title_height + 2 * padding_y
 
 	# Position box centered on screen
 	box_x = WIDTH // 2 - box_width // 2
 	box_y = HEIGHT // 2 - box_height // 2
 
 	# Draw black background rectangle
-	pygame.draw.rect(WIN, BLACK, (box_x, box_y, box_width, box_height))
+	if theme == "82":
+		pygame.draw.rect(WIN, (13, 54, 77), (box_x, box_y, box_width, box_height))
+		#pygame.draw.rect(WIN, (128, 0, 128), (box_x, box_y, box_width, box_height))
+	else:
+		pygame.draw.rect(WIN, BLACK, (box_x, box_y, box_width, box_height))
 
-	# Draw blue outline rectangle
-	pygame.draw.rect(WIN, color, (box_x, box_y, box_width, box_height), 3)
+	# Draw outline rectangle
+	if theme == "82":
+		pygame.draw.rect(WIN, (128, 0, 128), (box_x, box_y, box_width, box_height), 3)
+	else:
+		pygame.draw.rect(WIN, color, (box_x, box_y, box_width, box_height), 3)
 
 	# Draw the text centered inside the box
-	title_x = WIDTH // 2 - title.get_width() // 2
-	title_y = box_y + padding_y
+	current_y = box_y + padding_y
+	for title_surf in title_surfaces:
+		title_x = WIDTH // 2 - title_surf.get_width() // 2
+		WIN.blit(title_surf, (title_x, current_y))
+		current_y += title_surf.get_height() + spacing
 
 	if subtext != "":
 		subtitle_x = WIDTH // 2 - subtitle.get_width() // 2
-		subtitle_y = title_y + title.get_height() + spacing
-
-	WIN.blit(title, (title_x, title_y))
-	if subtext != "":
+		subtitle_y = current_y
 		WIN.blit(subtitle, (subtitle_x, subtitle_y))
 
 	pygame.display.update()
@@ -922,13 +1059,13 @@ def spawn_powerup():
 					break
 
 		if not overlap:
-			powerups.append(PowerUp(x, y, size, ptype))
+			powerups.append(PowerUp(x, y, size, ptype, theme))
 			break
 
 def draw_powerups():
 	"""Render all power-ups on the screen."""
 	for powerup in powerups:
-		powerup.render(WIN)
+		powerup.render(WIN, theme)
 
 def clear_powerups():
 	"""Remove all power-ups from the board."""
@@ -1001,7 +1138,7 @@ def countdown():
 		elif theme == "LEGACY":
 			show_message(str(i))
 		elif theme == "82":
-			show_message(str(i), "", WHITE)
+			show_message(str(i), "", LIGHT_GRAY)
 		pygame.display.update()
 		pygame.time.delay(1000)
 
@@ -1017,7 +1154,7 @@ def countdown():
 	elif theme == "LEGACY":
 		show_message("GO!")
 	elif theme == "82":
-		show_message("GO!", "", WHITE)
+		show_message("GO!", "", LIGHT_GRAY)
 	pygame.display.update()
 	pygame.time.delay(800)
 	if theme == "ARES":
@@ -1219,9 +1356,48 @@ def ai_control(current_game_time):
 	if not player2.can_turn(current_game_time, turn_cooldown):
 		return
 
+	# Emergency wall avoidance - check if AI is dangerously close to any wall
+	WALL_DANGER_ZONE = 60  # Distance from wall that triggers emergency turn (reduced to make AI more aggressive)
+	pos_x, pos_y = player2.pos
+	dir_x, dir_y = player2.dir
+
+	# Check if heading toward a wall and too close
+	if dir_x > 0 and pos_x > 900 - WALL_DANGER_ZONE:  # Heading right toward right wall
+		# Turn up or down
+		if pos_y < 450:
+			player2.dir = dirs["DOWN"]
+		else:
+			player2.dir = dirs["UP"]
+		player2.last_turn_time = current_game_time
+		return
+	elif dir_x < 0 and pos_x < WALL_DANGER_ZONE:  # Heading left toward left wall
+		# Turn up or down
+		if pos_y < 450:
+			player2.dir = dirs["DOWN"]
+		else:
+			player2.dir = dirs["UP"]
+		player2.last_turn_time = current_game_time
+		return
+	elif dir_y > 0 and pos_y > 900 - WALL_DANGER_ZONE:  # Heading down toward bottom wall
+		# Turn left or right
+		if pos_x < 450:
+			player2.dir = dirs["RIGHT"]
+		else:
+			player2.dir = dirs["LEFT"]
+		player2.last_turn_time = current_game_time
+		return
+	elif dir_y < 0 and pos_y < WALL_DANGER_ZONE:  # Heading up toward top wall
+		# Turn left or right
+		if pos_x < 450:
+			player2.dir = dirs["RIGHT"]
+		else:
+			player2.dir = dirs["LEFT"]
+		player2.last_turn_time = current_game_time
+		return
+
 	possible_dirs = [dirs["UP"], dirs["DOWN"], dirs["LEFT"], dirs["RIGHT"]]
 
-	def will_collide(pos, dir_vec, steps=12):
+	def will_collide(pos, dir_vec, steps=20):
 		"""Predict if moving forward will cause a collision using simplified hitbox detection."""
 		# Get sprite dimensions based on theme
 		if theme == "LEGACY" or theme == "ARES":
@@ -1243,9 +1419,9 @@ def ai_control(current_game_time):
 		nx_norm, ny_norm = dir_vec[0] / mag, dir_vec[1] / mag
 
 		# Define a safety margin around the bike
-		# Reduced from 0.5 to 0.15 to allow AI to navigate tighter spaces
-		# The actual hitbox is 90% of sprite size, so this gives minimal buffer
-		safety_margin = sprite_w * 0.15
+		# Increased from 0.15 to 0.25, and adding extra margin for walls
+		safety_margin = sprite_w * 0.25
+		wall_margin = 100  # Large fixed margin for wall detection to ensure AI turns away from edges early
 
 		# Look ahead specified steps with larger step size for performance
 		step_increment = max(1, SPEED)  # Check every SPEED pixels instead of every pixel
@@ -1257,11 +1433,32 @@ def ai_control(current_game_time):
 			# Check wall collisions with margin
 			fx = test_pos_x + nx_norm * front_length
 			fy = test_pos_y + ny_norm * front_length
-			if fx < safety_margin or fx >= WIDTH - safety_margin or fy < safety_margin or fy >= HEIGHT - safety_margin:
+			if fx < wall_margin or fx >= WIDTH - wall_margin or fy < wall_margin or fy >= HEIGHT - wall_margin:
 				return True
 
+			# Check for head-on collision with player1
+			# Calculate player1's position and direction
+			p1_x, p1_y = player1.pos
+			p1_dx, p1_dy = player1.dir
+			p1_mag = math.hypot(p1_dx, p1_dy)
+
+			if p1_mag > 0:
+				# Normalize player1's direction
+				p1_nx, p1_ny = p1_dx / p1_mag, p1_dy / p1_mag
+
+				# Check if player1 is moving toward us (opposite directions)
+				# Dot product of normalized directions: -1 means exactly opposite, < -0.7 means roughly opposite
+				dot_product = nx_norm * p1_nx + ny_norm * p1_ny
+
+				if dot_product < -0.7:  # Bikes are moving toward each other
+					# Check if player1 is in front of us
+					dist_to_p1 = math.hypot(test_pos_x - p1_x, test_pos_y - p1_y)
+					if dist_to_p1 < sprite_w * 3:  # Within 3 bike lengths
+						return True
+
 			# Check trail collisions using a simple radius check (much faster)
-			TRAIL_SAFETY_MARGIN = 50
+			# Skip only the very recent trail to avoid false positives with the tail
+			TRAIL_SAFETY_MARGIN = 5  # Only skip the last 5 positions to avoid immediate tail collision
 			test_point = (int(test_pos_x), int(test_pos_y))
 
 			# Quick check: is the test point near any trail?
@@ -1562,7 +1759,6 @@ def run_game():
 	global game_over, win_text, win_color, game_time_offset, last_powerup_spawn, show_ui_overlay, show_debug_hitboxes
 
 	# --- Start Screen ---
-	WIN.blit(background, (0, 0))
 	main_menu()
 	running = True
 	game_over = False
@@ -1591,28 +1787,33 @@ def run_game():
 			# Player 1 (WASD) — Disable turning if frozen
 			if not player1.is_frozen(current_time):
 				if player1.can_turn(current_time, turn_cooldown):
-					if keys[pygame.K_w] and player1.dir != dirs["DOWN"] and player1.dir != dirs["UP"]:
+					# Check if perpendicular keys are held simultaneously (prevent diagonal zigzag)
+					vertical_keys = keys[pygame.K_w] or keys[pygame.K_s]
+					horizontal_keys = keys[pygame.K_a] or keys[pygame.K_d]
+					perpendicular_keys_held = vertical_keys and horizontal_keys
+
+					if keys[pygame.K_w] and player1.dir != dirs["DOWN"] and player1.dir != dirs["UP"] and not perpendicular_keys_held:
 						# if theme == "82":
 						# 	if turn_sound_82_file.exists():
 						# 		turn_channel.stop()
 						# 		turn_channel.play(turn_sound_82)
 						player1.dir = dirs["UP"]
 						player1.last_turn_time = current_time
-					elif keys[pygame.K_s] and player1.dir != dirs["UP"] and player1.dir != dirs["DOWN"]:
+					elif keys[pygame.K_s] and player1.dir != dirs["UP"] and player1.dir != dirs["DOWN"] and not perpendicular_keys_held:
 						# if theme == "82":
 						# 	if turn_sound_82_file.exists():
 						# 		turn_channel.stop()
 						# 		turn_channel.play(turn_sound_82)
 						player1.dir = dirs["DOWN"]
 						player1.last_turn_time = current_time
-					elif keys[pygame.K_a] and player1.dir != dirs["RIGHT"] and player1.dir != dirs["LEFT"]:
+					elif keys[pygame.K_a] and player1.dir != dirs["RIGHT"] and player1.dir != dirs["LEFT"] and not perpendicular_keys_held:
 						# if theme == "82":
 						# 	if turn_sound_82_file.exists():
 						# 		turn_channel.stop()
 						# 		turn_channel.play(turn_sound_82)
 						player1.dir = dirs["LEFT"]
 						player1.last_turn_time = current_time
-					elif keys[pygame.K_d] and player1.dir != dirs["LEFT"] and player1.dir != dirs["RIGHT"]:
+					elif keys[pygame.K_d] and player1.dir != dirs["LEFT"] and player1.dir != dirs["RIGHT"] and not perpendicular_keys_held:
 						# if theme == "82":
 						# 	if turn_sound_82_file.exists():
 						# 		turn_channel.stop()
@@ -1629,28 +1830,33 @@ def run_game():
 					# 		turn_sound_82.play()
 				else:
 					if player2.can_turn(current_time, turn_cooldown):
-						if keys[pygame.K_UP] and player2.dir != dirs["DOWN"] and player2.dir != dirs["UP"]:
+						# Check if perpendicular keys are held simultaneously (prevent diagonal zigzag)
+						vertical_keys = keys[pygame.K_UP] or keys[pygame.K_DOWN]
+						horizontal_keys = keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]
+						perpendicular_keys_held = vertical_keys and horizontal_keys
+
+						if keys[pygame.K_UP] and player2.dir != dirs["DOWN"] and player2.dir != dirs["UP"] and not perpendicular_keys_held:
 							player2.dir = dirs["UP"]
 							player2.last_turn_time = current_time
 							# if theme == "82":
 								# if turn_sound_82_file.exists():
 								# 	turn_channel.stop()
 								# 	turn_channel.play(turn_sound_82)
-						elif keys[pygame.K_DOWN] and player2.dir != dirs["UP"] and player2.dir != dirs["DOWN"]:
+						elif keys[pygame.K_DOWN] and player2.dir != dirs["UP"] and player2.dir != dirs["DOWN"] and not perpendicular_keys_held:
 							player2.dir = dirs["DOWN"]
 							player2.last_turn_time = current_time
 							# if theme == "82":
 								# if turn_sound_82_file.exists():
 								# 	turn_channel.stop()
 								# 	turn_channel.play(turn_sound_82)
-						elif keys[pygame.K_LEFT] and player2.dir != dirs["RIGHT"] and player2.dir != dirs["LEFT"]:
+						elif keys[pygame.K_LEFT] and player2.dir != dirs["RIGHT"] and player2.dir != dirs["LEFT"] and not perpendicular_keys_held:
 							player2.dir = dirs["LEFT"]
 							player2.last_turn_time = current_time
 							# if theme == "82":
 								# if turn_sound_82_file.exists():
 								# 	turn_channel.stop()
 								# 	turn_channel.play(turn_sound_82)
-						elif keys[pygame.K_RIGHT] and player2.dir != dirs["LEFT"] and player2.dir != dirs["RIGHT"]:
+						elif keys[pygame.K_RIGHT] and player2.dir != dirs["LEFT"] and player2.dir != dirs["RIGHT"] and not perpendicular_keys_held:
 							player2.dir = dirs["RIGHT"]
 							player2.last_turn_time = current_time
 							# if theme == "82":
@@ -1718,59 +1924,59 @@ def run_game():
 					center_x2, center_y2, sprite_w, sprite_h, angle2_deg
 				)
 
-			if bikes_collided:
-				# Bike hitboxes overlapped - it's a draw
-				# Play collision sound for draw
-				if theme == "82":
-					if derezzed_sound_82_file.exists():
-						pygame.mixer.music.stop()
-						turn_channel.stop()
-						derezz_channel.play(derezzed_sound_82)
+			# Handle bike-to-bike collision ONLY if neither bike crashed into walls/trails
+			if bikes_collided and not collided1 and not collided2:
+				# Determine winner based on who hit whom from the side
+				# Calculate front positions of both bikes
+				p1_front_x = center_x1 + nx1 * (sprite_w / 2)
+				p1_front_y = center_y1 + ny1 * (sprite_w / 2)
+				p2_front_x = center_x2 + nx2 * (sprite_w / 2)
+				p2_front_y = center_y2 + ny2 * (sprite_w / 2)
+
+				# Calculate distances from each bike's front to the other bike's center
+				dist_p1_front_to_p2_center = math.hypot(p1_front_x - center_x2, p1_front_y - center_y2)
+				dist_p2_front_to_p1_center = math.hypot(p2_front_x - center_x1, p2_front_y - center_y1)
+
+				# The bike whose front is closer to the other bike's center is the one that crashed
+				# The other bike wins (was hit from the side)
+				if dist_p1_front_to_p2_center < dist_p2_front_to_p1_center:
+					# Player 1's front hit player 2's side - player 2 wins
+					p2_win()
+				elif dist_p2_front_to_p1_center < dist_p1_front_to_p2_center:
+					# Player 2's front hit player 1's side - player 1 wins
+					p1_win()
 				else:
-					if derezzed_sound_file.exists():
-						pygame.mixer.music.stop()
-						derezz_channel.play(derezzed_sound)
-
-				game_over = True
-
-				# --- Draw final collision frame before pausing ---
-				WIN.fill(BLACK)
-				draw_tron_grid(WIN)
-				for point in player1.trail:
-					pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-				for point in player2.trail:
-					if theme == "ARES":
-						pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
+					# Perfect head-on collision - it's a draw (very rare)
+					if theme == "82":
+						if derezzed_sound_82_file.exists():
+							pygame.mixer.music.stop()
+							turn_channel.stop()
+							derezz_channel.play(derezzed_sound_82)
 					else:
-						pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-				draw_obstacles()
-				draw_powerups()
-				draw_sprites()
-				draw_scoreboard()
-				pygame.display.update()
-
-				# Small pause to show the collision frame
-				if theme == "82":
-					pygame.time.delay(2600)
-				else:
-					pygame.time.delay(1800)
-
-				win_text = "DRAW!"
-				if theme == "ARES":
-					win_color = DARKER_RED
-					if this_changes_everything.exists():
-						pygame.mixer.music.load("music/this_changes_everything.mp3")
-						pygame.mixer.music.play(-1)
-				elif theme == "LEGACY":
-					win_color = TEAL
-					if arena.exists():
-						pygame.mixer.music.load("music/arena.mp3")
-						pygame.mixer.music.play(-1)
-				else:
-					win_color = WHITE
-					if arena.exists():
-						pygame.mixer.music.load("music/arena.mp3")
-						pygame.mixer.music.play(-1)
+						if derezzed_sound_file.exists():
+							pygame.mixer.music.stop()
+							derezz_channel.play(derezzed_sound)
+					game_over = True
+					if theme == "82":
+						pygame.time.delay(2600)
+					else:
+						pygame.time.delay(1800)
+					win_text = "DRAW!"
+					if theme == "ARES":
+						win_color = DARKER_RED
+						if this_changes_everything.exists():
+							pygame.mixer.music.load("music/this_changes_everything.mp3")
+							pygame.mixer.music.play(-1)
+					elif theme == "LEGACY":
+						win_color = TEAL
+						if arena.exists():
+							pygame.mixer.music.load("music/arena.mp3")
+							pygame.mixer.music.play(-1)
+					elif theme == "82":
+						win_color = LIGHT_GRAY
+						if tower_music.exists():
+							pygame.mixer.music.load("music/tower_music.mp3")
+							pygame.mixer.music.play(-1)
 
 			# --- Power-up collisions ---
 			check_powerup_collision(p1_front, player1, current_time)
@@ -1814,7 +2020,7 @@ def run_game():
 					draw_debug_hitboxes()
 				if show_ui_overlay:
 					draw_scoreboard()
-					show_message(win_text, "Press ESC to quit | SHIFT to toggle UI", win_color)
+					show_message(win_text, "Press ESC to quit | SHIFT to hide", win_color)
 				pygame.display.update()
 
 				for event in pygame.event.get():
@@ -1843,7 +2049,7 @@ def run_game():
 					draw_debug_hitboxes()
 				if show_ui_overlay:
 					draw_scoreboard()
-					show_message(win_text, "Press SPACE to continue | SHIFT to toggle UI", win_color)
+					show_message(win_text, "Press SPACE to continue | SHIFT to hide", win_color)
 				pygame.display.update()
 
 				for event in pygame.event.get():

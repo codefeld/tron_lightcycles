@@ -5,7 +5,7 @@ from main import *
 class PowerUp:
 	"""Represents a power-up on the grid."""
 
-	TYPES = ["freeze", "slow"]
+	TYPES = ["freeze", "slow", "fast"]
 	COLORS = {"freeze": (0, 200, 255), "slow": (0, 255, 100)}
 
 	def __init__(self, x, y, size, ptype, theme):
@@ -34,6 +34,8 @@ class PowerUp:
 			bike.frozen_until = current_time + 3000
 		elif self.type == "slow":
 			bike.slow_until = current_time + 5000
+		elif self.type == "fast":
+			bike.fast_until = current_time + 3000
 
 	def render(self, screen, theme):
 		"""Render the power-up on the screen."""
