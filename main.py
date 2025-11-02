@@ -112,11 +112,13 @@ legacy_background = pygame.image.load("images/tron_legacy_grid.png")
 legacy_background = pygame.transform.scale(legacy_background, (WIDTH, HEIGHT))
 ares_background = pygame.image.load("images/tron_ares_grid.png")
 ares_background = pygame.transform.scale(ares_background, (WIDTH, HEIGHT))
-pygame.display.set_caption("TRON: Lightcycles")
+pygame.display.set_caption("TRON Lightcycles")
 
 # Player settings
 SPEED = 5
 BLOCK_SIZE = 5
+
+difficulty = ""
 
 if derezzed_sound_file.exists():
 	derezzed_sound = pygame.mixer.Sound("music/derezzed_sound.mp3")

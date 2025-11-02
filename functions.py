@@ -173,7 +173,7 @@ def main_menu():
 			pygame.mixer.music.stop()
 			pygame.mixer.music.load(selected_song)
 			pygame.mixer.music.play(-1)
-			pygame.mixer.music.set_volume(0.75)
+			pygame.mixer.music.set_volume(1)
 		elif theme == "ARES":
 			WIN.blit(ares_background, (0, 0))
 			menu_song = random.choice(menu_music_ares)
@@ -181,7 +181,7 @@ def main_menu():
 			pygame.mixer.music.stop()
 			pygame.mixer.music.load(selected_song)
 			pygame.mixer.music.play(-1)
-			pygame.mixer.music.set_volume(1)
+			pygame.mixer.music.set_volume(0.75)
 		# Custom title screen rendering with large "TRON" on separate line
 		# For 82 theme, use tron_logo.png image; for others, use text
 		if theme == "82":
@@ -274,13 +274,51 @@ def main_menu():
 						match_over = False
 						menu_running = False
 						waiting = False
-						theme_menu()
+						difficulty_menu()
 					elif event.key == pygame.K_2:
 						single_player = False
 						p1_wins = 0
 						p2_wins = 0
 						match_over = False
 						menu_running = False
+						waiting = False
+						difficulty_menu()
+					elif event.key == pygame.K_ESCAPE:
+						pygame.quit()
+						sys.exit()
+
+def difficulty_menu():
+	global SPEED, BLOCK_SIZE, difficulty
+
+	difficulty_menu_running = True
+
+	while difficulty_menu_running:
+		if theme == "82":
+			WIN.blit(background_82, (0, 0))
+		elif theme == "LEGACY":
+			WIN.blit(legacy_background, (0, 0))
+		elif theme == "ARES":
+			WIN.blit(ares_background, (0, 0))
+		show_message("CHOOSE DIFFICULTY", "Press \"1\" for \"NORMAL\" or \"2\" for \"CHALLENGE\"", message_color)
+		waiting = True
+		while waiting:
+			for event in pygame.event.get():
+				if event.type == pygame.QUIT:
+					pygame.quit()
+					sys.exit()
+				if event.type == pygame.KEYDOWN:
+					if event.key == pygame.K_1:
+						difficulty = "NORMAL"
+						SPEED = 5
+						BLOCK_SIZE = 5
+						difficulty_menu_running = False
+						waiting = False
+						theme_menu()
+					elif event.key == pygame.K_2:
+						difficulty = "CHALLENGE"
+						SPEED = 8
+						BLOCK_SIZE = 8
+						difficulty_menu_running = False
 						waiting = False
 						theme_menu()
 					elif event.key == pygame.K_ESCAPE:
@@ -589,7 +627,6 @@ def check_collision(pos, trail1_set, trail2_set):
 		return True
 	return False
 
-
 def check_rect_collision_with_trails(bike_rect, trail1, trail2):
 	"""Check if a bike's hitbox rectangle collides with any trail blocks.
 
@@ -612,7 +649,6 @@ def check_rect_collision_with_trails(bike_rect, trail1, trail2):
 				return True
 
 	return False
-
 
 def rotated_rect_intersects_rect(center_x, center_y, width, height, angle_deg, rect):
 	"""Check if a rotated rectangle intersects an axis-aligned rectangle.
@@ -896,7 +932,6 @@ def draw_rotated_rect(surface, color, center_x, center_y, width, height, angle_d
 	# Draw the polygon
 	pygame.draw.polygon(surface, color, rotated_corners, line_width)
 
-
 def draw_sprites():
 	"""Render both bikes on the screen."""
 	import math
@@ -972,7 +1007,6 @@ def draw_debug_hitboxes():
 	# Draw full sprite outline in cyan
 	draw_rotated_rect_debug(WIN, (0, 255, 255), sprite_center_x, sprite_center_y,
 	                        sprite_width, sprite_height, p2_angle, line_width=2)
-
 
 def draw_scoreboard():
 	p1_text = small_font.render(f"Blue: {p1_wins}", True, BLUE)
@@ -1794,7 +1828,7 @@ def step_move_player(bike, other_bike, effective_speed, sprite_width, sprite_hei
 		bike.pos[0] = next_x
 		bike.pos[1] = next_y
 		distance_moved += step_size
-
+		
 	# Add trail points for rendering and collision detection
 	new_pos = (int(bike.pos[0]), int(bike.pos[1]))
 	bike.add_trail_point(new_pos)
