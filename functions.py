@@ -1815,25 +1815,27 @@ def step_move_player(bike, other_bike, effective_speed, sprite_width, sprite_hei
 		next_x = bike.pos[0] + nx * step_size
 		next_y = bike.pos[1] + ny * step_size
 
+		# num of player who collided (0 if no collision)
+		collided_player = 0
+
 		# Check if moving to this position would cause collision
 		if would_collide(next_x, next_y):
 			# Collision detected - stop here and trigger game over
 			if bike == player1:
-				p2_win()
+				collided_player = 1
 			else:
-				p1_win()
-			return True
+				collided_player = 2
 
 		# Safe to move - update position
 		bike.pos[0] = next_x
 		bike.pos[1] = next_y
 		distance_moved += step_size
-		
+
 	# Add trail points for rendering and collision detection
 	new_pos = (int(bike.pos[0]), int(bike.pos[1]))
 	bike.add_trail_point(new_pos)
 
-	return False
+	return collided_player
 
 def run_game():
 	"""Main game loop."""
@@ -1959,9 +1961,15 @@ def run_game():
 
 			# Move both bikes
 			collided1 = step_move_player(player1, player2, effective_speed_p1, sprite_w, sprite_h, back_margin=4)
-			if not collided1:
-				# Move player 2 (only if game not already ended)
-				collided2 = step_move_player(player2, player1, effective_speed_p2, sprite_w, sprite_h, back_margin=4)
+			if collided1 == 1:
+				p2_win()
+			elif collided1 == 2:
+				p1_win()
+			collided2 = step_move_player(player2, player1, effective_speed_p2, sprite_w, sprite_h, back_margin=4)
+			if collided2 == 1:
+				p2_win()
+			elif collided2 == 2:
+				p1_win()
 
 			p1_front = player1.get_front_pos(sprite_w)
 			p2_front = player2.get_front_pos(sprite_w)
@@ -2006,7 +2014,7 @@ def run_game():
 				)
 
 			# Handle bike-to-bike collision ONLY if neither bike crashed into walls/trails
-			if bikes_collided and not collided1 and not collided2:
+			if bikes_collided and collided1 == 0 and collided2 == 0:
 				# Determine winner based on who hit whom from the side
 				# Calculate front positions of both bikes
 				p1_front_x = center_x1 + nx1 * (sprite_w / 2)
