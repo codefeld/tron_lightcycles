@@ -39,7 +39,7 @@ the_game_has_changed = Path("music/the_game_has_changed.mp3")
 the_grid = Path("music/the_grid.mp3")
 fall = Path("music/fall.mp3")
 disc_wars = Path("music/disc_wars.mp3")
-# armory = Path("music/armory.mp3")
+armory = Path("music/armory.mp3")
 recognizer = Path("music/recognizer.mp3")
 rinzler = Path("music/rinzler.mp3")
 adagio_for_tron = Path("music/adagio_for_tron.mp3")
@@ -55,9 +55,12 @@ target_identified = Path("music/target_identified.mp3")
 new_directive = Path("music/new_directive.mp3")
 building_better_worlds = Path("music/building_better_worlds.mp3")
 in_the_image_of = Path("music/in_the_image_of.mp3")
+init2 = Path("music/init2.mp3")
 what_have_you_done = Path("music/what_have_you_done.mp3")
-# daemonize = Path("music/daemonize.mp3")
+daemonize = Path("music/daemonize.mp3")
 
+menu_music_legacy = [armory, recognizer]
+menu_music_ares = [init2, what_have_you_done, daemonize]
 game_music_legacy = [derezzed, fall, disc_wars, the_game_has_changed]
 game_music_ares = [infiltrator, target_identified]
 

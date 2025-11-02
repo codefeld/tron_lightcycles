@@ -161,16 +161,27 @@ def main_menu():
 			if tron_theme.exists():
 				pygame.mixer.music.load("music/tron_theme.mp3")
 				pygame.mixer.music.play(-1)
+				pygame.mixer.music.set_volume(1)
 		elif theme == "LEGACY":
 			WIN.blit(legacy_background, (0, 0))
-			if recognizer.exists():
-				pygame.mixer.music.load("music/recognizer.mp3")
-				pygame.mixer.music.play(-1)
+			# if recognizer.exists():
+			# 	pygame.mixer.music.load("music/recognizer.mp3")
+			# 	pygame.mixer.music.play(-1)
+			# 	pygame.mixer.music.set_volume(1)
+			menu_song = random.choice(menu_music_legacy)
+			selected_song = str(menu_song)
+			pygame.mixer.music.stop()
+			pygame.mixer.music.load(selected_song)
+			pygame.mixer.music.play(-1)
+			pygame.mixer.music.set_volume(0.75)
 		elif theme == "ARES":
 			WIN.blit(ares_background, (0, 0))
-			if what_have_you_done.exists():
-				pygame.mixer.music.load("music/what_have_you_done.mp3")
-				pygame.mixer.music.play(-1)
+			menu_song = random.choice(menu_music_ares)
+			selected_song = str(menu_song)
+			pygame.mixer.music.stop()
+			pygame.mixer.music.load(selected_song)
+			pygame.mixer.music.play(-1)
+			pygame.mixer.music.set_volume(1)
 		# Custom title screen rendering with large "TRON" on separate line
 		# For 82 theme, use tron_logo.png image; for others, use text
 		if theme == "82":
@@ -179,9 +190,13 @@ def main_menu():
 			if tron_logo_path.exists():
 				tron_logo_img = pygame.image.load("images/tron_logo.png")
 				# Scale the logo to a reasonable size (e.g., width of 400px)
-				logo_width = 400
+				lightcycle_img = pygame.image.load("images/lightcycle_text.png")
+				logo_width = 500
 				logo_height = int(tron_logo_img.get_height() * (logo_width / tron_logo_img.get_width()))
 				tron_title = pygame.transform.scale(tron_logo_img, (logo_width, logo_height))
+				subtitle_width = 400
+				subtitle_height = int(lightcycle_img.get_height() * (subtitle_width / lightcycle_img.get_width()))
+				lightcycles_title = pygame.transform.scale(lightcycle_img, (subtitle_width, subtitle_height))
 			else:
 				# Fallback to text if image doesn't exist
 				large_font = pygame.font.Font(tron_font, 100)
@@ -195,29 +210,29 @@ def main_menu():
 
 		# Render other title components
 		# For 82 theme, render "LIGHTCYCLES" with gray fill and dark red outline (like obstacles)
-		if theme == "82":
-			# Create text with outline effect
-			outline_color = (113, 0, 0)  # Dark red outline (same as obstacle outline)
-			fill_color = (13, 54, 77)  # Gray fill
+		# if theme == "82":
+		# 	# Create text with outline effect
+		# 	outline_color = (113, 0, 0)  # Dark red outline (same as obstacle outline)
+		# 	fill_color = (13, 54, 77)  # Gray fill
 
-			# Render outline (draw text multiple times with offset)
-			outline_surfaces = []
-			for dx, dy in [(-2, -2), (-2, 2), (2, -2), (2, 2), (-2, 0), (2, 0), (0, -2), (0, 2)]:
-				outline_surfaces.append((font.render("LIGHTCYCLES", True, outline_color), (dx, dy)))
+		# 	# Render outline (draw text multiple times with offset)
+		# 	outline_surfaces = []
+		# 	for dx, dy in [(-2, -2), (-2, 2), (2, -2), (2, 2), (-2, 0), (2, 0), (0, -2), (0, 2)]:
+		# 		outline_surfaces.append((font.render("LIGHTCYCLES", True, outline_color), (dx, dy)))
 
-			# Create a surface large enough to hold the text with outline
-			base_text = font.render("LIGHTCYCLES", True, fill_color)
-			text_width = base_text.get_width() + 8
-			text_height = base_text.get_height() + 8
-			lightcycles_title = pygame.Surface((text_width, text_height), pygame.SRCALPHA)
+		# 	# Create a surface large enough to hold the text with outline
+		# 	base_text = font.render("LIGHTCYCLES", True, fill_color)
+		# 	text_width = base_text.get_width() + 8
+		# 	text_height = base_text.get_height() + 8
+		# 	lightcycles_title = pygame.Surface((text_width, text_height), pygame.SRCALPHA)
 
-			# Draw outline
-			for outline_surf, (dx, dy) in outline_surfaces:
-				lightcycles_title.blit(outline_surf, (4 + dx, 4 + dy))
+		# 	# Draw outline
+		# 	for outline_surf, (dx, dy) in outline_surfaces:
+		# 		lightcycles_title.blit(outline_surf, (4 + dx, 4 + dy))
 
-			# Draw main text on top
-			lightcycles_title.blit(base_text, (4, 4))
-		else:
+		# 	# Draw main text on top
+		# 	lightcycles_title.blit(base_text, (4, 4))
+		if theme != "82":
 			lightcycles_title = font.render("LIGHTCYCLES", True, message_color)
 
 		instruction_text = small_font.render("Press \"1\" for 1 Player or \"2\" for 2 Players", True, (180, 180, 180))
@@ -227,10 +242,18 @@ def main_menu():
 		tron_y = HEIGHT // 3
 
 		lightcycles_x = (WIDTH - lightcycles_title.get_width()) // 2
-		lightcycles_y = tron_y + tron_title.get_height() + 20
+		if theme == "82":
+			lightcycles_y = tron_y + tron_title.get_height() - 60
+		elif theme == "LEGACY":
+			lightcycles_y = tron_y + tron_title.get_height()
+		else:
+			lightcycles_y = tron_y + tron_title.get_height() + 20
 
 		instruction_x = (WIDTH - instruction_text.get_width()) // 2
-		instruction_y = lightcycles_y + lightcycles_title.get_height() + 30
+		if theme == "82":
+			instruction_y = lightcycles_y + lightcycles_title.get_height() - 50
+		else:
+			instruction_y = lightcycles_y + lightcycles_title.get_height() + 30
 
 		# Draw the title elements
 		WIN.blit(tron_title, (tron_x, tron_y))
@@ -1116,16 +1139,19 @@ def countdown():
 			pygame.mixer.music.stop()
 			pygame.mixer.music.load("music/init.mp3")
 			pygame.mixer.music.play(-1)
+			pygame.mixer.music.set_volume(0.75)
 	elif theme == "LEGACY":
 		if clu.exists():
 			pygame.mixer.music.stop()
 			pygame.mixer.music.load("music/clu.mp3")
 			pygame.mixer.music.play(-1)
+			pygame.mixer.music.set_volume(1)
 	elif theme == "82":
 		if ring_game_and_escape1.exists():
 			pygame.mixer.music.stop()
 			pygame.mixer.music.load("music/ring_game_and_escape1.mp3")
 			pygame.mixer.music.play(-1)
+			pygame.mixer.music.set_volume(1)
 	for i in range(3, 0, -1):
 		WIN.fill(BLACK)
 		draw_tron_grid(WIN)
@@ -1163,17 +1189,20 @@ def countdown():
 		pygame.mixer.music.stop()
 		pygame.mixer.music.load(selected_song)
 		pygame.mixer.music.play(-1)
+		pygame.mixer.music.set_volume(0.75)
 	elif theme == "82":
 		if ring_game_and_escape2.exists():
 			pygame.mixer.music.stop()
 			pygame.mixer.music.load("music/ring_game_and_escape2.mp3")
 			pygame.mixer.music.play(-1)
+			pygame.mixer.music.set_volume(1)
 	else:
 		game_song = random.choice(game_music_legacy)
 		selected_song = str(game_song)
 		pygame.mixer.music.stop()
 		pygame.mixer.music.load(selected_song)
 		pygame.mixer.music.play(-1)
+		pygame.mixer.music.set_volume(1)
 
 def p1_win():
 	global game_over, match_over, win_color, win_text, p1_wins
@@ -1221,28 +1250,34 @@ def p1_win():
 			if new_directive.exists():
 				pygame.mixer.music.load("music/new_directive.mp3")
 				pygame.mixer.music.play(-1)
+				pygame.mixer.music.set_volume(0.75)
 		elif theme == "LEGACY":
 			if end_titles.exists():
 				pygame.mixer.music.load("music/end_titles.mp3")
 				pygame.mixer.music.play(-1)
+				pygame.mixer.music.set_volume(1)
 		elif theme == "82":
 			if ending_titles2.exists():
 				pygame.mixer.music.load("music/ending_titles2.mp3")
 				pygame.mixer.music.play(-1)
+				pygame.mixer.music.set_volume(1)
 	else:
 		win_text = "TEAM BLUE WINS!"
 		if theme == "ARES":
 			if a_question_of_trust.exists():
 				pygame.mixer.music.load("music/a_question_of_trust.mp3")
 				pygame.mixer.music.play(-1)
+				pygame.mixer.music.set_volume(0.75)
 		elif theme == "LEGACY":
 			if the_grid.exists():
 				pygame.mixer.music.load("music/the_grid.mp3")
 				pygame.mixer.music.play(-1)
+				pygame.mixer.music.set_volume(1)
 		elif theme == "82":
 			if ending_titles1.exists():
 				pygame.mixer.music.load("music/ending_titles1.mp3")
 				pygame.mixer.music.play(-1)
+				pygame.mixer.music.set_volume(1)
 
 def p2_win():
 	global game_over, match_over, win_color, win_text, p2_wins
@@ -1297,27 +1332,33 @@ def p2_win():
 				if expendable.exists():
 					pygame.mixer.music.load("music/100%_expendable.mp3")
 					pygame.mixer.music.play(-1)
+					pygame.mixer.music.set_volume(0.75)
 			elif theme == "LEGACY":
 				if adagio_for_tron.exists():
 					pygame.mixer.music.load("music/adagio_for_tron.mp3")
 					pygame.mixer.music.play(-1)
+					pygame.mixer.music.set_volume(1)
 			elif theme == "82":
 				if sea_of_simulation.exists():
 					pygame.mixer.music.load("music/sea_of_simulation.mp3")
 					pygame.mixer.music.play(-1)
+					pygame.mixer.music.set_volume(1)
 		else:
 			if theme == "ARES":
 				if new_directive.exists():
 					pygame.mixer.music.load("music/new_directive.mp3")
 					pygame.mixer.music.play(-1)
+					pygame.mixer.music.set_volume(0.75)
 			elif theme == "LEGACY":
 				if end_titles.exists():
 					pygame.mixer.music.load("music/end_titles.mp3")
 					pygame.mixer.music.play(-1)
+					pygame.mixer.music.set_volume(1)
 			elif theme == "82":
 				if ending_titles2.exists():
 					pygame.mixer.music.load("music/ending_titles2.mp3")
 					pygame.mixer.music.play(-1)
+					pygame.mixer.music.set_volume(1)
 	else:
 		if theme == "ARES":
 			win_text = "TEAM RED WINS!"
@@ -1328,27 +1369,33 @@ def p2_win():
 				if in_the_image_of.exists():
 					pygame.mixer.music.load("music/in_the_image_of.mp3")
 					pygame.mixer.music.play(-1)
+					pygame.mixer.music.set_volume(0.75)
 			elif theme == "LEGACY":
 				if rinzler.exists():
 					pygame.mixer.music.load("music/rinzler.mp3")
 					pygame.mixer.music.play(-1)
+					pygame.mixer.music.set_volume(1)
 			elif theme == "82":
 				if weve_got_company.exists():
 					pygame.mixer.music.load("music/weve_got_company.mp3")
 					pygame.mixer.music.play(-1)
+					pygame.mixer.music.set_volume(1)
 		else:
 			if theme == "ARES":
 				if a_question_of_trust.exists():
 					pygame.mixer.music.load("music/a_question_of_trust.mp3")
 					pygame.mixer.music.play(-1)
+					pygame.mixer.music.set_volume(0.75)
 			elif theme == "LEGACY":
 				if the_grid.exists():
 					pygame.mixer.music.load("music/the_grid.mp3")
 					pygame.mixer.music.play(-1)
+					pygame.mixer.music.set_volume(1)
 			elif theme == "82":
 				if ending_titles1.exists():
 					pygame.mixer.music.load("music/ending_titles1.mp3")
 					pygame.mixer.music.play(-1)
+					pygame.mixer.music.set_volume(1)
 
 def ai_control(current_game_time):
 	"""AI for p2 bike that avoids collisions and seeks power-ups."""
@@ -1947,6 +1994,20 @@ def run_game():
 					p1_win()
 				else:
 					# Perfect head-on collision - it's a draw (very rare)
+					WIN.fill(BLACK)
+					draw_tron_grid(WIN)
+					for point in player1.trail:
+						pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+					for point in player2.trail:
+						if theme == "ARES":
+							pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
+						else:
+							pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+					draw_obstacles()
+					draw_powerups()
+					draw_sprites()
+					draw_scoreboard()
+					pygame.display.update()
 					if theme == "82":
 						if derezzed_sound_82_file.exists():
 							pygame.mixer.music.stop()
@@ -1967,16 +2028,19 @@ def run_game():
 						if this_changes_everything.exists():
 							pygame.mixer.music.load("music/this_changes_everything.mp3")
 							pygame.mixer.music.play(-1)
+							pygame.mixer.music.set_volume(0.75)
 					elif theme == "LEGACY":
 						win_color = TEAL
 						if arena.exists():
 							pygame.mixer.music.load("music/arena.mp3")
 							pygame.mixer.music.play(-1)
+							pygame.mixer.music.set_volume(1)
 					elif theme == "82":
 						win_color = LIGHT_GRAY
 						if tower_music.exists():
 							pygame.mixer.music.load("music/tower_music.mp3")
 							pygame.mixer.music.play(-1)
+							pygame.mixer.music.set_volume(1)
 
 			# --- Power-up collisions ---
 			check_powerup_collision(p1_front, player1, current_time)
