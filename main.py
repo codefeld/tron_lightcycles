@@ -4,8 +4,6 @@ import os
 import random
 
 from bike import Bike
-# from obstacle import Obstacle
-# from powerup import PowerUp
 
 from functions import *
 
