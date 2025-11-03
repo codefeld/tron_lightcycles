@@ -135,7 +135,7 @@ def reset_sprites():
 	player2.reset_status()
 
 def main_menu():
-	global p1_wins, p2_wins, match_over, single_player, font, small_font, message_color
+	global p1_wins, p2_wins, match_over, single_player, font, small_font, message_color, current_track
 
 	if theme == "82":
 		font = pygame.font.Font(tron_font, 50)
@@ -150,8 +150,6 @@ def main_menu():
 		small_font = pygame.font.Font(orbitron_regular, 20)
 		message_color = (255, 0, 0)
 
-	global p1_wins, p2_wins, match_over, single_player
-
 	menu_running = True
 
 	while menu_running:
@@ -162,18 +160,16 @@ def main_menu():
 				pygame.mixer.music.load("music/tron_theme.mp3")
 				pygame.mixer.music.play(-1)
 				pygame.mixer.music.set_volume(1)
+				current_track = tron_theme
 		elif theme == "LEGACY":
 			WIN.blit(legacy_background, (0, 0))
-			# if recognizer.exists():
-			# 	pygame.mixer.music.load("music/recognizer.mp3")
-			# 	pygame.mixer.music.play(-1)
-			# 	pygame.mixer.music.set_volume(1)
 			menu_song = random.choice(menu_music_legacy)
 			selected_song = str(menu_song)
 			pygame.mixer.music.stop()
 			pygame.mixer.music.load(selected_song)
 			pygame.mixer.music.play(-1)
 			pygame.mixer.music.set_volume(1)
+			current_track = selected_song
 		elif theme == "ARES":
 			WIN.blit(ares_background, (0, 0))
 			menu_song = random.choice(menu_music_ares)
@@ -182,6 +178,7 @@ def main_menu():
 			pygame.mixer.music.load(selected_song)
 			pygame.mixer.music.play(-1)
 			pygame.mixer.music.set_volume(0.75)
+			current_track = selected_song
 		# Custom title screen rendering with large "TRON" on separate line
 		# For 82 theme, use tron_logo.png image; for others, use text
 		if theme == "82":
@@ -309,7 +306,7 @@ def difficulty_menu():
 				if event.type == pygame.KEYDOWN:
 					if event.key == pygame.K_1:
 						difficulty = "NORMAL"
-						SPEED = 5
+						SPEED = 6
 						BLOCK_SIZE = 5
 						difficulty_menu_running = False
 						waiting = False
@@ -317,13 +314,12 @@ def difficulty_menu():
 					elif event.key == pygame.K_2:
 						difficulty = "CHALLENGE"
 						SPEED = 8
-						BLOCK_SIZE = 8
+						BLOCK_SIZE = 5
 						difficulty_menu_running = False
 						waiting = False
 						theme_menu()
 					elif event.key == pygame.K_ESCAPE:
-						pygame.quit()
-						sys.exit()
+						main_menu()
 
 def theme_menu():
 	global theme, BLUE, ORANGE, WHITE, font, small_font
@@ -375,8 +371,7 @@ def theme_menu():
 						waiting = False
 						reset_game()
 					elif event.key == pygame.K_ESCAPE:
-						pygame.quit()
-						sys.exit()
+						difficulty_menu()
 
 def draw_squircle(surface, center_x, center_y, size, color, roundness=0.7):
 	"""Draw a rounded rectangle."""
@@ -934,15 +929,17 @@ def draw_rotated_rect(surface, color, center_x, center_y, width, height, angle_d
 
 def draw_sprites():
 	"""Render both bikes on the screen."""
-	import math
-
-	# Draw glows in legacy mode before rendering bikes
-	if theme == "LEGACY" or theme == "ARES":
-		draw_bike_glow(player1)
-		draw_bike_glow(player2)
-
 	player1.render(WIN, blit_bike_with_front_at, back_margin=4)
 	player2.render(WIN, blit_bike_with_front_at, back_margin=4)
+
+def draw_trails():
+	for point in player1.trail:
+		pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+	for point in player2.trail:
+		if theme == "ARES":
+			pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
+		else:
+			pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 
 def draw_debug_hitboxes():
 	"""Draw debug visualization showing outline of entire sprite."""
@@ -1168,27 +1165,35 @@ def check_trail_powerup_collisions(current_time):
 				break
 
 def countdown():
+	global current_track
+
 	if theme == "ARES":
 		if init.exists():
 			pygame.mixer.music.stop()
 			pygame.mixer.music.load("music/init.mp3")
 			pygame.mixer.music.play(-1)
 			pygame.mixer.music.set_volume(0.75)
+			current_track = init
 	elif theme == "LEGACY":
 		if clu.exists():
 			pygame.mixer.music.stop()
 			pygame.mixer.music.load("music/clu.mp3")
 			pygame.mixer.music.play(-1)
 			pygame.mixer.music.set_volume(1)
+			current_track = clu
 	elif theme == "82":
 		if ring_game_and_escape1.exists():
 			pygame.mixer.music.stop()
 			pygame.mixer.music.load("music/ring_game_and_escape1.mp3")
 			pygame.mixer.music.play(-1)
 			pygame.mixer.music.set_volume(1)
+			current_track = ring_game_and_escape1
 	for i in range(3, 0, -1):
 		WIN.fill(BLACK)
 		draw_tron_grid(WIN)
+		if theme == "LEGACY" or theme == "ARES":
+			draw_bike_glow(player1)
+			draw_bike_glow(player2)
 		draw_obstacles()
 		draw_powerups()
 		draw_sprites()
@@ -1205,6 +1210,9 @@ def countdown():
 	# Flash "GO!"
 	WIN.fill(BLACK)
 	draw_tron_grid(WIN)
+	if theme == "LEGACY" or theme == "ARES":
+		draw_bike_glow(player1)
+		draw_bike_glow(player2)
 	draw_obstacles()
 	draw_powerups()
 	draw_sprites()
@@ -1224,12 +1232,14 @@ def countdown():
 		pygame.mixer.music.load(selected_song)
 		pygame.mixer.music.play(-1)
 		pygame.mixer.music.set_volume(0.75)
+		current_track = selected_song
 	elif theme == "82":
 		if ring_game_and_escape2.exists():
 			pygame.mixer.music.stop()
 			pygame.mixer.music.load("music/ring_game_and_escape2.mp3")
 			pygame.mixer.music.play(-1)
 			pygame.mixer.music.set_volume(1)
+			current_track = ring_game_and_escape2
 	else:
 		game_song = random.choice(game_music_legacy)
 		selected_song = str(game_song)
@@ -1237,9 +1247,10 @@ def countdown():
 		pygame.mixer.music.load(selected_song)
 		pygame.mixer.music.play(-1)
 		pygame.mixer.music.set_volume(1)
+		current_track = selected_song
 
 def p1_win():
-	global game_over, match_over, win_color, win_text, p1_wins
+	global game_over, match_over, win_color, win_text, p1_wins, current_track
 	if theme == "82":
 		if derezzed_sound_82_file.exists():
 			pygame.mixer.music.stop()
@@ -1255,13 +1266,10 @@ def p1_win():
 	# --- Draw final collision frame before pausing ---
 	WIN.fill(BLACK)
 	draw_tron_grid(WIN)
-	for point in player1.trail:
-		pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-	for point in player2.trail:
-		if theme == "ARES":
-			pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
-		else:
-			pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+	if theme == "LEGACY" or theme == "ARES":
+		draw_bike_glow(player1)
+		draw_bike_glow(player2)
+	draw_trails()
 	draw_obstacles()
 	draw_powerups()
 	draw_sprites()
@@ -1285,16 +1293,19 @@ def p1_win():
 				pygame.mixer.music.load("music/new_directive.mp3")
 				pygame.mixer.music.play(-1)
 				pygame.mixer.music.set_volume(0.75)
+				current_track = new_directive
 		elif theme == "LEGACY":
 			if end_titles.exists():
 				pygame.mixer.music.load("music/end_titles.mp3")
 				pygame.mixer.music.play(-1)
 				pygame.mixer.music.set_volume(1)
+				current_track = end_titles
 		elif theme == "82":
 			if ending_titles2.exists():
 				pygame.mixer.music.load("music/ending_titles2.mp3")
 				pygame.mixer.music.play(-1)
 				pygame.mixer.music.set_volume(1)
+				current_track = ending_titles2
 	else:
 		win_text = "TEAM BLUE WINS!"
 		if theme == "ARES":
@@ -1302,19 +1313,22 @@ def p1_win():
 				pygame.mixer.music.load("music/a_question_of_trust.mp3")
 				pygame.mixer.music.play(-1)
 				pygame.mixer.music.set_volume(0.75)
+				current_track = a_question_of_trust
 		elif theme == "LEGACY":
 			if the_grid.exists():
 				pygame.mixer.music.load("music/the_grid.mp3")
 				pygame.mixer.music.play(-1)
 				pygame.mixer.music.set_volume(1)
+				current_track = the_grid
 		elif theme == "82":
 			if ending_titles1.exists():
 				pygame.mixer.music.load("music/ending_titles1.mp3")
 				pygame.mixer.music.play(-1)
 				pygame.mixer.music.set_volume(1)
+				current_track = ending_titles1
 
 def p2_win():
-	global game_over, match_over, win_color, win_text, p2_wins
+	global game_over, match_over, win_color, win_text, p2_wins, current_track
 	if theme == "82":
 		if derezzed_sound_82_file.exists():
 			pygame.mixer.music.stop()
@@ -1330,13 +1344,10 @@ def p2_win():
 	# --- Draw final collision frame before pausing ---
 	WIN.fill(BLACK)
 	draw_tron_grid(WIN)
-	for point in player1.trail:
-		pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-	for point in player2.trail:
-		if theme == "ARES":
-			pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
-		else:
-			pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+	if theme == "LEGACY" or theme == "ARES":
+		draw_bike_glow(player1)
+		draw_bike_glow(player2)
+	draw_trails()
 	draw_obstacles()
 	draw_powerups()
 	draw_sprites()
@@ -1367,32 +1378,38 @@ def p2_win():
 					pygame.mixer.music.load("music/100%_expendable.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(0.75)
+					current_track = expendable
 			elif theme == "LEGACY":
 				if adagio_for_tron.exists():
 					pygame.mixer.music.load("music/adagio_for_tron.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
+					current_track = adagio_for_tron
 			elif theme == "82":
 				if sea_of_simulation.exists():
 					pygame.mixer.music.load("music/sea_of_simulation.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
+					current_track = sea_of_simulation
 		else:
 			if theme == "ARES":
 				if new_directive.exists():
 					pygame.mixer.music.load("music/new_directive.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(0.75)
+					current_track = new_directive
 			elif theme == "LEGACY":
 				if end_titles.exists():
 					pygame.mixer.music.load("music/end_titles.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
+					current_track = end_titles
 			elif theme == "82":
 				if ending_titles2.exists():
 					pygame.mixer.music.load("music/ending_titles2.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
+					current_track = ending_titles2
 	else:
 		if theme == "ARES":
 			win_text = "TEAM RED WINS!"
@@ -1404,32 +1421,38 @@ def p2_win():
 					pygame.mixer.music.load("music/in_the_image_of.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(0.75)
+					current_track = in_the_image_of
 			elif theme == "LEGACY":
 				if rinzler.exists():
 					pygame.mixer.music.load("music/rinzler.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
+					current_track = rinzler
 			elif theme == "82":
 				if weve_got_company.exists():
 					pygame.mixer.music.load("music/weve_got_company.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
+					current_track = weve_got_company
 		else:
 			if theme == "ARES":
 				if a_question_of_trust.exists():
 					pygame.mixer.music.load("music/a_question_of_trust.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(0.75)
+					current_track = a_question_of_trust
 			elif theme == "LEGACY":
 				if the_grid.exists():
 					pygame.mixer.music.load("music/the_grid.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
+					current_track = the_grid
 			elif theme == "82":
 				if ending_titles1.exists():
 					pygame.mixer.music.load("music/ending_titles1.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
+					current_track = ending_titles1
 
 def ai_control(current_game_time):
 	"""AI for p2 bike that avoids collisions and seeks power-ups."""
@@ -1809,31 +1832,37 @@ def step_move_player(bike, other_bike, effective_speed, sprite_width, sprite_hei
 	steps = max(1, int(effective_speed))
 	step_size = effective_speed / steps
 	distance_moved = 0.0
+	distance_since_last_trail = 0.0
+	collided_player = 0
 
 	for step in range(steps):
 		# Calculate the next position
 		next_x = bike.pos[0] + nx * step_size
 		next_y = bike.pos[1] + ny * step_size
 
-		# num of player who collided (0 if no collision)
-		collided_player = 0
-
 		# Check if moving to this position would cause collision
 		if would_collide(next_x, next_y):
-			# Collision detected - stop here and trigger game over
 			if bike == player1:
 				collided_player = 1
 			else:
 				collided_player = 2
 
-		# Safe to move - update position
+		# Update position
 		bike.pos[0] = next_x
 		bike.pos[1] = next_y
 		distance_moved += step_size
+		distance_since_last_trail += step_size
 
-	# Add trail points for rendering and collision detection
-	new_pos = (int(bike.pos[0]), int(bike.pos[1]))
-	bike.add_trail_point(new_pos)
+		# Add trail point every BLOCK_SIZE pixels to ensure continuous trail
+		if distance_since_last_trail >= BLOCK_SIZE:
+			new_pos = (int(bike.pos[0]), int(bike.pos[1]))
+			bike.add_trail_point(new_pos)
+			distance_since_last_trail = 0.0
+
+	# Add final trail point if we haven't added one recently
+	if distance_since_last_trail > 0:
+		new_pos = (int(bike.pos[0]), int(bike.pos[1]))
+		bike.add_trail_point(new_pos)
 
 	return collided_player
 
@@ -1961,11 +1990,11 @@ def run_game():
 
 			# Move both bikes
 			collided1 = step_move_player(player1, player2, effective_speed_p1, sprite_w, sprite_h, back_margin=4)
+			collided2 = step_move_player(player2, player1, effective_speed_p2, sprite_w, sprite_h, back_margin=4)
 			if collided1 == 1:
 				p2_win()
 			elif collided1 == 2:
 				p1_win()
-			collided2 = step_move_player(player2, player1, effective_speed_p2, sprite_w, sprite_h, back_margin=4)
 			if collided2 == 1:
 				p2_win()
 			elif collided2 == 2:
@@ -2038,13 +2067,10 @@ def run_game():
 					# Perfect head-on collision - it's a draw (very rare)
 					WIN.fill(BLACK)
 					draw_tron_grid(WIN)
-					for point in player1.trail:
-						pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-					for point in player2.trail:
-						if theme == "ARES":
-							pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
-						else:
-							pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+					if theme == "LEGACY" or theme == "ARES":
+						draw_bike_glow(player1)
+						draw_bike_glow(player2)
+					draw_trails()
 					draw_obstacles()
 					draw_powerups()
 					draw_sprites()
@@ -2071,18 +2097,21 @@ def run_game():
 							pygame.mixer.music.load("music/this_changes_everything.mp3")
 							pygame.mixer.music.play(-1)
 							pygame.mixer.music.set_volume(0.75)
+							current_track = this_changes_everything
 					elif theme == "LEGACY":
 						win_color = TEAL
 						if arena.exists():
 							pygame.mixer.music.load("music/arena.mp3")
 							pygame.mixer.music.play(-1)
 							pygame.mixer.music.set_volume(1)
+							current_track = arena
 					elif theme == "82":
 						win_color = LIGHT_GRAY
 						if tower_music.exists():
 							pygame.mixer.music.load("music/tower_music.mp3")
 							pygame.mixer.music.play(-1)
 							pygame.mixer.music.set_volume(1)
+							current_track = tower_music
 
 			# --- Power-up collisions ---
 			check_powerup_collision(p1_front, player1, current_time)
@@ -2092,13 +2121,10 @@ def run_game():
 			# Render everything
 			WIN.fill(BLACK)
 			draw_tron_grid(WIN)
-			for point in player1.trail:
-				pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-			for point in player2.trail:
-				if theme == "ARES":
-					pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
-				else:
-					pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+			if theme == "LEGACY" or theme == "ARES":
+				draw_bike_glow(player1)
+				draw_bike_glow(player2)
+			draw_trails()
 			draw_obstacles()
 			draw_powerups()
 			draw_sprites()
@@ -2112,13 +2138,10 @@ def run_game():
 			if match_over:
 				WIN.fill(BLACK)
 				draw_tron_grid(WIN)
-				for point in player1.trail:
-					pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-				for point in player2.trail:
-					if theme == "ARES":
-						pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
-					else:
-						pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+				if theme == "LEGACY" or theme == "ARES":
+					draw_bike_glow(player1)
+					draw_bike_glow(player2)
+				draw_trails()
 				draw_obstacles()
 				draw_powerups()
 				draw_sprites()
@@ -2134,6 +2157,7 @@ def run_game():
 						running = False
 					elif event.type == pygame.KEYDOWN:
 						if event.key == pygame.K_ESCAPE:
+							show_ui_overlay = True
 							main_menu()
 						elif event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
 							show_ui_overlay = not show_ui_overlay
@@ -2141,13 +2165,10 @@ def run_game():
 			else:
 				WIN.fill(BLACK)
 				draw_tron_grid(WIN)
-				for point in player1.trail:
-					pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
-				for point in player2.trail:
-					if theme == "ARES":
-						pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
-					else:
-						pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+				if theme == "LEGACY" or theme == "ARES":
+					draw_bike_glow(player1)
+					draw_bike_glow(player2)
+				draw_trails()
 				draw_obstacles()
 				draw_powerups()
 				draw_sprites()
@@ -2164,8 +2185,9 @@ def run_game():
 					elif event.type == pygame.KEYDOWN:
 						if event.key == pygame.K_SPACE:
 							reset_game()
-							show_ui_overlay = True  # Reset UI overlay for next round
+							show_ui_overlay = True
 						elif event.key == pygame.K_ESCAPE:
+							show_ui_overlay = True
 							main_menu()
 						elif event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
 							show_ui_overlay = not show_ui_overlay

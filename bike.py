@@ -15,6 +15,7 @@ class Bike:
 		self.trail_set = set()  # Set for fast collision detection
 		self.frozen_until = 0
 		self.slow_until = 0
+		self.fast_until = 0
 		self.last_turn_time = 0
 
 	def reset_trail(self):
@@ -53,6 +54,10 @@ class Bike:
 	def is_slowed(self, current_time):
 		"""Check if bike is currently slowed."""
 		return current_time < self.slow_until
+	
+	def is_fast(self, current_time):
+		"""Check if bike is currently fast."""
+		return current_time < self.fast_until
 
 	def get_effective_speed(self, base_speed, current_time):
 		"""Get the effective speed considering status effects."""

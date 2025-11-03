@@ -17,7 +17,7 @@ class PowerUp:
 		if theme == "ARES":
 			self.color = (255, 0, 0)
 		elif theme == "LEGACY":
-			self.color = (0, 0, 0)
+			self.color = (0, 200, 255)
 		elif theme == "82":
 			# self.color = (122, 189, 255)
 			self.color = (128, 0, 128)
@@ -46,6 +46,6 @@ class PowerUp:
 			pygame.draw.rect(screen, (122, 189, 255), (self.x, self.y, self.size, self.size), 2)
 			# pygame.draw.rect(screen, (113, 0, 0), (self.x, self.y, self.size, self.size), 2)
 		elif theme == "LEGACY":
-			pygame.draw.rect(screen, (0, 200, 255), (self.x, self.y, self.size, self.size), 2)
+			pygame.draw.rect(screen, (255, 255, 255), (self.x, self.y, self.size, self.size), 2)
 		else:
 			pygame.draw.rect(screen, (255, 255, 255), (self.x, self.y, self.size, self.size), 2)

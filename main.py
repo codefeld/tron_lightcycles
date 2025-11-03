@@ -64,6 +64,8 @@ menu_music_ares = [init2, what_have_you_done, daemonize]
 game_music_legacy = [derezzed, fall, disc_wars, the_game_has_changed]
 game_music_ares = [infiltrator, target_identified]
 
+current_track = ""
+
 WIDTH, HEIGHT = 900, 900
 
 themes = ["82", "LEGACY", "ARES"]
@@ -117,6 +119,7 @@ pygame.display.set_caption("TRON Lightcycles")
 # Player settings
 SPEED = 5
 BLOCK_SIZE = 5
+TRAIL_WIDTH = 5  # Visual width of trails (always 5px regardless of difficulty)
 
 difficulty = ""
 
