@@ -848,8 +848,10 @@ def draw_bike_glow(bike, alpha=80):
 	if mag > 0:
 		# Normalize direction
 		nx, ny = dx / mag, dy / mag
-		# Calculate center of sprite - positioned further back (40% from back)
-		center_offset = sprite_width * 0.4
+		# Calculate center of sprite - same calculation as blit_bike_with_front_at
+		# This ensures the glow is centered exactly with the bike sprite
+		back_margin = 4
+		center_offset = sprite_width / 2 - back_margin
 		center_x = back_center_x + nx * center_offset
 		center_y = back_center_y + ny * center_offset
 	else:
