@@ -55,10 +55,10 @@ building_better_worlds = Path("music/building_better_worlds.mp3")
 in_the_image_of = Path("music/in_the_image_of.mp3")
 init2 = Path("music/init2.mp3")
 what_have_you_done = Path("music/what_have_you_done.mp3")
-daemonize = Path("music/daemonize.mp3")
+# daemonize = Path("music/daemonize.mp3")
 
 menu_music_legacy = [armory, recognizer]
-menu_music_ares = [init2, what_have_you_done, daemonize]
+menu_music_ares = [init2, what_have_you_done]
 game_music_legacy = [derezzed, fall, disc_wars, the_game_has_changed]
 game_music_ares = [infiltrator, target_identified]
 
@@ -188,6 +188,8 @@ player1 = ""
 player2 = ""
 
 clock = pygame.time.Clock()
+
+show_debug_hitboxes = False
 
 tron_font = os.path.join("fonts", "TRON.ttf")
 

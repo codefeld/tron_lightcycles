@@ -942,7 +942,7 @@ def draw_trails():
 			pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 
 def draw_debug_hitboxes():
-	"""Draw debug visualization showing outline of entire sprite."""
+	"""Draw debug visualization showing actual collision hitboxes."""
 	import math
 
 	if theme == "LEGACY" or theme == "ARES":
@@ -953,57 +953,60 @@ def draw_debug_hitboxes():
 		sprite_height = height_82
 
 	back_margin = 4  # Same as used in blit_bike_with_front_at
+	tight_width = sprite_width * 0.9
+	tight_height = sprite_height * 0.9
 
-	# Player 1 sprite outline
-	p1_x, p1_y = player1.pos
-	p1_dir = player1.dir
-	p1_angle = math.degrees(math.atan2(p1_dir[1], p1_dir[0]))
+	def draw_bike_hitboxes(bike, color_body, color_front):
+		"""Draw hitboxes for a single bike."""
+		pos_x, pos_y = bike.pos
+		dir_x, dir_y = bike.dir
+		angle = math.degrees(math.atan2(dir_y, dir_x))
 
-	# Back center (center of 5x5 trail block)
-	back_center_x = p1_x + 2
-	back_center_y = p1_y + 2
+		# Back center (center of 5x5 trail block)
+		back_center_x = pos_x + 2
+		back_center_y = pos_y + 2
 
-	# Normalize direction
-	p1_mag = math.sqrt(p1_dir[0]**2 + p1_dir[1]**2)
-	if p1_mag > 0:
-		p1_nx = p1_dir[0] / p1_mag
-		p1_ny = p1_dir[1] / p1_mag
+		# Normalize direction
+		mag = math.sqrt(dir_x**2 + dir_y**2)
+		if mag > 0:
+			nx = dir_x / mag
+			ny = dir_y / mag
+		else:
+			nx, ny = 1, 0
+
+		# Calculate body hitbox center (90% of sprite size)
+		body_offset = sprite_width / 2 - back_margin
+		body_center_x = back_center_x + nx * body_offset
+		body_center_y = back_center_y + ny * body_offset
+
+		# Draw body hitbox in semi-transparent color
+		draw_rotated_rect_debug(WIN, color_body, body_center_x, body_center_y,
+		                        tight_width, tight_height, angle, line_width=2)
+
+		# Calculate front hitbox position
+		# The outer edge of the front hitbox aligns with the sprite's front edge
+		front_hitbox_width = sprite_width * 0.25
+		front_hitbox_height = tight_height
+
+		# Position the hitbox so its outer edge aligns with sprite edge
+		# Sprite front edge is at (sprite_width - back_margin) from back
+		# Hitbox center should be at: sprite_edge - (hitbox_width / 2)
+		front_offset = (sprite_width - back_margin) - (front_hitbox_width / 2)
+		front_center_x = back_center_x + nx * front_offset
+		front_center_y = back_center_y + ny * front_offset
+
+		# Draw front hitbox in bright color
+		draw_rotated_rect_debug(WIN, color_front, front_center_x, front_center_y,
+		                        front_hitbox_width, front_hitbox_height, angle, line_width=2)
+
+	# Player 1 hitboxes (cyan body, white front)
+	draw_bike_hitboxes(player1, (0, 180, 180), (255, 255, 255))
+
+	# Player 2 hitboxes (orange/red body, yellow front)
+	if theme == "ARES":
+		draw_bike_hitboxes(player2, (180, 0, 0), (255, 255, 0))
 	else:
-		p1_nx, p1_ny = 1, 0
-
-	# Calculate sprite center (matching blit_bike_with_front_at logic)
-	center_offset = sprite_width / 2 - back_margin
-	sprite_center_x = back_center_x + p1_nx * center_offset
-	sprite_center_y = back_center_y + p1_ny * center_offset
-
-	# Draw full sprite outline in cyan
-	draw_rotated_rect_debug(WIN, (0, 255, 255), sprite_center_x, sprite_center_y,
-	                        sprite_width, sprite_height, p1_angle, line_width=2)
-
-	# Player 2 sprite outline
-	p2_x, p2_y = player2.pos
-	p2_dir = player2.dir
-	p2_angle = math.degrees(math.atan2(p2_dir[1], p2_dir[0]))
-
-	# Back center
-	back_center_x = p2_x + 2
-	back_center_y = p2_y + 2
-
-	# Normalize direction
-	p2_mag = math.sqrt(p2_dir[0]**2 + p2_dir[1]**2)
-	if p2_mag > 0:
-		p2_nx = p2_dir[0] / p2_mag
-		p2_ny = p2_dir[1] / p2_mag
-	else:
-		p2_nx, p2_ny = 1, 0
-
-	# Calculate sprite center
-	sprite_center_x = back_center_x + p2_nx * center_offset
-	sprite_center_y = back_center_y + p2_ny * center_offset
-
-	# Draw full sprite outline in cyan
-	draw_rotated_rect_debug(WIN, (0, 255, 255), sprite_center_x, sprite_center_y,
-	                        sprite_width, sprite_height, p2_angle, line_width=2)
+		draw_bike_hitboxes(player2, (180, 100, 0), (255, 255, 0))
 
 def draw_scoreboard():
 	p1_text = small_font.render(f"Blue: {p1_wins}", True, BLUE)
@@ -1197,6 +1200,8 @@ def countdown():
 		draw_obstacles()
 		draw_powerups()
 		draw_sprites()
+		if show_debug_hitboxes:
+			draw_debug_hitboxes()
 		draw_scoreboard()
 		if theme == "ARES":
 			show_message(str(i), "", DARKER_RED)
@@ -1216,6 +1221,8 @@ def countdown():
 	draw_obstacles()
 	draw_powerups()
 	draw_sprites()
+	if show_debug_hitboxes:
+		draw_debug_hitboxes()
 	draw_scoreboard()
 	if theme == "ARES":
 		show_message("GO!", "", DARKER_RED)
@@ -1273,6 +1280,8 @@ def p1_win():
 	draw_obstacles()
 	draw_powerups()
 	draw_sprites()
+	if show_debug_hitboxes:
+		draw_debug_hitboxes()
 	draw_scoreboard()
 	pygame.display.update()
 
@@ -1351,6 +1360,8 @@ def p2_win():
 	draw_obstacles()
 	draw_powerups()
 	draw_sprites()
+	if show_debug_hitboxes:
+		draw_debug_hitboxes()
 	draw_scoreboard()
 	pygame.display.update()
 
@@ -1758,15 +1769,17 @@ def step_move_player(bike, other_bike, effective_speed, sprite_width, sprite_hei
 
 		# Calculate front hitbox position
 		# The front hitbox is a small rectangle at the tip of the bike
-		# positioned at 85% of the bike's length from the back
-		front_offset = sprite_width * 0.85
-		front_center_x = test_x + 2 + nx * front_offset
-		front_center_y = test_y + 2 + ny * front_offset
-
-		# Front hitbox dimensions - small rectangle at the tip
-		# Width is 15% of bike length, height is full bike width
+		# Its outer edge should align perfectly with the sprite's front edge
+		back_margin = 4
 		front_hitbox_width = sprite_width * 0.25
 		front_hitbox_height = tight_height
+
+		# Position the hitbox so its outer edge aligns with sprite edge
+		# Sprite front edge is at (sprite_width - back_margin) from back
+		# Hitbox center should be at: sprite_edge - (hitbox_width / 2)
+		front_offset = (sprite_width - back_margin) - (front_hitbox_width / 2)
+		front_center_x = test_x + 2 + nx * front_offset
+		front_center_y = test_y + 2 + ny * front_offset
 
 		# Also calculate body hitbox for turn collision detection
 		# The body extends from the back position
@@ -1826,6 +1839,32 @@ def step_move_player(bike, other_bike, effective_speed, sprite_width, sprite_hei
 			if rotated_rect_intersects_rect(front_center_x, front_center_y, front_hitbox_width, front_hitbox_height, angle_deg, obs_rect):
 				return True
 
+		# Check bike-to-bike collision
+		if other_bike is not None:
+			# Calculate other bike's position and hitbox
+			other_mag = math.hypot(other_bike.dir[0], other_bike.dir[1])
+			if other_mag > 0:
+				# Calculate other bike's rotation angle
+				other_rad = math.atan2(-other_bike.dir[1], other_bike.dir[0])
+				other_angle_deg = math.degrees(other_rad)
+
+				# Calculate other bike's sprite center
+				other_back_center_x = other_bike.pos[0] + 2
+				other_back_center_y = other_bike.pos[1] + 2
+				other_nx = other_bike.dir[0] / other_mag
+				other_ny = other_bike.dir[1] / other_mag
+				other_center_offset = sprite_width / 2 - back_margin
+				other_center_x = other_back_center_x + other_nx * other_center_offset
+				other_center_y = other_back_center_y + other_ny * other_center_offset
+
+				# Check if this bike's hitbox would intersect the other bike's hitbox
+				# Use the full body hitbox for bike-to-bike collision
+				if rotated_rects_intersect(
+					body_center_x, body_center_y, body_width, body_height, angle_deg,
+					other_center_x, other_center_y, tight_width, tight_height, other_angle_deg
+				):
+					return True
+
 		return False
 
 	# Move step-by-step, checking BEFORE each move
@@ -1842,12 +1881,37 @@ def step_move_player(bike, other_bike, effective_speed, sprite_width, sprite_hei
 
 		# Check if moving to this position would cause collision
 		if would_collide(next_x, next_y):
+			# Collision detected - do a binary search to find the exact tangent position
+			# Start with current position (safe) and next position (collision)
+			safe_x, safe_y = bike.pos[0], bike.pos[1]
+			collide_x, collide_y = next_x, next_y
+
+			# Binary search for the exact tangent point (10 iterations gives sub-pixel precision)
+			for _ in range(10):
+				mid_x = (safe_x + collide_x) / 2
+				mid_y = (safe_y + collide_y) / 2
+
+				if would_collide(mid_x, mid_y):
+					# Mid point collides, search in first half
+					collide_x, collide_y = mid_x, mid_y
+				else:
+					# Mid point is safe, search in second half
+					safe_x, safe_y = mid_x, mid_y
+
+			# Move to the tangent position (midpoint between final safe and collide positions)
+			# This ensures the hitbox edge is exactly at the collision boundary
+			tangent_x = (safe_x + collide_x) / 2
+			tangent_y = (safe_y + collide_y) / 2
+			bike.pos[0] = tangent_x
+			bike.pos[1] = tangent_y
+
 			if bike == player1:
 				collided_player = 1
 			else:
 				collided_player = 2
+			break
 
-		# Update position
+		# Update position (only if no collision)
 		bike.pos[0] = next_x
 		bike.pos[1] = next_y
 		distance_moved += step_size
@@ -2074,6 +2138,8 @@ def run_game():
 					draw_obstacles()
 					draw_powerups()
 					draw_sprites()
+					if show_debug_hitboxes:
+						draw_debug_hitboxes()
 					draw_scoreboard()
 					pygame.display.update()
 					if theme == "82":
@@ -2161,6 +2227,8 @@ def run_game():
 							main_menu()
 						elif event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
 							show_ui_overlay = not show_ui_overlay
+						elif event.key == pygame.K_h:
+							show_debug_hitboxes = not show_debug_hitboxes
 
 			else:
 				WIN.fill(BLACK)
@@ -2191,5 +2259,7 @@ def run_game():
 							main_menu()
 						elif event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
 							show_ui_overlay = not show_ui_overlay
+						elif event.key == pygame.K_h:
+							show_debug_hitboxes = not show_debug_hitboxes
 
 	pygame.quit()
