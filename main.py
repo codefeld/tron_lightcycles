@@ -84,6 +84,8 @@ LIGHT_RED = (255, 50, 50)
 TEAL = (0, 180, 150)
 WHITE = (255, 255, 255)
 LIGHT_GRAY = (200, 200, 200)
+YELLOW = (255, 255, 0)
+GREEN = (22, 247, 21)
 
 blue_wins = 0
 orange_wins = 0
@@ -106,12 +108,18 @@ first_powerup_spawned = False
 # Screen setup
 info = pygame.display.Info()
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
+
 background_82 = pygame.image.load("images/tron_82_grid_background.jpg")
 background_82 = pygame.transform.scale(background_82, (WIDTH, HEIGHT))
+
 legacy_background = pygame.image.load("images/tron_legacy_grid.png")
 legacy_background = pygame.transform.scale(legacy_background, (WIDTH, HEIGHT))
+
 ares_background = pygame.image.load("images/tron_ares_grid.png")
 ares_background = pygame.transform.scale(ares_background, (WIDTH, HEIGHT))
+
+reconfigured_background = pygame.image.load("images/tron_reconfigured_grid.png")
+reconfigured_background = pygame.transform.scale(reconfigured_background, (WIDTH, HEIGHT))
 pygame.display.set_caption("TRON Lightcycles")
 
 # Player settings

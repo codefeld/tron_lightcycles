@@ -149,6 +149,10 @@ def main_menu():
 		font = pygame.font.Font(tron_ares, 50)
 		small_font = pygame.font.Font(orbitron_regular, 20)
 		message_color = (255, 0, 0)
+	elif theme == "RECONFIGURED":
+		font = pygame.font.Font(tr2n, 75)
+		small_font = pygame.font.Font(orbitron_regular, 20)
+		message_color = (0, 255, 255)
 
 	menu_running = True
 
@@ -179,6 +183,15 @@ def main_menu():
 			pygame.mixer.music.play(-1)
 			pygame.mixer.music.set_volume(0.75)
 			current_track = selected_song
+		elif theme == "RECONFIGURED":
+			WIN.blit(reconfigured_background, (0, 0))
+			menu_song = random.choice(menu_music_legacy)
+			selected_song = str(menu_song)
+			pygame.mixer.music.stop()
+			pygame.mixer.music.load(selected_song)
+			pygame.mixer.music.play(-1)
+			pygame.mixer.music.set_volume(1)
+			current_track = selected_song
 		# Custom title screen rendering with large "TRON" on separate line
 		# For 82 theme, use tron_logo.png image; for others, use text
 		if theme == "82":
@@ -204,31 +217,11 @@ def main_menu():
 		elif theme == "ARES":
 			large_font = pygame.font.Font(tron_ares, 150)
 			tron_title = large_font.render("TRON", True, message_color)
+		elif theme == "RECONFIGURED":
+			large_font = pygame.font.Font(tr2n, 200)
+			tron_title = large_font.render("TRON", True, message_color)
 
 		# Render other title components
-		# For 82 theme, render "LIGHTCYCLES" with gray fill and dark red outline (like obstacles)
-		# if theme == "82":
-		# 	# Create text with outline effect
-		# 	outline_color = (113, 0, 0)  # Dark red outline (same as obstacle outline)
-		# 	fill_color = (13, 54, 77)  # Gray fill
-
-		# 	# Render outline (draw text multiple times with offset)
-		# 	outline_surfaces = []
-		# 	for dx, dy in [(-2, -2), (-2, 2), (2, -2), (2, 2), (-2, 0), (2, 0), (0, -2), (0, 2)]:
-		# 		outline_surfaces.append((font.render("LIGHTCYCLES", True, outline_color), (dx, dy)))
-
-		# 	# Create a surface large enough to hold the text with outline
-		# 	base_text = font.render("LIGHTCYCLES", True, fill_color)
-		# 	text_width = base_text.get_width() + 8
-		# 	text_height = base_text.get_height() + 8
-		# 	lightcycles_title = pygame.Surface((text_width, text_height), pygame.SRCALPHA)
-
-		# 	# Draw outline
-		# 	for outline_surf, (dx, dy) in outline_surfaces:
-		# 		lightcycles_title.blit(outline_surf, (4 + dx, 4 + dy))
-
-		# 	# Draw main text on top
-		# 	lightcycles_title.blit(base_text, (4, 4))
 		if theme != "82":
 			lightcycles_title = font.render("LIGHTCYCLES", True, message_color)
 
@@ -243,8 +236,10 @@ def main_menu():
 			lightcycles_y = tron_y + tron_title.get_height() - 60
 		elif theme == "LEGACY":
 			lightcycles_y = tron_y + tron_title.get_height()
-		else:
+		elif theme == "ARES":
 			lightcycles_y = tron_y + tron_title.get_height() + 20
+		elif theme == "RECONFIGURED":
+			lightcycles_y = tron_y + tron_title.get_height()
 
 		instruction_x = (WIDTH - instruction_text.get_width()) // 2
 		if theme == "82":
@@ -296,6 +291,8 @@ def difficulty_menu():
 			WIN.blit(legacy_background, (0, 0))
 		elif theme == "ARES":
 			WIN.blit(ares_background, (0, 0))
+		elif theme == "RECONFIGURED":
+			WIN.blit(reconfigured_background, (0, 0))
 		show_message("CHOOSE DIFFICULTY", "Press \"1\" for \"NORMAL\" or \"2\" for \"CHALLENGE\"", message_color)
 		waiting = True
 		while waiting:
@@ -333,6 +330,8 @@ def theme_menu():
 			WIN.blit(legacy_background, (0, 0))
 		elif theme == "ARES":
 			WIN.blit(ares_background, (0, 0))
+		elif theme == "RECONFIGURED":
+			WIN.blit(reconfigured_background, (0, 0))
 		show_message("SELECT A THEME", "Press \"1\" for \"82\", \"2\" for \"LEGACY\", or \"3\" for \"ARES\"", message_color)
 		waiting = True
 		while waiting:
@@ -370,6 +369,14 @@ def theme_menu():
 						theme_menu_running = False
 						waiting = False
 						reset_game()
+					elif event.key == pygame.K_r:
+						theme = "RECONFIGURED"
+						WHITE = (255, 255, 255)
+						font = pygame.font.Font(tron_ares, 50)
+						small_font = pygame.font.Font(orbitron_regular, 20)
+						theme_menu_running = False
+						waiting = False
+						reset_game()
 					elif event.key == pygame.K_ESCAPE:
 						difficulty_menu()
 
@@ -397,6 +404,9 @@ def draw_squircle_grid(surface, squircle_size=30, spacing=40, roundness=0.7):
 	elif theme == "ARES":
 		bg_color = (10, 0, 0)
 		squircle_color = DARKEST_RED
+	elif theme == "RECONFIGURED":
+		bg_color = (0, 10, 0)
+		squircle_color = GREEN
 
 	surface.fill(bg_color)
 
@@ -450,7 +460,7 @@ def draw_rotated_rect_debug(surface, color, center_x, center_y, width, height, a
 	pygame.draw.polygon(surface, color, rotated_corners, line_width)
 
 def draw_tron_grid(surface, desired_spacing=40):
-	if theme == "LEGACY" or theme == "ARES":
+	if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED":
 		draw_squircle_grid(WIN, 90, 120, .1)
 	elif theme == "82":
 		color = WHITE
@@ -829,7 +839,7 @@ def draw_bike_glow(bike, alpha=80):
 			pygame.draw.ellipse(glow_surface, (*bike.color, current_alpha), rect)
 
 	# Calculate the center of the bike sprite
-	if theme == "LEGACY" or theme == "ARES":
+	if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED":
 		sprite_width = legacy_width
 		sprite_height = legacy_height
 	elif theme == "82":
@@ -936,10 +946,15 @@ def draw_sprites():
 
 def draw_trails():
 	for point in player1.trail:
-		pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
+		if theme == "RECONFIGURED":
+			pygame.draw.rect(WIN, GREEN, (*point, BLOCK_SIZE, BLOCK_SIZE))
+		else:
+			pygame.draw.rect(WIN, BLUE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 	for point in player2.trail:
 		if theme == "ARES":
 			pygame.draw.rect(WIN, RED, (*point, BLOCK_SIZE, BLOCK_SIZE))
+		elif theme == "RECONFIGURED":
+			pygame.draw.rect(WIN, YELLOW, (*point, BLOCK_SIZE, BLOCK_SIZE))
 		else:
 			pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 
@@ -947,7 +962,7 @@ def draw_debug_hitboxes():
 	"""Draw debug visualization showing actual collision hitboxes."""
 	import math
 
-	if theme == "LEGACY" or theme == "ARES":
+	if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED":
 		sprite_width = legacy_width
 		sprite_height = legacy_height
 	else:  # 82 theme
@@ -1002,18 +1017,29 @@ def draw_debug_hitboxes():
 		                        front_hitbox_width, front_hitbox_height, angle, line_width=2)
 
 	# Player 1 hitboxes (cyan body, white front)
-	draw_bike_hitboxes(player1, (0, 180, 180), (255, 255, 255))
+	if theme == "RECONFIGURED":
+		draw_bike_hitboxes(player1, GREEN, (255, 255, 0))
+	else:
+		draw_bike_hitboxes(player1, (0, 180, 180), (255, 255, 255))
 
 	# Player 2 hitboxes (orange/red body, yellow front)
 	if theme == "ARES":
 		draw_bike_hitboxes(player2, (180, 0, 0), (255, 255, 0))
+	elif theme == "RECONFIGURED":
+		draw_bike_hitboxes(player2, YELLOW, (255, 255, 0))
 	else:
 		draw_bike_hitboxes(player2, (180, 100, 0), (255, 255, 0))
 
 def draw_scoreboard():
-	p1_text = small_font.render(f"Blue: {p1_wins}", True, BLUE)
+	if theme == "RECONFIGURED":
+		p1_text = small_font.render(f"Green: {p1_wins}", True, GREEN)
+	else:
+		p1_text = small_font.render(f"Blue: {p1_wins}", True, BLUE)
+
 	if theme == "ARES":
 		p2_text = small_font.render(f"Red: {p2_wins}", True, RED)
+	elif theme == "RECONFIGURED":
+		p2_text = small_font.render(f"Yellow: {p1_wins}", True, YELLOW)
 	else:
 		p2_text = small_font.render(f"Orange: {p2_wins}", True, ORANGE)
 
@@ -1037,6 +1063,9 @@ def reset_game():
 	elif theme == "82":
 		player1 = Bike(blue_82_sprite, BLUE, "Blue")
 		player2 = Bike(orange_82_sprite, ORANGE, "Orange")
+	elif theme == "RECONFIGURED":
+		player1 = Bike(blue_legacy_sprite, GREEN, "Green")
+		player2 = Bike(orange_legacy_sprite, YELLOW, "Yellow")
 
 	reset_sprites()
 	clear_powerups()
@@ -1193,10 +1222,17 @@ def countdown():
 			pygame.mixer.music.play(-1)
 			pygame.mixer.music.set_volume(1)
 			current_track = ring_game_and_escape1
+	elif theme == "RECONFIGURED":
+		if clu.exists():
+			pygame.mixer.music.stop()
+			pygame.mixer.music.load("music/clu.mp3")
+			pygame.mixer.music.play(-1)
+			pygame.mixer.music.set_volume(1)
+			current_track = clu
 	for i in range(3, 0, -1):
 		WIN.fill(BLACK)
 		draw_tron_grid(WIN)
-		if theme == "LEGACY" or theme == "ARES":
+		if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED":
 			draw_bike_glow(player1)
 			draw_bike_glow(player2)
 		draw_obstacles()
@@ -1211,13 +1247,15 @@ def countdown():
 			show_message(str(i))
 		elif theme == "82":
 			show_message(str(i), "", LIGHT_GRAY)
+		elif theme == "RECONFIGURED":
+			show_message(str(i), "", GREEN)
 		pygame.display.update()
 		pygame.time.delay(1000)
 
 	# Flash "GO!"
 	WIN.fill(BLACK)
 	draw_tron_grid(WIN)
-	if theme == "LEGACY" or theme == "ARES":
+	if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED":
 		draw_bike_glow(player1)
 		draw_bike_glow(player2)
 	draw_obstacles()
@@ -1232,6 +1270,8 @@ def countdown():
 		show_message("GO!")
 	elif theme == "82":
 		show_message("GO!", "", LIGHT_GRAY)
+	elif theme == "RECONFIGURED":
+		show_message("GO!", "", GREEN)
 	pygame.display.update()
 	pygame.time.delay(800)
 	if theme == "ARES":
@@ -1249,7 +1289,15 @@ def countdown():
 			pygame.mixer.music.play(-1)
 			pygame.mixer.music.set_volume(1)
 			current_track = ring_game_and_escape2
-	else:
+	elif theme == "LEGACY":
+		game_song = random.choice(game_music_legacy)
+		selected_song = str(game_song)
+		pygame.mixer.music.stop()
+		pygame.mixer.music.load(selected_song)
+		pygame.mixer.music.play(-1)
+		pygame.mixer.music.set_volume(1)
+		current_track = selected_song
+	elif theme == "RECONFIGURED":
 		game_song = random.choice(game_music_legacy)
 		selected_song = str(game_song)
 		pygame.mixer.music.stop()
@@ -1275,7 +1323,7 @@ def p1_win():
 	# --- Draw final collision frame before pausing ---
 	WIN.fill(BLACK)
 	draw_tron_grid(WIN)
-	if theme == "LEGACY" or theme == "ARES":
+	if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED":
 		draw_bike_glow(player1)
 		draw_bike_glow(player2)
 	draw_trails()
@@ -1298,7 +1346,10 @@ def p1_win():
 	# Check for match victory
 	if p1_wins >= MAX_SCORE:
 		match_over = True
-		win_text = "TEAM BLUE WINS THE MATCH!"
+		if theme == "RECONFIGURED":
+			win_text = "TEAM GREEN WINS THE MATCH!"
+		else:
+			win_text = "TEAM BLUE WINS THE MATCH!"
 		if theme == "ARES":
 			if new_directive.exists():
 				pygame.mixer.music.load("music/new_directive.mp3")
@@ -1311,6 +1362,12 @@ def p1_win():
 				pygame.mixer.music.play(-1)
 				pygame.mixer.music.set_volume(1)
 				current_track = end_titles
+		elif theme == "RECONFIGURED":
+			if end_titles.exists():
+				pygame.mixer.music.load("music/end_titles.mp3")
+				pygame.mixer.music.play(-1)
+				pygame.mixer.music.set_volume(1)
+				current_track = end_titles
 		elif theme == "82":
 			if ending_titles2.exists():
 				pygame.mixer.music.load("music/ending_titles2.mp3")
@@ -1318,7 +1375,10 @@ def p1_win():
 				pygame.mixer.music.set_volume(1)
 				current_track = ending_titles2
 	else:
-		win_text = "TEAM BLUE WINS!"
+		if theme == "RECONFIGURED":
+			win_text = "TEAM GREEN WINS!"
+		else:
+			win_text = "TEAM BLUE WINS!"
 		if theme == "ARES":
 			if a_question_of_trust.exists():
 				pygame.mixer.music.load("music/a_question_of_trust.mp3")
@@ -1326,6 +1386,12 @@ def p1_win():
 				pygame.mixer.music.set_volume(0.75)
 				current_track = a_question_of_trust
 		elif theme == "LEGACY":
+			if the_grid.exists():
+				pygame.mixer.music.load("music/the_grid.mp3")
+				pygame.mixer.music.play(-1)
+				pygame.mixer.music.set_volume(1)
+				current_track = the_grid
+		elif theme == "RECONFIGURED":
 			if the_grid.exists():
 				pygame.mixer.music.load("music/the_grid.mp3")
 				pygame.mixer.music.play(-1)
@@ -1355,7 +1421,7 @@ def p2_win():
 	# --- Draw final collision frame before pausing ---
 	WIN.fill(BLACK)
 	draw_tron_grid(WIN)
-	if theme == "LEGACY" or theme == "ARES":
+	if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED":
 		draw_bike_glow(player1)
 		draw_bike_glow(player2)
 	draw_trails()
@@ -1376,6 +1442,8 @@ def p2_win():
 	p2_wins += 1
 	if theme == "ARES":
 		win_color = RED
+	elif theme == "RECONFIGURED":
+		win_color = YELLOW
 	else:
 		win_color = ORANGE
 	# Check for match victory
@@ -1383,6 +1451,8 @@ def p2_win():
 		match_over = True
 		if theme == "ARES":
 			win_text = "TEAM RED WINS THE MATCH!"
+		elif theme == "RECONFIGURED":
+			win_text = "TEAM YELLOW WINS THE MATCH!"
 		else:
 			win_text = "TEAM ORANGE WINS THE MATCH!"
 		if single_player:
@@ -1393,6 +1463,12 @@ def p2_win():
 					pygame.mixer.music.set_volume(0.75)
 					current_track = expendable
 			elif theme == "LEGACY":
+				if adagio_for_tron.exists():
+					pygame.mixer.music.load("music/adagio_for_tron.mp3")
+					pygame.mixer.music.play(-1)
+					pygame.mixer.music.set_volume(1)
+					current_track = adagio_for_tron
+			elif theme == "RECONFIGURED":
 				if adagio_for_tron.exists():
 					pygame.mixer.music.load("music/adagio_for_tron.mp3")
 					pygame.mixer.music.play(-1)
@@ -1417,6 +1493,12 @@ def p2_win():
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
 					current_track = end_titles
+			elif theme == "RECONFIGURED":
+				if end_titles.exists():
+					pygame.mixer.music.load("music/end_titles.mp3")
+					pygame.mixer.music.play(-1)
+					pygame.mixer.music.set_volume(1)
+					current_track = end_titles
 			elif theme == "82":
 				if ending_titles2.exists():
 					pygame.mixer.music.load("music/ending_titles2.mp3")
@@ -1426,6 +1508,8 @@ def p2_win():
 	else:
 		if theme == "ARES":
 			win_text = "TEAM RED WINS!"
+		elif theme == "RECONFIGURED":
+			win_text = "TEAM YELLOW WINS!"
 		else:
 			win_text = "TEAM ORANGE WINS!"
 		if single_player:
@@ -1436,6 +1520,12 @@ def p2_win():
 					pygame.mixer.music.set_volume(0.75)
 					current_track = in_the_image_of
 			elif theme == "LEGACY":
+				if rinzler.exists():
+					pygame.mixer.music.load("music/rinzler.mp3")
+					pygame.mixer.music.play(-1)
+					pygame.mixer.music.set_volume(1)
+					current_track = rinzler
+			elif theme == "RECONFIGURED":
 				if rinzler.exists():
 					pygame.mixer.music.load("music/rinzler.mp3")
 					pygame.mixer.music.play(-1)
@@ -1455,6 +1545,12 @@ def p2_win():
 					pygame.mixer.music.set_volume(0.75)
 					current_track = a_question_of_trust
 			elif theme == "LEGACY":
+				if the_grid.exists():
+					pygame.mixer.music.load("music/the_grid.mp3")
+					pygame.mixer.music.play(-1)
+					pygame.mixer.music.set_volume(1)
+					current_track = the_grid
+			elif theme == "RECONFIGURED":
 				if the_grid.exists():
 					pygame.mixer.music.load("music/the_grid.mp3")
 					pygame.mixer.music.play(-1)
@@ -1517,7 +1613,7 @@ def ai_control(current_game_time):
 	def will_collide(pos, dir_vec, steps=20):
 		"""Predict if moving forward will cause a collision using simplified hitbox detection."""
 		# Get sprite dimensions based on theme
-		if theme == "LEGACY" or theme == "ARES":
+		if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED":
 			sprite_w = legacy_width
 			sprite_h = legacy_height
 		elif theme == "82":
@@ -2047,7 +2143,7 @@ def run_game():
 			effective_speed_p2 = player2.get_effective_speed(SPEED, current_time)
 
 			# Get sprite dimensions based on theme
-			if theme == "LEGACY" or theme == "ARES":
+			if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED":
 				sprite_w = legacy_width
 				sprite_h = legacy_height
 			elif theme == "82":
@@ -2133,7 +2229,7 @@ def run_game():
 					# Perfect head-on collision - it's a draw (very rare)
 					WIN.fill(BLACK)
 					draw_tron_grid(WIN)
-					if theme == "LEGACY" or theme == "ARES":
+					if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED":
 						draw_bike_glow(player1)
 						draw_bike_glow(player2)
 					draw_trails()
@@ -2173,6 +2269,13 @@ def run_game():
 							pygame.mixer.music.play(-1)
 							pygame.mixer.music.set_volume(1)
 							current_track = arena
+					elif theme == "RECONFIGURED":
+						win_color = GREEN
+						if arena.exists():
+							pygame.mixer.music.load("music/arena.mp3")
+							pygame.mixer.music.play(-1)
+							pygame.mixer.music.set_volume(1)
+							current_track = arena
 					elif theme == "82":
 						win_color = LIGHT_GRAY
 						if tower_music.exists():
@@ -2189,7 +2292,7 @@ def run_game():
 			# Render everything
 			WIN.fill(BLACK)
 			draw_tron_grid(WIN)
-			if theme == "LEGACY" or theme == "ARES":
+			if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED":
 				draw_bike_glow(player1)
 				draw_bike_glow(player2)
 			draw_trails()
@@ -2206,7 +2309,7 @@ def run_game():
 			if match_over:
 				WIN.fill(BLACK)
 				draw_tron_grid(WIN)
-				if theme == "LEGACY" or theme == "ARES":
+				if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED":
 					draw_bike_glow(player1)
 					draw_bike_glow(player2)
 				draw_trails()
@@ -2235,7 +2338,7 @@ def run_game():
 			else:
 				WIN.fill(BLACK)
 				draw_tron_grid(WIN)
-				if theme == "LEGACY" or theme == "ARES":
+				if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED":
 					draw_bike_glow(player1)
 					draw_bike_glow(player2)
 				draw_trails()

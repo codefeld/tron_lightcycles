@@ -19,8 +19,9 @@ class PowerUp:
 		elif theme == "LEGACY":
 			self.color = (0, 200, 255)
 		elif theme == "82":
-			# self.color = (122, 189, 255)
 			self.color = (128, 0, 128)
+		elif theme == "RECONFIGURED":
+			self.color = (0, 255, 0)
 		else:
 			self.color = PowerUp.COLORS[ptype]
 
@@ -44,8 +45,9 @@ class PowerUp:
 			pygame.draw.rect(screen, (128, 128, 128), (self.x, self.y, self.size, self.size), 2)
 		elif theme == "82":
 			pygame.draw.rect(screen, (122, 189, 255), (self.x, self.y, self.size, self.size), 2)
-			# pygame.draw.rect(screen, (113, 0, 0), (self.x, self.y, self.size, self.size), 2)
 		elif theme == "LEGACY":
+			pygame.draw.rect(screen, (255, 255, 255), (self.x, self.y, self.size, self.size), 2)
+		elif theme == "RECONFIGURED":
 			pygame.draw.rect(screen, (255, 255, 255), (self.x, self.y, self.size, self.size), 2)
 		else:
 			pygame.draw.rect(screen, (255, 255, 255), (self.x, self.y, self.size, self.size), 2)
