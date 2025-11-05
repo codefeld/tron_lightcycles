@@ -70,6 +70,8 @@ themes = ["82", "LEGACY", "ARES"]
 
 theme = random.choice(themes)
 
+# theme = "RECONFIGURED"
+
 message_color = ""
 
 # Colors
@@ -86,6 +88,7 @@ WHITE = (255, 255, 255)
 LIGHT_GRAY = (200, 200, 200)
 YELLOW = (255, 255, 0)
 GREEN = (22, 247, 21)
+DARKER_GREEN = (0, 165, 0)
 
 blue_wins = 0
 orange_wins = 0

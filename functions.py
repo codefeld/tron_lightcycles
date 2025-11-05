@@ -152,7 +152,7 @@ def main_menu():
 	elif theme == "RECONFIGURED":
 		font = pygame.font.Font(tr2n, 75)
 		small_font = pygame.font.Font(orbitron_regular, 20)
-		message_color = (0, 255, 255)
+		message_color = (0, 255, 0)
 
 	menu_running = True
 
@@ -207,6 +207,14 @@ def main_menu():
 				subtitle_width = 400
 				subtitle_height = int(lightcycle_img.get_height() * (subtitle_width / lightcycle_img.get_width()))
 				lightcycles_title = pygame.transform.scale(lightcycle_img, (subtitle_width, subtitle_height))
+		elif theme == "RECONFIGURED":
+			# Load and display the TRON logo image
+			tron_logo_path = Path("images/tron_reconfigured_logo.png")
+			if tron_logo_path.exists():
+				tron_logo_img = pygame.image.load("images/tron_reconfigured_logo.png")
+				logo_width = 600
+				logo_height = int(tron_logo_img.get_height() * (logo_width / tron_logo_img.get_width()))
+				tron_title = pygame.transform.scale(tron_logo_img, (logo_width, logo_height))
 			else:
 				# Fallback to text if image doesn't exist
 				large_font = pygame.font.Font(tron_font, 100)
@@ -239,7 +247,7 @@ def main_menu():
 		elif theme == "ARES":
 			lightcycles_y = tron_y + tron_title.get_height() + 20
 		elif theme == "RECONFIGURED":
-			lightcycles_y = tron_y + tron_title.get_height()
+			lightcycles_y = tron_y + tron_title.get_height() + 40
 
 		instruction_x = (WIDTH - instruction_text.get_width()) // 2
 		if theme == "82":
@@ -332,7 +340,10 @@ def theme_menu():
 			WIN.blit(ares_background, (0, 0))
 		elif theme == "RECONFIGURED":
 			WIN.blit(reconfigured_background, (0, 0))
-		show_message("SELECT A THEME", "Press \"1\" for \"82\", \"2\" for \"LEGACY\", or \"3\" for \"ARES\"", message_color)
+		if theme == "RECONFIGURED":
+			show_message("SELECT A THEME", "Press \"1\" for \"82\", \"2\" for \"LEGACY\", \"3\" for \"ARES\", or \"R\" for RECONFIGURED", message_color)
+		else:
+			show_message("SELECT A THEME", "Press \"1\" for \"82\", \"2\" for \"LEGACY\", or \"3\" for \"ARES\"", message_color)
 		waiting = True
 		while waiting:
 			for event in pygame.event.get():
@@ -406,7 +417,7 @@ def draw_squircle_grid(surface, squircle_size=30, spacing=40, roundness=0.7):
 		squircle_color = DARKEST_RED
 	elif theme == "RECONFIGURED":
 		bg_color = (0, 10, 0)
-		squircle_color = GREEN
+		squircle_color = DARKER_GREEN
 
 	surface.fill(bg_color)
 
@@ -1342,7 +1353,10 @@ def p1_win():
 		pygame.time.delay(1800)
 
 	p1_wins += 1
-	win_color = BLUE
+	if theme == "RECONFIGURED":
+		win_color = GREEN
+	else:
+		win_color = BLUE
 	# Check for match victory
 	if p1_wins >= MAX_SCORE:
 		match_over = True
