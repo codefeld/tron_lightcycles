@@ -565,7 +565,7 @@ def draw_tron_grid(surface, desired_spacing=40):
 
 		surface.blit(glow, (0, 0))
 
-def show_message(text, subtext="", color=TEAL):
+def show_message(text, subtext="", color=WHITE):
 	# Add padding around the text
 	padding_x = 20
 	padding_y = 15
@@ -1282,7 +1282,7 @@ def countdown():
 		if theme == "ARES":
 			show_message(str(i), "", DARKER_RED)
 		elif theme == "LEGACY":
-			show_message(str(i))
+			show_message(str(i), "", DARKER_BLUE)
 		elif theme == "82":
 			show_message(str(i), "", LIGHT_GRAY)
 		elif theme == "RECONFIGURED":
@@ -1307,7 +1307,7 @@ def countdown():
 	if theme == "ARES":
 		show_message("GO!", "", DARKER_RED)
 	elif theme == "LEGACY":
-		show_message("GO!")
+		show_message("GO!", "", DARKER_BLUE)
 	elif theme == "82":
 		show_message("GO!", "", LIGHT_GRAY)
 	elif theme == "RECONFIGURED":
@@ -2358,7 +2358,7 @@ def run_game():
 							pygame.mixer.music.set_volume(0.75)
 							current_track = this_changes_everything
 					elif theme == "LEGACY":
-						win_color = TEAL
+						win_color = DARKER_BLUE
 						if arena.exists():
 							pygame.mixer.music.load("music/arena.mp3")
 							pygame.mixer.music.play(-1)
@@ -2379,7 +2379,7 @@ def run_game():
 							pygame.mixer.music.set_volume(1)
 							current_track = tower_music
 					elif theme == "UPRISING":
-						win_color = TEAL
+						win_color = DARKER_BLUE
 						if arena.exists():
 							pygame.mixer.music.load("music/arena.mp3")
 							pygame.mixer.music.play(-1)

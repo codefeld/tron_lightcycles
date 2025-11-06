@@ -92,6 +92,7 @@ message_color = ""
 BLACK = (0, 0, 0)
 GRID_COLOR = (20, 20, 30)
 BLUE = (0, 255, 255)
+DARKER_BLUE = (0, 200, 200)
 ORANGE = (255, 150, 0)
 RED = (255, 0, 0)
 DARKER_RED = (200, 0, 0)
