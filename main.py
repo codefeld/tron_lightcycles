@@ -57,10 +57,24 @@ init2 = Path("music/init2.mp3")
 what_have_you_done = Path("music/what_have_you_done.mp3")
 # daemonize = Path("music/daemonize.mp3")
 
+derezzed_reconfigured = Path("music/derezzed_reconfigured.mp3")
+fall_reconfigured = Path("music/fall_reconfigured.mp3")
+the_grid_reconfigured = Path("music/the_grid_reconfigured.mp3")
+rinzler_reconfigured = Path("music/rinzler_reconfigured.mp3")
+end_titles_reconfigured = Path("music/end_titles_reconfigured.mp3")
+arena_reconfigured1 = Path("music/arena_reconfigured1.mp3")
+arena_reconfigured2 = Path("music/arena_reconfigured2.mp3")
+end_of_line_reconfigured = Path("music/end_of_line_reconfigured.mp3")
+solar_sailer_reconfigured = Path("music/solar_sailer_reconfigured.mp3")
+encom_reconfigured = Path("music/encom_reconfigured.mp3")
+the_son_of_flynn_reconfigured = Path("music/the_son_of_flynn_reconfigured.mp3")
+
 menu_music_legacy = [armory, recognizer]
 menu_music_ares = [init2, what_have_you_done]
+menu_music_reconfigured = [derezzed_reconfigured, fall_reconfigured]
 game_music_legacy = [derezzed, fall, disc_wars, the_game_has_changed]
 game_music_ares = [infiltrator, target_identified]
+game_music_reconfigured = [arena_reconfigured1, arena_reconfigured2, end_of_line_reconfigured]
 
 current_track = ""
 
@@ -123,6 +137,7 @@ ares_background = pygame.transform.scale(ares_background, (WIDTH, HEIGHT))
 
 reconfigured_background = pygame.image.load("images/tron_reconfigured_grid.png")
 reconfigured_background = pygame.transform.scale(reconfigured_background, (WIDTH, HEIGHT))
+
 pygame.display.set_caption("TRON Lightcycles")
 
 # Player settings
@@ -178,6 +193,11 @@ orange_legacy_big = pygame.transform.flip(orange_legacy_big, True, False)
 red_ares_big = pygame.image.load("images/red_lightcycle_ares.png").convert_alpha()
 red_ares_big = pygame.transform.flip(red_ares_big, True, False)
 
+green_reconfigured_big = pygame.image.load("images/green_lightcycle_reconfigured.png").convert_alpha()
+green_reconfigured_big = pygame.transform.flip(green_reconfigured_big, True, False)
+yellow_reconfigured_big = pygame.image.load("images/yellow_lightcycle_reconfigured.png").convert_alpha()
+yellow_reconfigured_big = pygame.transform.flip(yellow_reconfigured_big, True, False)
+
 scale_factor_82 = .05
 width_82 = int(blue_82_big.get_width() * scale_factor_82)
 height_82 = int(blue_82_big.get_height() * scale_factor_82)
@@ -186,6 +206,10 @@ legacy_scale_factor = .04
 legacy_width = int(blue_legacy_big.get_width() * legacy_scale_factor)
 legacy_height = int(blue_legacy_big.get_height() * legacy_scale_factor)
 
+reconfigured_scale_factor = .045
+reconfigured_width = int(green_reconfigured_big.get_width() * reconfigured_scale_factor)
+reconfigured_height = int(green_reconfigured_big.get_height() * reconfigured_scale_factor)
+
 blue_82_sprite = pygame.transform.scale(blue_82_big, (width_82, height_82))
 orange_82_sprite = pygame.transform.scale(orange_82_big, (width_82, height_82))
 
@@ -193,6 +217,9 @@ blue_legacy_sprite = pygame.transform.scale(blue_legacy_big, (legacy_width, lega
 orange_legacy_sprite = pygame.transform.scale(orange_legacy_big, (legacy_width, legacy_height))
 
 red_ares_sprite = pygame.transform.scale(red_ares_big, (legacy_width, legacy_height))
+
+green_reconfigured_sprite = pygame.transform.scale(green_reconfigured_big, (reconfigured_width, reconfigured_height))
+yellow_reconfigured_sprite = pygame.transform.scale(yellow_reconfigured_big, (reconfigured_width, reconfigured_height))
 
 # Create bike instances
 player1 = ""
@@ -212,6 +239,8 @@ orbitron_bold = os.path.join("fonts", "Orbitron-Bold.ttf")
 orbitron_regular = os.path.join("fonts", "Orbitron-Medium.ttf")
 
 tron_ares = os.path.join("fonts", "TronAres.ttf")
+
+pixel_font = os.path.join("fonts", "PressStart2P-Regular.ttf")
 
 turn_cooldown = 50 
 

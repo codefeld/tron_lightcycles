@@ -33,7 +33,7 @@ class Obstacle:
 			pygame.draw.rect(screen, (255, 255, 255), core, 2)
 		elif theme == "RECONFIGURED":
 			pygame.draw.rect(screen, (0, 0, 0), core)
-			pygame.draw.rect(screen, (255, 255, 255), core, 2)
+			pygame.draw.rect(screen, (144, 238, 144), core, 2)
 		elif theme == "82":
 			pygame.draw.rect(screen, (13, 54, 77), core)
 			pygame.draw.rect(screen, (113, 0, 0), core, 2)

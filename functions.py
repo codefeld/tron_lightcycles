@@ -150,8 +150,8 @@ def main_menu():
 		small_font = pygame.font.Font(orbitron_regular, 20)
 		message_color = (255, 0, 0)
 	elif theme == "RECONFIGURED":
-		font = pygame.font.Font(tr2n, 75)
-		small_font = pygame.font.Font(orbitron_regular, 20)
+		font = pygame.font.Font(pixel_font, 50)
+		small_font = pygame.font.Font(pixel_font, 15)
 		message_color = (0, 255, 0)
 
 	menu_running = True
@@ -185,12 +185,12 @@ def main_menu():
 			current_track = selected_song
 		elif theme == "RECONFIGURED":
 			WIN.blit(reconfigured_background, (0, 0))
-			menu_song = random.choice(menu_music_legacy)
+			menu_song = random.choice(menu_music_reconfigured)
 			selected_song = str(menu_song)
 			pygame.mixer.music.stop()
 			pygame.mixer.music.load(selected_song)
 			pygame.mixer.music.play(-1)
-			pygame.mixer.music.set_volume(1)
+			pygame.mixer.music.set_volume(0.75)
 			current_track = selected_song
 		# Custom title screen rendering with large "TRON" on separate line
 		# For 82 theme, use tron_logo.png image; for others, use text
@@ -324,7 +324,8 @@ def difficulty_menu():
 						waiting = False
 						theme_menu()
 					elif event.key == pygame.K_ESCAPE:
-						main_menu()
+						pygame.quit()
+						sys.exit()
 
 def theme_menu():
 	global theme, BLUE, ORANGE, WHITE, font, small_font
@@ -383,13 +384,14 @@ def theme_menu():
 					elif event.key == pygame.K_r:
 						theme = "RECONFIGURED"
 						WHITE = (255, 255, 255)
-						font = pygame.font.Font(tron_ares, 50)
-						small_font = pygame.font.Font(orbitron_regular, 20)
+						font = pygame.font.Font(pixel_font, 50)
+						small_font = pygame.font.Font(pixel_font, 15)
 						theme_menu_running = False
 						waiting = False
 						reset_game()
 					elif event.key == pygame.K_ESCAPE:
-						difficulty_menu()
+						pygame.quit()
+						sys.exit()
 
 def draw_squircle(surface, center_x, center_y, size, color, roundness=0.7):
 	"""Draw a rounded rectangle."""
@@ -471,8 +473,10 @@ def draw_rotated_rect_debug(surface, color, center_x, center_y, width, height, a
 	pygame.draw.polygon(surface, color, rotated_corners, line_width)
 
 def draw_tron_grid(surface, desired_spacing=40):
-	if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED":
+	if theme == "LEGACY" or theme == "ARES":
 		draw_squircle_grid(WIN, 90, 120, .1)
+	elif theme == "RECONFIGURED":
+		draw_squircle_grid(WIN, 90, 120, 0)
 	elif theme == "82":
 		color = WHITE
 		surface.fill((0, 0, 25))
@@ -850,13 +854,12 @@ def draw_bike_glow(bike, alpha=80):
 			pygame.draw.ellipse(glow_surface, (*bike.color, current_alpha), rect)
 
 	# Calculate the center of the bike sprite
-	if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED":
+	if theme == "LEGACY" or theme == "ARES":
 		sprite_width = legacy_width
-		sprite_height = legacy_height
 	elif theme == "82":
 		sprite_width = width_82
-		sprite_height = height_82
-
+	elif theme == "RECONFIGURED":
+		sprite_width = reconfigured_width
 
 	# Get direction magnitude for centering calculation
 	mag = math.hypot(dx, dy)
@@ -922,33 +925,33 @@ def get_bike_rect(bike, sprite_width, sprite_height, back_margin=4):
 
 	return rect
 
-def draw_rotated_rect(surface, color, center_x, center_y, width, height, angle_deg, line_width=2):
-	"""Draw a rotated rectangle using polygon drawing."""
-	import math
+# def draw_rotated_rect(surface, color, center_x, center_y, width, height, angle_deg, line_width=2):
+# 	"""Draw a rotated rectangle using polygon drawing."""
+# 	import math
 
-	# Create corner points for an unrotated rectangle centered at origin
-	half_w = width / 2
-	half_h = height / 2
-	corners = [
-		(-half_w, -half_h),
-		(half_w, -half_h),
-		(half_w, half_h),
-		(-half_w, half_h)
-	]
+# 	# Create corner points for an unrotated rectangle centered at origin
+# 	half_w = width / 2
+# 	half_h = height / 2
+# 	corners = [
+# 		(-half_w, -half_h),
+# 		(half_w, -half_h),
+# 		(half_w, half_h),
+# 		(-half_w, half_h)
+# 	]
 
-	# Rotate each corner point
-	angle_rad = math.radians(angle_deg)
-	cos_a = math.cos(angle_rad)
-	sin_a = math.sin(angle_rad)
+# 	# Rotate each corner point
+# 	angle_rad = math.radians(angle_deg)
+# 	cos_a = math.cos(angle_rad)
+# 	sin_a = math.sin(angle_rad)
 
-	rotated_corners = []
-	for x, y in corners:
-		rotated_x = x * cos_a - y * sin_a
-		rotated_y = x * sin_a + y * cos_a
-		rotated_corners.append((center_x + rotated_x, center_y + rotated_y))
+# 	rotated_corners = []
+# 	for x, y in corners:
+# 		rotated_x = x * cos_a - y * sin_a
+# 		rotated_y = x * sin_a + y * cos_a
+# 		rotated_corners.append((center_x + rotated_x, center_y + rotated_y))
 
-	# Draw the polygon
-	pygame.draw.polygon(surface, color, rotated_corners, line_width)
+# 	# Draw the polygon
+# 	pygame.draw.polygon(surface, color, rotated_corners, line_width)
 
 def draw_sprites():
 	"""Render both bikes on the screen."""
@@ -973,10 +976,13 @@ def draw_debug_hitboxes():
 	"""Draw debug visualization showing actual collision hitboxes."""
 	import math
 
-	if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED":
+	if theme == "LEGACY" or theme == "ARES":
 		sprite_width = legacy_width
 		sprite_height = legacy_height
-	else:  # 82 theme
+	elif theme == "RECONFIGURED":
+		sprite_width = reconfigured_width
+		sprite_height = reconfigured_height
+	elif theme == "82":
 		sprite_width = width_82
 		sprite_height = height_82
 
@@ -1050,7 +1056,7 @@ def draw_scoreboard():
 	if theme == "ARES":
 		p2_text = small_font.render(f"Red: {p2_wins}", True, RED)
 	elif theme == "RECONFIGURED":
-		p2_text = small_font.render(f"Yellow: {p1_wins}", True, YELLOW)
+		p2_text = small_font.render(f"Yellow: {p2_wins}", True, YELLOW)
 	else:
 		p2_text = small_font.render(f"Orange: {p2_wins}", True, ORANGE)
 
@@ -1075,8 +1081,8 @@ def reset_game():
 		player1 = Bike(blue_82_sprite, BLUE, "Blue")
 		player2 = Bike(orange_82_sprite, ORANGE, "Orange")
 	elif theme == "RECONFIGURED":
-		player1 = Bike(blue_legacy_sprite, GREEN, "Green")
-		player2 = Bike(orange_legacy_sprite, YELLOW, "Yellow")
+		player1 = Bike(green_reconfigured_sprite, GREEN, "Green")
+		player2 = Bike(yellow_reconfigured_sprite, YELLOW, "Yellow")
 
 	reset_sprites()
 	clear_powerups()
@@ -1234,12 +1240,12 @@ def countdown():
 			pygame.mixer.music.set_volume(1)
 			current_track = ring_game_and_escape1
 	elif theme == "RECONFIGURED":
-		if clu.exists():
+		if the_son_of_flynn_reconfigured.exists():
 			pygame.mixer.music.stop()
-			pygame.mixer.music.load("music/clu.mp3")
+			pygame.mixer.music.load("music/the_son_of_flynn_reconfigured.mp3")
 			pygame.mixer.music.play(-1)
-			pygame.mixer.music.set_volume(1)
-			current_track = clu
+			pygame.mixer.music.set_volume(0.75)
+			current_track = the_son_of_flynn_reconfigured
 	for i in range(3, 0, -1):
 		WIN.fill(BLACK)
 		draw_tron_grid(WIN)
@@ -1309,7 +1315,7 @@ def countdown():
 		pygame.mixer.music.set_volume(1)
 		current_track = selected_song
 	elif theme == "RECONFIGURED":
-		game_song = random.choice(game_music_legacy)
+		game_song = random.choice(game_music_reconfigured)
 		selected_song = str(game_song)
 		pygame.mixer.music.stop()
 		pygame.mixer.music.load(selected_song)
@@ -1377,11 +1383,11 @@ def p1_win():
 				pygame.mixer.music.set_volume(1)
 				current_track = end_titles
 		elif theme == "RECONFIGURED":
-			if end_titles.exists():
-				pygame.mixer.music.load("music/end_titles.mp3")
+			if end_titles_reconfigured.exists():
+				pygame.mixer.music.load("music/end_titles_reconfigured.mp3")
 				pygame.mixer.music.play(-1)
-				pygame.mixer.music.set_volume(1)
-				current_track = end_titles
+				pygame.mixer.music.set_volume(0.75)
+				current_track = end_titles_reconfigured
 		elif theme == "82":
 			if ending_titles2.exists():
 				pygame.mixer.music.load("music/ending_titles2.mp3")
@@ -1406,11 +1412,11 @@ def p1_win():
 				pygame.mixer.music.set_volume(1)
 				current_track = the_grid
 		elif theme == "RECONFIGURED":
-			if the_grid.exists():
-				pygame.mixer.music.load("music/the_grid.mp3")
+			if the_grid_reconfigured.exists():
+				pygame.mixer.music.load("music/the_grid_reconfigured.mp3")
 				pygame.mixer.music.play(-1)
-				pygame.mixer.music.set_volume(1)
-				current_track = the_grid
+				pygame.mixer.music.set_volume(0.75)
+				current_track = the_grid_reconfigured
 		elif theme == "82":
 			if ending_titles1.exists():
 				pygame.mixer.music.load("music/ending_titles1.mp3")
@@ -1483,11 +1489,11 @@ def p2_win():
 					pygame.mixer.music.set_volume(1)
 					current_track = adagio_for_tron
 			elif theme == "RECONFIGURED":
-				if adagio_for_tron.exists():
-					pygame.mixer.music.load("music/adagio_for_tron.mp3")
+				if encom_reconfigured.exists():
+					pygame.mixer.music.load("music/encom_reconfigured.mp3")
 					pygame.mixer.music.play(-1)
-					pygame.mixer.music.set_volume(1)
-					current_track = adagio_for_tron
+					pygame.mixer.music.set_volume(0.75)
+					current_track = encom_reconfigured
 			elif theme == "82":
 				if sea_of_simulation.exists():
 					pygame.mixer.music.load("music/sea_of_simulation.mp3")
@@ -1508,11 +1514,11 @@ def p2_win():
 					pygame.mixer.music.set_volume(1)
 					current_track = end_titles
 			elif theme == "RECONFIGURED":
-				if end_titles.exists():
-					pygame.mixer.music.load("music/end_titles.mp3")
+				if end_titles_reconfigured.exists():
+					pygame.mixer.music.load("music/end_titles_reconfigured.mp3")
 					pygame.mixer.music.play(-1)
-					pygame.mixer.music.set_volume(1)
-					current_track = end_titles
+					pygame.mixer.music.set_volume(0.75)
+					current_track = end_titles_reconfigured
 			elif theme == "82":
 				if ending_titles2.exists():
 					pygame.mixer.music.load("music/ending_titles2.mp3")
@@ -1540,11 +1546,11 @@ def p2_win():
 					pygame.mixer.music.set_volume(1)
 					current_track = rinzler
 			elif theme == "RECONFIGURED":
-				if rinzler.exists():
-					pygame.mixer.music.load("music/rinzler.mp3")
+				if rinzler_reconfigured.exists():
+					pygame.mixer.music.load("music/rinzler_reconfigured.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
-					current_track = rinzler
+					current_track = rinzler_reconfigured
 			elif theme == "82":
 				if weve_got_company.exists():
 					pygame.mixer.music.load("music/weve_got_company.mp3")
@@ -1565,11 +1571,11 @@ def p2_win():
 					pygame.mixer.music.set_volume(1)
 					current_track = the_grid
 			elif theme == "RECONFIGURED":
-				if the_grid.exists():
-					pygame.mixer.music.load("music/the_grid.mp3")
+				if the_grid_reconfigured.exists():
+					pygame.mixer.music.load("music/the_grid_reconfigured.mp3")
 					pygame.mixer.music.play(-1)
-					pygame.mixer.music.set_volume(1)
-					current_track = the_grid
+					pygame.mixer.music.set_volume(0.75)
+					current_track = the_grid_reconfigured
 			elif theme == "82":
 				if ending_titles1.exists():
 					pygame.mixer.music.load("music/ending_titles1.mp3")
@@ -2044,7 +2050,7 @@ def step_move_player(bike, other_bike, effective_speed, sprite_width, sprite_hei
 
 def run_game():
 	"""Main game loop."""
-	global game_over, win_text, win_color, game_time_offset, last_powerup_spawn, show_ui_overlay, show_debug_hitboxes
+	global game_over, win_text, win_color, game_time_offset, last_powerup_spawn, show_ui_overlay, show_debug_hitboxes, current_track
 
 	# --- Start Screen ---
 	main_menu()
@@ -2285,11 +2291,11 @@ def run_game():
 							current_track = arena
 					elif theme == "RECONFIGURED":
 						win_color = GREEN
-						if arena.exists():
-							pygame.mixer.music.load("music/arena.mp3")
+						if solar_sailer_reconfigured.exists():
+							pygame.mixer.music.load("music/solar_sailer_reconfigured.mp3")
 							pygame.mixer.music.play(-1)
-							pygame.mixer.music.set_volume(1)
-							current_track = arena
+							pygame.mixer.music.set_volume(0.75)
+							current_track = solar_sailer_reconfigured
 					elif theme == "82":
 						win_color = LIGHT_GRAY
 						if tower_music.exists():

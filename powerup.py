@@ -49,5 +49,3 @@ class PowerUp:
 			pygame.draw.rect(screen, (255, 255, 255), (self.x, self.y, self.size, self.size), 2)
 		elif theme == "RECONFIGURED":
 			pygame.draw.rect(screen, (255, 255, 255), (self.x, self.y, self.size, self.size), 2)
-		else:
-			pygame.draw.rect(screen, (255, 255, 255), (self.x, self.y, self.size, self.size), 2)
