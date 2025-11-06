@@ -1633,9 +1633,12 @@ def ai_control(current_game_time):
 	def will_collide(pos, dir_vec, steps=20):
 		"""Predict if moving forward will cause a collision using simplified hitbox detection."""
 		# Get sprite dimensions based on theme
-		if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED":
+		if theme == "LEGACY" or theme == "ARES":
 			sprite_w = legacy_width
 			sprite_h = legacy_height
+		elif theme == "RECONFIGURED":
+			sprite_w = reconfigured_width
+			sprite_h = reconfigured_height
 		elif theme == "82":
 			sprite_w = width_82
 			sprite_h = height_82
@@ -2163,9 +2166,12 @@ def run_game():
 			effective_speed_p2 = player2.get_effective_speed(SPEED, current_time)
 
 			# Get sprite dimensions based on theme
-			if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED":
+			if theme == "LEGACY" or theme == "ARES":
 				sprite_w = legacy_width
 				sprite_h = legacy_height
+			elif theme == "RECONFIGURED":
+				sprite_w = reconfigured_width
+				sprite_h = reconfigured_height
 			elif theme == "82":
 				sprite_w = width_82
 				sprite_h = height_82
