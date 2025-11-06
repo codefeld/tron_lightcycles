@@ -84,7 +84,7 @@ themes = ["82", "LEGACY", "ARES"]
 
 theme = random.choice(themes)
 
-# theme = "RECONFIGURED"
+# theme = "UPRISING"
 
 message_color = ""
 
