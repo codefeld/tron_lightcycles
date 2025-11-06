@@ -459,7 +459,7 @@ def draw_squircle_grid(surface, squircle_size=30, spacing=40, roundness=0.7):
 	elif theme == "RECONFIGURED":
 		bg_color = (0, 10, 0)
 		squircle_color = DARKER_GREEN
-	elif theme == "LEGACY":
+	elif theme == "UPRISING":
 		bg_color = (0, 0, 16)
 		squircle_color = TEAL
 
