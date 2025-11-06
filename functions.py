@@ -1288,7 +1288,7 @@ def countdown():
 		elif theme == "RECONFIGURED":
 			show_message(str(i), "", GREEN)
 		elif theme == "UPRISING":
-			show_message(str(i))
+			show_message(str(i), "", DARKER_BLUE)
 		pygame.display.update()
 		pygame.time.delay(1000)
 
@@ -1313,7 +1313,7 @@ def countdown():
 	elif theme == "RECONFIGURED":
 		show_message("GO!", "", GREEN)
 	elif theme == "UPRISING":
-		show_message("GO!")
+		show_message("GO!", "", DARKER_BLUE)
 	pygame.display.update()
 	pygame.time.delay(800)
 	if theme == "ARES":
