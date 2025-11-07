@@ -10,6 +10,7 @@ from functions import *
 pygame.init()
 pygame.mixer.init()
 pygame.mixer.set_num_channels(5)
+pygame.mouse.set_visible(False)
 
 turn_channel = pygame.mixer.Channel(0)
 derezz_channel = pygame.mixer.Channel(0)
@@ -69,12 +70,27 @@ solar_sailer_reconfigured = Path("music/solar_sailer_reconfigured.mp3")
 encom_reconfigured = Path("music/encom_reconfigured.mp3")
 the_son_of_flynn_reconfigured = Path("music/the_son_of_flynn_reconfigured.mp3")
 
+renegades_pledge = Path("music/renegades_pledge.mp3")
+tesler_throwdown = Path("music/tesler_throwdown.mp3")
+goodbye_renegade = Path("music/goodbye_renegade.mp3")
+the_games = Path("music/the_games.mp3")
+club_infestation = Path("music/club_infestation.mp3")
+zed_dances = Path("music/zed_dances.mp3")
+teslers_party = Path("music/teslers_party.mp3")
+revenge = Path("music/revenge.mp3")
+luxs_sacrifice = Path("music/luxs_sacrifice.mp3")
+rescuing_the_rebellion = Path("music/rescuing_the_rebellion.mp3")
+trons_turn = Path("music/trons_turn.mp3")
+
 menu_music_legacy = [armory, recognizer]
 menu_music_ares = [init2, what_have_you_done]
 menu_music_reconfigured = [derezzed_reconfigured, fall_reconfigured]
+menu_music_uprising = [trons_turn, revenge]
+
 game_music_legacy = [derezzed, fall, disc_wars, the_game_has_changed]
 game_music_ares = [infiltrator, target_identified]
 game_music_reconfigured = [arena_reconfigured1, arena_reconfigured2, end_of_line_reconfigured]
+game_music_uprising = [club_infestation, zed_dances, teslers_party]
 
 current_track = ""
 
