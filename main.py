@@ -56,7 +56,6 @@ building_better_worlds = Path("music/building_better_worlds.mp3")
 in_the_image_of = Path("music/in_the_image_of.mp3")
 init2 = Path("music/init2.mp3")
 what_have_you_done = Path("music/what_have_you_done.mp3")
-# daemonize = Path("music/daemonize.mp3")
 
 derezzed_reconfigured = Path("music/derezzed_reconfigured.mp3")
 fall_reconfigured = Path("music/fall_reconfigured.mp3")
@@ -183,21 +182,6 @@ dirs = {
 }
 
 # Load sprites
-# blue_bike_big = pygame.image.load("images/blue_cycle.png").convert_alpha()
-# orange_bike_big = pygame.image.load("images/orange_cycle.png").convert_alpha()
-# red_bike_big = pygame.image.load("images/red_cycle.png").convert_alpha()
-
-# blue_bike_big = pygame.transform.flip(blue_bike_big, True, False)
-# orange_bike_big = pygame.transform.flip(orange_bike_big, True, False)
-# red_bike_big = pygame.transform.flip(red_bike_big, True, False)
-
-# scale_factor = .05
-# bike_width = int(blue_bike_big.get_width() * scale_factor)
-# bike_height = int(blue_bike_big.get_height() * scale_factor)
-
-# blue_bike_sprite = pygame.transform.scale(blue_bike_big, (bike_width, bike_height))
-# orange_bike_sprite = pygame.transform.scale(orange_bike_big, (bike_width, bike_height))
-# red_bike_sprite = pygame.transform.scale(red_bike_big, (bike_width, bike_height))
 
 blue_82_big = pygame.image.load("images/blue_lightcycle_82.png").convert_alpha()
 blue_82_big = pygame.transform.flip(blue_82_big, True, False)

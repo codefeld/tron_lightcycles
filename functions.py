@@ -631,7 +631,6 @@ def show_message(text, subtext="", color=WHITE):
 	# Draw black background rectangle
 	if theme == "82":
 		pygame.draw.rect(WIN, (13, 54, 77), (box_x, box_y, box_width, box_height))
-		#pygame.draw.rect(WIN, (128, 0, 128), (box_x, box_y, box_width, box_height))
 	else:
 		pygame.draw.rect(WIN, BLACK, (box_x, box_y, box_width, box_height))
 
@@ -2161,31 +2160,15 @@ def run_game():
 					perpendicular_keys_held = vertical_keys and horizontal_keys
 
 					if keys[pygame.K_w] and player1.dir != dirs["DOWN"] and player1.dir != dirs["UP"] and not perpendicular_keys_held:
-						# if theme == "82":
-						# 	if turn_sound_82_file.exists():
-						# 		turn_channel.stop()
-						# 		turn_channel.play(turn_sound_82)
 						player1.dir = dirs["UP"]
 						player1.last_turn_time = current_time
 					elif keys[pygame.K_s] and player1.dir != dirs["UP"] and player1.dir != dirs["DOWN"] and not perpendicular_keys_held:
-						# if theme == "82":
-						# 	if turn_sound_82_file.exists():
-						# 		turn_channel.stop()
-						# 		turn_channel.play(turn_sound_82)
 						player1.dir = dirs["DOWN"]
 						player1.last_turn_time = current_time
 					elif keys[pygame.K_a] and player1.dir != dirs["RIGHT"] and player1.dir != dirs["LEFT"] and not perpendicular_keys_held:
-						# if theme == "82":
-						# 	if turn_sound_82_file.exists():
-						# 		turn_channel.stop()
-						# 		turn_channel.play(turn_sound_82)
 						player1.dir = dirs["LEFT"]
 						player1.last_turn_time = current_time
 					elif keys[pygame.K_d] and player1.dir != dirs["LEFT"] and player1.dir != dirs["RIGHT"] and not perpendicular_keys_held:
-						# if theme == "82":
-						# 	if turn_sound_82_file.exists():
-						# 		turn_channel.stop()
-						# 		turn_channel.play(turn_sound_82)
 						player1.dir = dirs["RIGHT"]
 						player1.last_turn_time = current_time
 
@@ -2193,9 +2176,6 @@ def run_game():
 			if not player2.is_frozen(current_time):
 				if single_player:
 					ai_control(current_time)
-					# if theme == "82":
-					# 	if turn_sound_82_file.exists():
-					# 		turn_sound_82.play()
 				else:
 					if player2.can_turn(current_time, turn_cooldown):
 						# Check if perpendicular keys are held simultaneously (prevent diagonal zigzag)
@@ -2206,31 +2186,15 @@ def run_game():
 						if keys[pygame.K_UP] and player2.dir != dirs["DOWN"] and player2.dir != dirs["UP"] and not perpendicular_keys_held:
 							player2.dir = dirs["UP"]
 							player2.last_turn_time = current_time
-							# if theme == "82":
-								# if turn_sound_82_file.exists():
-								# 	turn_channel.stop()
-								# 	turn_channel.play(turn_sound_82)
 						elif keys[pygame.K_DOWN] and player2.dir != dirs["UP"] and player2.dir != dirs["DOWN"] and not perpendicular_keys_held:
 							player2.dir = dirs["DOWN"]
 							player2.last_turn_time = current_time
-							# if theme == "82":
-								# if turn_sound_82_file.exists():
-								# 	turn_channel.stop()
-								# 	turn_channel.play(turn_sound_82)
 						elif keys[pygame.K_LEFT] and player2.dir != dirs["RIGHT"] and player2.dir != dirs["LEFT"] and not perpendicular_keys_held:
 							player2.dir = dirs["LEFT"]
 							player2.last_turn_time = current_time
-							# if theme == "82":
-								# if turn_sound_82_file.exists():
-								# 	turn_channel.stop()
-								# 	turn_channel.play(turn_sound_82)
 						elif keys[pygame.K_RIGHT] and player2.dir != dirs["LEFT"] and player2.dir != dirs["RIGHT"] and not perpendicular_keys_held:
 							player2.dir = dirs["RIGHT"]
 							player2.last_turn_time = current_time
-							# if theme == "82":
-								# if turn_sound_82_file.exists():
-								# 	turn_channel.stop()
-								# 	turn_channel.play(turn_sound_82)
 
 			# Get effective speeds considering status effects
 			effective_speed_p1 = player1.get_effective_speed(SPEED, current_time)
