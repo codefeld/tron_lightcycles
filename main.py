@@ -137,7 +137,7 @@ game_time_offset = 0
 powerups = []
 POWERUP_SIZE = 20
 last_powerup_spawn = 0
-POWERUP_SPAWN_INTERVAL = 3000
+POWERUP_SPAWN_INTERVAL = 2000
 first_powerup_spawned = False
 
 # Screen setup
