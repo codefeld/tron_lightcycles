@@ -17,6 +17,7 @@ class Bike:
 		self.slow_until = 0
 		self.fast_until = 0
 		self.last_turn_time = 0
+		self.last_turn_direction = None  # Track the last turn made (LEFT, RIGHT, UP, DOWN)
 
 	def reset_trail(self):
 		"""Clear the bike's trail."""
@@ -28,6 +29,7 @@ class Bike:
 		self.frozen_until = 0
 		self.slow_until = 0
 		self.last_turn_time = 0
+		self.last_turn_direction = None
 
 	def get_front_pos(self, sprite_width, back_margin=4):
 		"""Calculate the front position of the bike."""
@@ -69,7 +71,42 @@ class Bike:
 
 	def can_turn(self, current_time, cooldown):
 		"""Check if enough time has passed since last turn."""
-		return current_time - self.last_turn_time > cooldown
+		return current_time - self.last_turn_time >= cooldown
+
+	def is_zigzag(self, new_direction, dirs, current_time, zigzag_window=200):
+		"""
+		Check if the new direction would be a zigzag move.
+		A zigzag is when you turn to the same direction as your last turn within a short time window.
+		For example: turning LEFT then LEFT again within 200ms.
+
+		Args:
+			new_direction: The direction to check
+			dirs: Dictionary of direction vectors
+			current_time: Current game time in milliseconds
+			zigzag_window: Time window in milliseconds to check for zigzag (default 200ms)
+		"""
+		if self.last_turn_direction is None:
+			return False
+
+		# Only check for zigzag if within the time window
+		time_since_last_turn = current_time - self.last_turn_time
+		if time_since_last_turn > zigzag_window:
+			return False
+
+		# Define same direction pairs (turning the same way twice rapidly)
+		same_direction_pairs = [
+			(dirs["LEFT"], dirs["LEFT"]),
+			(dirs["RIGHT"], dirs["RIGHT"]),
+			(dirs["UP"], dirs["UP"]),
+			(dirs["DOWN"], dirs["DOWN"])
+		]
+
+		# Check if trying to turn in the same direction as last turn
+		for last_dir, same_dir in same_direction_pairs:
+			if self.last_turn_direction == last_dir and new_direction == same_dir:
+				return True
+
+		return False
 
 	def render(self, screen, blit_func, back_margin=4):
 		"""Render the bike sprite on the screen."""

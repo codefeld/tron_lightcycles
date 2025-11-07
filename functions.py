@@ -1667,35 +1667,35 @@ def ai_control(current_game_time):
 	# Check if heading toward a wall and too close
 	if dir_x > 0 and pos_x > 900 - WALL_DANGER_ZONE:  # Heading right toward right wall
 		# Turn up or down
-		if pos_y < 450:
-			player2.dir = dirs["DOWN"]
-		else:
-			player2.dir = dirs["UP"]
-		player2.last_turn_time = current_game_time
+		new_dir = dirs["DOWN"] if pos_y < 450 else dirs["UP"]
+		if not player2.is_zigzag(new_dir, dirs, current_game_time):
+			player2.last_turn_direction = player2.dir
+			player2.dir = new_dir
+			player2.last_turn_time = current_game_time
 		return
 	elif dir_x < 0 and pos_x < WALL_DANGER_ZONE:  # Heading left toward left wall
 		# Turn up or down
-		if pos_y < 450:
-			player2.dir = dirs["DOWN"]
-		else:
-			player2.dir = dirs["UP"]
-		player2.last_turn_time = current_game_time
+		new_dir = dirs["DOWN"] if pos_y < 450 else dirs["UP"]
+		if not player2.is_zigzag(new_dir, dirs, current_game_time):
+			player2.last_turn_direction = player2.dir
+			player2.dir = new_dir
+			player2.last_turn_time = current_game_time
 		return
 	elif dir_y > 0 and pos_y > 900 - WALL_DANGER_ZONE:  # Heading down toward bottom wall
 		# Turn left or right
-		if pos_x < 450:
-			player2.dir = dirs["RIGHT"]
-		else:
-			player2.dir = dirs["LEFT"]
-		player2.last_turn_time = current_game_time
+		new_dir = dirs["RIGHT"] if pos_x < 450 else dirs["LEFT"]
+		if not player2.is_zigzag(new_dir, dirs, current_game_time):
+			player2.last_turn_direction = player2.dir
+			player2.dir = new_dir
+			player2.last_turn_time = current_game_time
 		return
 	elif dir_y < 0 and pos_y < WALL_DANGER_ZONE:  # Heading up toward top wall
 		# Turn left or right
-		if pos_x < 450:
-			player2.dir = dirs["RIGHT"]
-		else:
-			player2.dir = dirs["LEFT"]
-		player2.last_turn_time = current_game_time
+		new_dir = dirs["RIGHT"] if pos_x < 450 else dirs["LEFT"]
+		if not player2.is_zigzag(new_dir, dirs, current_game_time):
+			player2.last_turn_direction = player2.dir
+			player2.dir = new_dir
+			player2.last_turn_time = current_game_time
 		return
 
 	possible_dirs = [dirs["UP"], dirs["DOWN"], dirs["LEFT"], dirs["RIGHT"]]
@@ -1868,8 +1868,9 @@ def ai_control(current_game_time):
 			   (player2.dir == dirs["RIGHT"] and target_dir == dirs["LEFT"]):
 				continue
 
-			# Check if this direction is safe
-			if not will_collide(player2.pos, target_dir, steps=15):
+			# Check if this direction is safe and not a zigzag
+			if not will_collide(player2.pos, target_dir, steps=15):# and not player2.is_zigzag(target_dir, dirs, current_game_time):
+				player2.last_turn_direction = player2.dir
 				player2.dir = target_dir
 				player2.last_turn_time = current_game_time
 				return
@@ -1917,7 +1918,8 @@ def ai_control(current_game_time):
 				best_safety = safety
 				best_dir = direction
 
-		if best_dir:
+		if best_dir:# and not player2.is_zigzag(best_dir, dirs, current_game_time):
+			player2.last_turn_direction = player2.dir
 			player2.dir = best_dir
 			player2.last_turn_time = current_game_time
 
@@ -2154,23 +2156,26 @@ def run_game():
 			# Player 1 (WASD) — Disable turning if frozen
 			if not player1.is_frozen(current_time):
 				if player1.can_turn(current_time, turn_cooldown):
-					# Check if perpendicular keys are held simultaneously (prevent diagonal zigzag)
-					vertical_keys = keys[pygame.K_w] or keys[pygame.K_s]
-					horizontal_keys = keys[pygame.K_a] or keys[pygame.K_d]
-					perpendicular_keys_held = vertical_keys and horizontal_keys
+					# Count how many direction keys are pressed
+					p1_keys_pressed = sum([keys[pygame.K_w], keys[pygame.K_s], keys[pygame.K_a], keys[pygame.K_d]])
 
-					if keys[pygame.K_w] and player1.dir != dirs["DOWN"] and player1.dir != dirs["UP"] and not perpendicular_keys_held:
-						player1.dir = dirs["UP"]
-						player1.last_turn_time = current_time
-					elif keys[pygame.K_s] and player1.dir != dirs["UP"] and player1.dir != dirs["DOWN"] and not perpendicular_keys_held:
-						player1.dir = dirs["DOWN"]
-						player1.last_turn_time = current_time
-					elif keys[pygame.K_a] and player1.dir != dirs["RIGHT"] and player1.dir != dirs["LEFT"] and not perpendicular_keys_held:
-						player1.dir = dirs["LEFT"]
-						player1.last_turn_time = current_time
-					elif keys[pygame.K_d] and player1.dir != dirs["LEFT"] and player1.dir != dirs["RIGHT"] and not perpendicular_keys_held:
-						player1.dir = dirs["RIGHT"]
-						player1.last_turn_time = current_time
+					# Only allow input if exactly one key is pressed
+					if p1_keys_pressed == 1:
+						new_dir = None
+						if keys[pygame.K_w] and player1.dir != dirs["DOWN"] and player1.dir != dirs["UP"]:
+							new_dir = dirs["UP"]
+						elif keys[pygame.K_s] and player1.dir != dirs["UP"] and player1.dir != dirs["DOWN"]:
+							new_dir = dirs["DOWN"]
+						elif keys[pygame.K_a] and player1.dir != dirs["RIGHT"] and player1.dir != dirs["LEFT"]:
+							new_dir = dirs["LEFT"]
+						elif keys[pygame.K_d] and player1.dir != dirs["LEFT"] and player1.dir != dirs["RIGHT"]:
+							new_dir = dirs["RIGHT"]
+
+						# Only apply turn if not a zigzag
+						if new_dir is not None: #and not player1.is_zigzag(new_dir, dirs, current_time):
+							player1.last_turn_direction = player1.dir
+							player1.dir = new_dir
+							player1.last_turn_time = current_time
 
 			# Player 2 (Arrows or AI) — Disable turning if frozen
 			if not player2.is_frozen(current_time):
@@ -2178,23 +2183,26 @@ def run_game():
 					ai_control(current_time)
 				else:
 					if player2.can_turn(current_time, turn_cooldown):
-						# Check if perpendicular keys are held simultaneously (prevent diagonal zigzag)
-						vertical_keys = keys[pygame.K_UP] or keys[pygame.K_DOWN]
-						horizontal_keys = keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]
-						perpendicular_keys_held = vertical_keys and horizontal_keys
+						# Count how many direction keys are pressed
+						p2_keys_pressed = sum([keys[pygame.K_UP], keys[pygame.K_DOWN], keys[pygame.K_LEFT], keys[pygame.K_RIGHT]])
 
-						if keys[pygame.K_UP] and player2.dir != dirs["DOWN"] and player2.dir != dirs["UP"] and not perpendicular_keys_held:
-							player2.dir = dirs["UP"]
-							player2.last_turn_time = current_time
-						elif keys[pygame.K_DOWN] and player2.dir != dirs["UP"] and player2.dir != dirs["DOWN"] and not perpendicular_keys_held:
-							player2.dir = dirs["DOWN"]
-							player2.last_turn_time = current_time
-						elif keys[pygame.K_LEFT] and player2.dir != dirs["RIGHT"] and player2.dir != dirs["LEFT"] and not perpendicular_keys_held:
-							player2.dir = dirs["LEFT"]
-							player2.last_turn_time = current_time
-						elif keys[pygame.K_RIGHT] and player2.dir != dirs["LEFT"] and player2.dir != dirs["RIGHT"] and not perpendicular_keys_held:
-							player2.dir = dirs["RIGHT"]
-							player2.last_turn_time = current_time
+						# Only allow input if exactly one key is pressed
+						if p2_keys_pressed == 1:
+							new_dir = None
+							if keys[pygame.K_UP] and player2.dir != dirs["DOWN"] and player2.dir != dirs["UP"]:
+								new_dir = dirs["UP"]
+							elif keys[pygame.K_DOWN] and player2.dir != dirs["UP"] and player2.dir != dirs["DOWN"]:
+								new_dir = dirs["DOWN"]
+							elif keys[pygame.K_LEFT] and player2.dir != dirs["RIGHT"] and player2.dir != dirs["LEFT"]:
+								new_dir = dirs["LEFT"]
+							elif keys[pygame.K_RIGHT] and player2.dir != dirs["LEFT"] and player2.dir != dirs["RIGHT"]:
+								new_dir = dirs["RIGHT"]
+
+							# Only apply turn if not a zigzag
+							if new_dir is not None:# and not player2.is_zigzag(new_dir, dirs, current_time):
+								player2.last_turn_direction = player2.dir
+								player2.dir = new_dir
+								player2.last_turn_time = current_time
 
 			# Get effective speeds considering status effects
 			effective_speed_p1 = player1.get_effective_speed(SPEED, current_time)

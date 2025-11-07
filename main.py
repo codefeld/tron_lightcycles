@@ -245,7 +245,7 @@ tron_ares = os.path.join("fonts", "TronAres.ttf")
 
 pixel_font = os.path.join("fonts", "PressStart2P-Regular.ttf")
 
-turn_cooldown = 50 
+turn_cooldown = 10
 
 if __name__ == '__main__':
 	run_game()
