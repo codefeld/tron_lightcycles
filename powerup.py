@@ -23,7 +23,7 @@ class PowerUp:
 		elif theme == "RECONFIGURED":
 			self.color = (0, 255, 0)
 		elif theme == "UPRISING":
-			self.color = (0, 200, 255)
+			self.color = (0, 0, 0)
 		else:
 			self.color = PowerUp.COLORS[ptype]
 
@@ -52,4 +52,4 @@ class PowerUp:
 		elif theme == "RECONFIGURED":
 			pygame.draw.rect(screen, (255, 255, 255), (self.x, self.y, self.size, self.size), 2)
 		elif theme == "UPRISING":
-			pygame.draw.rect(screen, (255, 255, 255), (self.x, self.y, self.size, self.size), 2)
+			pygame.draw.rect(screen, BLUE, (self.x, self.y, self.size, self.size), 2)

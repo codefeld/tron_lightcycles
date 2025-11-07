@@ -41,5 +41,5 @@ class Obstacle:
 			pygame.draw.rect(screen, (0, 0, 0), core)
 			pygame.draw.rect(screen, (255, 180, 180), core, 2)
 		elif theme == "UPRISING":
-			pygame.draw.rect(screen, (0, 0, 0), core)
-			pygame.draw.rect(screen, (255, 255, 255), core, 2)
+			pygame.draw.rect(screen, (0, 30, 50), core)
+			pygame.draw.rect(screen, LIGHTER_TEAL, core, 2)

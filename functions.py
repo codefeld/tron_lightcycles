@@ -462,8 +462,8 @@ def draw_squircle_grid(surface, squircle_size=30, spacing=40, roundness=0.7):
 		bg_color = (0, 10, 0)
 		squircle_color = DARKER_GREEN
 	elif theme == "UPRISING":
-		bg_color = (0, 0, 16)
-		squircle_color = TEAL
+		bg_color = DARKER_TEAL
+		squircle_color = (100, 100, 100)
 
 	surface.fill(bg_color)
 
