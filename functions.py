@@ -564,14 +564,14 @@ def draw_tron_grid(surface, desired_spacing=40):
 			y = int(j * spacing_y)
 			pygame.draw.line(surface, line_color, (0, y), (width, y), line_thickness)
 
-		# Add decorative corner pixels at intersections for 8-bit style
-		corner_color = (0, 255, 0)  # Bright green
-		corner_size = 5
-		for i in range(cols + 1):
-			for j in range(rows + 1):
-				x = int(i * spacing_x)
-				y = int(j * spacing_y)
-				pygame.draw.rect(surface, corner_color, (x - corner_size // 2, y - corner_size // 2, corner_size, corner_size))
+		# # Add decorative corner pixels at intersections for 8-bit style
+		# corner_color = (0, 255, 0)  # Bright green
+		# corner_size = 5
+		# for i in range(cols + 1):
+		# 	for j in range(rows + 1):
+		# 		x = int(i * spacing_x)
+		# 		y = int(j * spacing_y)
+		# 		pygame.draw.rect(surface, corner_color, (x - corner_size // 2, y - corner_size // 2, corner_size, corner_size))
 	elif theme == "82":
 		color = WHITE
 		surface.fill((0, 0, 25))
