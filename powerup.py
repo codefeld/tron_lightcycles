@@ -50,6 +50,21 @@ class PowerUp:
 		elif theme == "LEGACY":
 			pygame.draw.rect(screen, (255, 255, 255), (self.x, self.y, self.size, self.size), 2)
 		elif theme == "RECONFIGURED":
-			pygame.draw.rect(screen, (255, 255, 255), (self.x, self.y, self.size, self.size), 2)
+			# 8-bit style power-up with pixelated cross pattern
+			# Main black fill
+			pygame.draw.rect(screen, (0, 0, 0), (self.x, self.y, self.size, self.size))
+
+			# Create pixel art cross/plus pattern in the center
+			center_x = self.x + self.size // 2
+			center_y = self.y + self.size // 2
+			pixel = 2
+
+			# Vertical bar of cross
+			pygame.draw.rect(screen, (0, 255, 0), (center_x - pixel, self.y + 3, pixel * 2, self.size - 6))
+			# Horizontal bar of cross
+			pygame.draw.rect(screen, (0, 255, 0), (self.x + 3, center_y - pixel, self.size - 6, pixel * 2))
+
+			# Thick pixelated border
+			pygame.draw.rect(screen, (128, 255, 128), (self.x, self.y, self.size, self.size), pixel * 2)
 		elif theme == "UPRISING":
 			pygame.draw.rect(screen, BLUE, (self.x, self.y, self.size, self.size), 2)

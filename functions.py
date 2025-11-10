@@ -248,12 +248,19 @@ def main_menu():
 		elif theme == "LEGACY":
 			large_font = pygame.font.Font(tr2n, 200)
 			tron_title = large_font.render("TRON", True, message_color)
+			lightcycle_img = pygame.image.load("images/lightcycle_text_legacy.png")
+			subtitle_width = 550
+			subtitle_height = int(lightcycle_img.get_height() * (subtitle_width / lightcycle_img.get_width()))
+			lightcycles_title = pygame.transform.scale(lightcycle_img, (subtitle_width, subtitle_height))
 		elif theme == "ARES":
 			large_font = pygame.font.Font(tron_ares, 150)
 			tron_title = large_font.render("TRON", True, message_color)
 
 		# Render other title components
-		if theme != "82" and theme != "UPRISING":
+		if theme == "RECONFIGURED":
+			title_font = pygame.font.Font(pixel_font, 25)
+			lightcycles_title = font.render("L1GHTCYCL3S", True, message_color)
+		elif theme != "82" and theme != "UPRISING" and theme != "LEGACY":
 			lightcycles_title = font.render("LIGHTCYCLES", True, message_color)
 
 		instruction_text = small_font.render("Press \"1\" for 1 Player or \"2\" for 2 Players", True, (180, 180, 180))
@@ -262,15 +269,21 @@ def main_menu():
 		tron_x = (WIDTH - tron_title.get_width()) // 2
 		tron_y = HEIGHT // 3
 
-		lightcycles_x = (WIDTH - lightcycles_title.get_width()) // 2
+		if theme == "LEGACY":
+			lightcycles_x = (WIDTH - lightcycles_title.get_width()) // 2 + 25
+		elif theme == "RECONFIGURED":
+			lightcycles_x = (WIDTH - lightcycles_title.get_width()) // 2 + 25
+		else:
+			lightcycles_x = (WIDTH - lightcycles_title.get_width()) // 2
+			
 		if theme == "82":
 			lightcycles_y = tron_y + tron_title.get_height() - 60
 		elif theme == "LEGACY":
-			lightcycles_y = tron_y + tron_title.get_height()
+			lightcycles_y = tron_y + tron_title.get_height() - 30
 		elif theme == "ARES":
 			lightcycles_y = tron_y + tron_title.get_height() + 20
 		elif theme == "RECONFIGURED":
-			lightcycles_y = tron_y + tron_title.get_height() + 40
+			lightcycles_y = tron_y + tron_title.get_height() + 30
 		elif theme == "UPRISING":
 			lightcycles_y = tron_y + tron_title.get_height() - 70
 
@@ -279,6 +292,8 @@ def main_menu():
 			instruction_y = lightcycles_y + lightcycles_title.get_height() - 50
 		elif theme == "UPRISING":
 			instruction_y = lightcycles_y + lightcycles_title.get_height() - 60
+		elif theme == "LEGACY":
+			instruction_y = lightcycles_y + lightcycles_title.get_height() + 60
 		else:
 			instruction_y = lightcycles_y + lightcycles_title.get_height() + 30
 
@@ -520,7 +535,43 @@ def draw_tron_grid(surface, desired_spacing=40):
 	if theme == "LEGACY" or theme == "ARES" or theme == "UPRISING":
 		draw_squircle_grid(WIN, 90, 120, .1)
 	elif theme == "RECONFIGURED":
-		draw_squircle_grid(WIN, 90, 120, 0)
+		# 8-bit style pixelated grid
+		surface.fill((0, 10, 0))  # Dark green background
+
+		width = surface.get_width()
+		height = surface.get_height()
+
+		# Use larger spacing for more 8-bit feel
+		pixel_spacing = 60
+
+		cols = width // pixel_spacing
+		rows = height // pixel_spacing
+
+		spacing_x = width / cols if cols > 0 else width
+		spacing_y = height / rows if rows > 0 else height
+
+		# Draw thick pixelated grid lines
+		line_color = (0, 100, 0)  # Medium green
+		line_thickness = 4
+
+		# Vertical lines
+		for i in range(cols + 1):
+			x = int(i * spacing_x)
+			pygame.draw.line(surface, line_color, (x, 0), (x, height), line_thickness)
+
+		# Horizontal lines
+		for j in range(rows + 1):
+			y = int(j * spacing_y)
+			pygame.draw.line(surface, line_color, (0, y), (width, y), line_thickness)
+
+		# Add decorative corner pixels at intersections for 8-bit style
+		corner_color = (0, 255, 0)  # Bright green
+		corner_size = 5
+		for i in range(cols + 1):
+			for j in range(rows + 1):
+				x = int(i * spacing_x)
+				y = int(j * spacing_y)
+				pygame.draw.rect(surface, corner_color, (x - corner_size // 2, y - corner_size // 2, corner_size, corner_size))
 	elif theme == "82":
 		color = WHITE
 		surface.fill((0, 0, 25))
