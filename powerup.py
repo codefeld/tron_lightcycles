@@ -21,7 +21,7 @@ class PowerUp:
 		elif theme == "82":
 			self.color = (128, 0, 128)
 		elif theme == "RECONFIGURED":
-			self.color = (0, 255, 0)
+			self.color = (0, 150, 0)
 		elif theme == "UPRISING":
 			self.color = (0, 0, 0)
 		else:
@@ -51,20 +51,20 @@ class PowerUp:
 			pygame.draw.rect(screen, (255, 255, 255), (self.x, self.y, self.size, self.size), 2)
 		elif theme == "RECONFIGURED":
 			# 8-bit style power-up with pixelated cross pattern
-			# Main black fill
-			pygame.draw.rect(screen, (0, 0, 0), (self.x, self.y, self.size, self.size))
+			# Main green fill
+			pygame.draw.rect(screen, (100, 255, 100), (self.x, self.y, self.size, self.size), 4)
 
-			# Create pixel art cross/plus pattern in the center
-			center_x = self.x + self.size // 2
-			center_y = self.y + self.size // 2
-			pixel = 2
+			# # Create pixel art cross/plus pattern in the center
+			# center_x = self.x + self.size // 2
+			# center_y = self.y + self.size // 2
+			# pixel = 2
 
-			# Vertical bar of cross
-			pygame.draw.rect(screen, (0, 255, 0), (center_x - pixel, self.y + 3, pixel * 2, self.size - 6))
-			# Horizontal bar of cross
-			pygame.draw.rect(screen, (0, 255, 0), (self.x + 3, center_y - pixel, self.size - 6, pixel * 2))
+			# # Vertical bar of cross
+			# pygame.draw.rect(screen, (0, 255, 0), (center_x - pixel, self.y + 3, pixel * 2, self.size - 6))
+			# # Horizontal bar of cross
+			# pygame.draw.rect(screen, (0, 255, 0), (self.x + 3, center_y - pixel, self.size - 6, pixel * 2))
 
-			# Thick pixelated border
-			pygame.draw.rect(screen, (128, 255, 128), (self.x, self.y, self.size, self.size), pixel * 2)
+			# # Thick pixelated border
+			# pygame.draw.rect(screen, (128, 255, 128), (self.x, self.y, self.size, self.size), pixel * 2)
 		elif theme == "UPRISING":
 			pygame.draw.rect(screen, BLUE, (self.x, self.y, self.size, self.size), 2)

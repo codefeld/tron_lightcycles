@@ -32,24 +32,8 @@ class Obstacle:
 			pygame.draw.rect(screen, (0, 0, 0), core)
 			pygame.draw.rect(screen, (255, 255, 255), core, 2)
 		elif theme == "RECONFIGURED":
-			# 8-bit style blocky obstacle with pixel art corners
-			# Main dark block
 			pygame.draw.rect(screen, (0, 20, 0), core)
-
-			# Thick bright green border for 8-bit look
-			pygame.draw.rect(screen, (0, 255, 0), core, 3)
-
-			# Add corner pixels for retro 8-bit aesthetic
-			pixel_size = 3
-			corner_color = (50, 255, 50)
-			# Top-left corner pixel
-			pygame.draw.rect(screen, corner_color, (self.x, self.y, pixel_size, pixel_size))
-			# Top-right corner pixel
-			pygame.draw.rect(screen, corner_color, (self.x + self.size - pixel_size, self.y, pixel_size, pixel_size))
-			# Bottom-left corner pixel
-			pygame.draw.rect(screen, corner_color, (self.x, self.y + self.size - pixel_size, pixel_size, pixel_size))
-			# Bottom-right corner pixel
-			pygame.draw.rect(screen, corner_color, (self.x + self.size - pixel_size, self.y + self.size - pixel_size, pixel_size, pixel_size))
+			pygame.draw.rect(screen, (100, 255, 100), core, 3)
 		elif theme == "82":
 			pygame.draw.rect(screen, (13, 54, 77), core)
 			pygame.draw.rect(screen, (113, 0, 0), core, 2)
