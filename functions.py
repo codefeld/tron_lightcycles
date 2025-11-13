@@ -159,52 +159,57 @@ def main_menu():
 		message_color = (0, 255, 255)
 
 	menu_running = True
+	# Flag to track if menu music has been initialized
 
 	while menu_running:
 
 		if theme == "82":
 			WIN.blit(background_82, (0, 0))
-			if tron_theme.exists():
+			if tron_theme.exists() and current_track != str(tron_theme):
 				pygame.mixer.music.load("music/tron_theme.mp3")
 				pygame.mixer.music.play(-1)
 				pygame.mixer.music.set_volume(1)
-				current_track = tron_theme
+				current_track = str(tron_theme)
 		elif theme == "LEGACY":
 			WIN.blit(legacy_background, (0, 0))
-			menu_song = random.choice(menu_music_legacy)
-			selected_song = str(menu_song)
-			pygame.mixer.music.stop()
-			pygame.mixer.music.load(selected_song)
-			pygame.mixer.music.play(-1)
-			pygame.mixer.music.set_volume(1)
-			current_track = selected_song
+			if current_track not in [str(song) for song in menu_music_legacy]:
+				menu_song = random.choice(menu_music_legacy)
+				selected_song = str(menu_song)
+				pygame.mixer.music.stop()
+				pygame.mixer.music.load(selected_song)
+				pygame.mixer.music.play(-1)
+				pygame.mixer.music.set_volume(1)
+				current_track = selected_song
 		elif theme == "ARES":
 			WIN.blit(ares_background, (0, 0))
-			menu_song = random.choice(menu_music_ares)
-			selected_song = str(menu_song)
-			pygame.mixer.music.stop()
-			pygame.mixer.music.load(selected_song)
-			pygame.mixer.music.play(-1)
-			pygame.mixer.music.set_volume(0.75)
-			current_track = selected_song
+			if current_track not in [str(song) for song in menu_music_ares]:
+				menu_song = random.choice(menu_music_ares)
+				selected_song = str(menu_song)
+				pygame.mixer.music.stop()
+				pygame.mixer.music.load(selected_song)
+				pygame.mixer.music.play(-1)
+				pygame.mixer.music.set_volume(0.75)
+				current_track = selected_song
 		elif theme == "RECONFIGURED":
 			WIN.blit(reconfigured_background, (0, 0))
-			menu_song = random.choice(menu_music_reconfigured)
-			selected_song = str(menu_song)
-			pygame.mixer.music.stop()
-			pygame.mixer.music.load(selected_song)
-			pygame.mixer.music.play(-1)
-			pygame.mixer.music.set_volume(0.75)
-			current_track = selected_song
+			if current_track not in [str(song) for song in menu_music_reconfigured]:
+				menu_song = random.choice(menu_music_reconfigured)
+				selected_song = str(menu_song)
+				pygame.mixer.music.stop()
+				pygame.mixer.music.load(selected_song)
+				pygame.mixer.music.play(-1)
+				pygame.mixer.music.set_volume(0.75)
+				current_track = selected_song
 		elif theme == "UPRISING":
 			WIN.blit(legacy_background, (0, 0))
-			menu_song = random.choice(menu_music_uprising)
-			selected_song = str(menu_song)
-			pygame.mixer.music.stop()
-			pygame.mixer.music.load(selected_song)
-			pygame.mixer.music.play(-1)
-			pygame.mixer.music.set_volume(1)
-			current_track = selected_song
+			if current_track not in [str(song) for song in menu_music_uprising]:
+				menu_song = random.choice(menu_music_uprising)
+				selected_song = str(menu_song)
+				pygame.mixer.music.stop()
+				pygame.mixer.music.load(selected_song)
+				pygame.mixer.music.play(-1)
+				pygame.mixer.music.set_volume(1)
+				current_track = selected_song
 		# Custom title screen rendering with large "TRON" on separate line
 		# For 82 theme, use tron_logo.png image; for others, use text
 		if theme == "82":
@@ -368,8 +373,9 @@ def difficulty_menu():
 						waiting = False
 						theme_menu()
 					elif event.key == pygame.K_ESCAPE:
-						pygame.quit()
-						sys.exit()
+						difficulty_menu_running = False
+						waiting = False
+						main_menu()
 
 def theme_menu():
 	global theme, BLUE, ORANGE, WHITE, font, small_font
@@ -446,8 +452,9 @@ def theme_menu():
 						waiting = False
 						reset_game()
 					elif event.key == pygame.K_ESCAPE:
-						pygame.quit()
-						sys.exit()
+						theme_menu_running = False
+						waiting = False
+						difficulty_menu()
 
 def draw_squircle(surface, center_x, center_y, size, color, roundness=0.7):
 	"""Draw a rounded rectangle."""
@@ -1326,35 +1333,35 @@ def countdown():
 			pygame.mixer.music.load("music/init.mp3")
 			pygame.mixer.music.play(-1)
 			pygame.mixer.music.set_volume(0.75)
-			current_track = init
+			current_track = str(init)
 	elif theme == "LEGACY":
 		if clu.exists():
 			pygame.mixer.music.stop()
 			pygame.mixer.music.load("music/clu.mp3")
 			pygame.mixer.music.play(-1)
 			pygame.mixer.music.set_volume(1)
-			current_track = clu
+			current_track = str(clu)
 	elif theme == "82":
 		if ring_game_and_escape1.exists():
 			pygame.mixer.music.stop()
 			pygame.mixer.music.load("music/ring_game_and_escape1.mp3")
 			pygame.mixer.music.play(-1)
 			pygame.mixer.music.set_volume(1)
-			current_track = ring_game_and_escape1
+			current_track = str(ring_game_and_escape1)
 	elif theme == "RECONFIGURED":
 		if the_son_of_flynn_reconfigured.exists():
 			pygame.mixer.music.stop()
 			pygame.mixer.music.load("music/the_son_of_flynn_reconfigured.mp3")
 			pygame.mixer.music.play(-1)
 			pygame.mixer.music.set_volume(0.75)
-			current_track = the_son_of_flynn_reconfigured
+			current_track = str(the_son_of_flynn_reconfigured)
 	elif theme == "UPRISING":
 		if tesler_throwdown.exists():
 			pygame.mixer.music.stop()
 			pygame.mixer.music.load("music/tesler_throwdown.mp3")
 			pygame.mixer.music.play(-1)
 			pygame.mixer.music.set_volume(1)
-			current_track = tesler_throwdown
+			current_track = str(tesler_throwdown)
 	for i in range(3, 0, -1):
 		WIN.fill(BLACK)
 		draw_tron_grid(WIN)
@@ -1418,7 +1425,7 @@ def countdown():
 			pygame.mixer.music.load("music/ring_game_and_escape2.mp3")
 			pygame.mixer.music.play(-1)
 			pygame.mixer.music.set_volume(1)
-			current_track = ring_game_and_escape2
+			current_track = str(ring_game_and_escape2)
 	elif theme == "LEGACY":
 		game_song = random.choice(game_music_legacy)
 		selected_song = str(game_song)
@@ -1496,31 +1503,31 @@ def p1_win():
 				pygame.mixer.music.load("music/new_directive.mp3")
 				pygame.mixer.music.play(-1)
 				pygame.mixer.music.set_volume(0.75)
-				current_track = new_directive
+				current_track = str(new_directive)
 		elif theme == "LEGACY":
 			if end_titles.exists():
 				pygame.mixer.music.load("music/end_titles.mp3")
 				pygame.mixer.music.play(-1)
 				pygame.mixer.music.set_volume(1)
-				current_track = end_titles
+				current_track = str(end_titles)
 		elif theme == "RECONFIGURED":
 			if end_titles_reconfigured.exists():
 				pygame.mixer.music.load("music/end_titles_reconfigured.mp3")
 				pygame.mixer.music.play(-1)
 				pygame.mixer.music.set_volume(0.75)
-				current_track = end_titles_reconfigured
+				current_track = str(end_titles_reconfigured)
 		elif theme == "82":
 			if ending_titles2.exists():
 				pygame.mixer.music.load("music/ending_titles2.mp3")
 				pygame.mixer.music.play(-1)
 				pygame.mixer.music.set_volume(1)
-				current_track = ending_titles2
+				current_track = str(ending_titles2)
 		elif theme == "UPRISING":
 			if goodbye_renegade.exists():
 				pygame.mixer.music.load("music/goodbye_renegade.mp3")
 				pygame.mixer.music.play(-1)
 				pygame.mixer.music.set_volume(1)
-				current_track = goodbye_renegade
+				current_track = str(goodbye_renegade)
 	else:
 		if theme == "RECONFIGURED":
 			win_text = "TEAM GREEN WINS!"
@@ -1531,31 +1538,31 @@ def p1_win():
 				pygame.mixer.music.load("music/a_question_of_trust.mp3")
 				pygame.mixer.music.play(-1)
 				pygame.mixer.music.set_volume(0.75)
-				current_track = a_question_of_trust
+				current_track = str(a_question_of_trust)
 		elif theme == "LEGACY":
 			if the_grid.exists():
 				pygame.mixer.music.load("music/the_grid.mp3")
 				pygame.mixer.music.play(-1)
 				pygame.mixer.music.set_volume(1)
-				current_track = the_grid
+				current_track = str(the_grid)
 		elif theme == "RECONFIGURED":
 			if the_grid_reconfigured.exists():
 				pygame.mixer.music.load("music/the_grid_reconfigured.mp3")
 				pygame.mixer.music.play(-1)
 				pygame.mixer.music.set_volume(0.75)
-				current_track = the_grid_reconfigured
+				current_track = str(the_grid_reconfigured)
 		elif theme == "82":
 			if ending_titles1.exists():
 				pygame.mixer.music.load("music/ending_titles1.mp3")
 				pygame.mixer.music.play(-1)
 				pygame.mixer.music.set_volume(1)
-				current_track = ending_titles1
+				current_track = str(ending_titles1)
 		elif theme == "UPRISING":
 			if renegades_pledge.exists():
 				pygame.mixer.music.load("music/renegades_pledge.mp3")
 				pygame.mixer.music.play(-1)
 				pygame.mixer.music.set_volume(1)
-				current_track = renegades_pledge
+				current_track = str(renegades_pledge)
 
 def p2_win():
 	global game_over, match_over, win_color, win_text, p2_wins, current_track
@@ -1614,62 +1621,62 @@ def p2_win():
 					pygame.mixer.music.load("music/100%_expendable.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(0.75)
-					current_track = expendable
+					current_track = str(expendable)
 			elif theme == "LEGACY":
 				if adagio_for_tron.exists():
 					pygame.mixer.music.load("music/adagio_for_tron.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
-					current_track = adagio_for_tron
+					current_track = str(adagio_for_tron)
 			elif theme == "RECONFIGURED":
 				if encom_reconfigured.exists():
 					pygame.mixer.music.load("music/encom_reconfigured.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(0.75)
-					current_track = encom_reconfigured
+					current_track = str(encom_reconfigured)
 			elif theme == "82":
 				if sea_of_simulation.exists():
 					pygame.mixer.music.load("music/sea_of_simulation.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
-					current_track = sea_of_simulation
+					current_track = str(sea_of_simulation)
 			elif theme == "UPRISING":
 				if luxs_sacrifice.exists():
 					pygame.mixer.music.load("music/luxs_sacrifice.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
-					current_track = luxs_sacrifice
+					current_track = str(luxs_sacrifice)
 		else:
 			if theme == "ARES":
 				if new_directive.exists():
 					pygame.mixer.music.load("music/new_directive.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(0.75)
-					current_track = new_directive
+					current_track = str(new_directive)
 			elif theme == "LEGACY":
 				if end_titles.exists():
 					pygame.mixer.music.load("music/end_titles.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
-					current_track = end_titles
+					current_track = str(end_titles)
 			elif theme == "RECONFIGURED":
 				if end_titles_reconfigured.exists():
 					pygame.mixer.music.load("music/end_titles_reconfigured.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(0.75)
-					current_track = end_titles_reconfigured
+					current_track = str(end_titles_reconfigured)
 			elif theme == "82":
 				if ending_titles2.exists():
 					pygame.mixer.music.load("music/ending_titles2.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
-					current_track = ending_titles2
+					current_track = str(ending_titles2)
 			elif theme == "UPRISING":
 				if goodbye_renegade.exists():
 					pygame.mixer.music.load("music/goodbye_renegade.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
-					current_track = goodbye_renegade
+					current_track = str(goodbye_renegade)
 	else:
 		if theme == "ARES":
 			win_text = "TEAM RED WINS!"
@@ -1683,7 +1690,7 @@ def p2_win():
 					pygame.mixer.music.load("music/in_the_image_of.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(0.75)
-					current_track = in_the_image_of
+					current_track = str(in_the_image_of)
 			elif theme == "LEGACY":
 				if rinzler.exists():
 					pygame.mixer.music.load("music/rinzler.mp3")
@@ -1695,50 +1702,50 @@ def p2_win():
 					pygame.mixer.music.load("music/rinzler_reconfigured.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
-					current_track = rinzler_reconfigured
+					current_track = str(rinzler_reconfigured)
 			elif theme == "82":
 				if weve_got_company.exists():
 					pygame.mixer.music.load("music/weve_got_company.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
-					current_track = weve_got_company
+					current_track = str(weve_got_company)
 			elif theme == "UPRISING":
 				if the_games.exists():
 					pygame.mixer.music.load("music/the_games.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
-					current_track = the_games
+					current_track = str(the_games)
 		else:
 			if theme == "ARES":
 				if a_question_of_trust.exists():
 					pygame.mixer.music.load("music/a_question_of_trust.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(0.75)
-					current_track = a_question_of_trust
+					current_track = str(a_question_of_trust)
 			elif theme == "LEGACY":
 				if the_grid.exists():
 					pygame.mixer.music.load("music/the_grid.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
-					current_track = the_grid
+					current_track = str(the_grid)
 			elif theme == "RECONFIGURED":
 				if the_grid_reconfigured.exists():
 					pygame.mixer.music.load("music/the_grid_reconfigured.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(0.75)
-					current_track = the_grid_reconfigured
+					current_track = str(the_grid_reconfigured)
 			elif theme == "82":
 				if ending_titles1.exists():
 					pygame.mixer.music.load("music/ending_titles1.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
-					current_track = ending_titles1
+					current_track = str(ending_titles1)
 			elif theme == "UPRISING":
 				if renegades_pledge.exists():
 					pygame.mixer.music.load("music/renegades_pledge.mp3")
 					pygame.mixer.music.play(-1)
 					pygame.mixer.music.set_volume(1)
-					current_track = renegades_pledge
+					current_track = str(renegades_pledge)
 
 def ai_control(current_game_time):
 	"""AI for p2 bike that avoids collisions and seeks power-ups."""
@@ -2417,35 +2424,35 @@ def run_game():
 							pygame.mixer.music.load("music/this_changes_everything.mp3")
 							pygame.mixer.music.play(-1)
 							pygame.mixer.music.set_volume(0.75)
-							current_track = this_changes_everything
+							current_track = str(this_changes_everything)
 					elif theme == "LEGACY":
 						win_color = DARKER_BLUE
 						if arena.exists():
 							pygame.mixer.music.load("music/arena.mp3")
 							pygame.mixer.music.play(-1)
 							pygame.mixer.music.set_volume(1)
-							current_track = arena
+							current_track = str(arena)
 					elif theme == "RECONFIGURED":
 						win_color = GREEN
 						if solar_sailer_reconfigured.exists():
 							pygame.mixer.music.load("music/solar_sailer_reconfigured.mp3")
 							pygame.mixer.music.play(-1)
 							pygame.mixer.music.set_volume(0.75)
-							current_track = solar_sailer_reconfigured
+							current_track = str(solar_sailer_reconfigured)
 					elif theme == "82":
 						win_color = LIGHT_GRAY
 						if tower_music.exists():
 							pygame.mixer.music.load("music/tower_music.mp3")
 							pygame.mixer.music.play(-1)
 							pygame.mixer.music.set_volume(1)
-							current_track = tower_music
+							current_track = str(tower_music)
 					elif theme == "UPRISING":
 						win_color = DARKER_BLUE
 						if rescuing_the_rebellion.exists():
 							pygame.mixer.music.load("music/rescuing_the_rebellion.mp3")
 							pygame.mixer.music.play(-1)
 							pygame.mixer.music.set_volume(1)
-							current_track = rescuing_the_rebellion
+							current_track = str(rescuing_the_rebellion)
 
 			# --- Power-up collisions ---
 			check_powerup_collision(p1_front, player1, current_time)
