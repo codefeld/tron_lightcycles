@@ -663,14 +663,46 @@ def show_message(text, subtext="", color=WHITE):
 
 	if subtext != "":
 		subtitle = small_font.render(subtext, True, (180, 180, 180))
+		subtext_lines = []
+
+		if subtitle.get_width() > max_text_width:
+			# Split text into two lines at a word boundary
+			words = subtext.split()
+
+			# Find the longest line1 that fits, ensuring line2 also fits
+			best_split = 1
+			for i in range(1, len(words)):
+				line1 = " ".join(words[:i])
+				line2 = " ".join(words[i:])
+
+				line1_render = small_font.render(line1, True, color)
+				line2_render = small_font.render(line2, True, color)
+
+				# Both lines must fit within max_text_width
+				if line1_render.get_width() <= max_text_width and line2_render.get_width() <= max_text_width:
+					best_split = i
+				else:
+					# If line1 is too wide, we've gone too far
+					if line1_render.get_width() > max_text_width:
+						break
+
+			line1 = " ".join(words[:best_split])
+			line2 = " ".join(words[best_split:])
+			subtext_lines = [line1, line2]
+		else:
+			subtext_lines = [subtext]
+
+		subtitle_surfaces = [small_font.render(line, True, (180, 180, 180)) for line in subtext_lines]
 
 	# Determine box width & height based on text sizes
 	max_title_width = max(surf.get_width() for surf in title_surfaces)
 	total_title_height = sum(surf.get_height() for surf in title_surfaces) + spacing * (len(title_surfaces) - 1)
 
 	if subtext != "":
-		box_width = max(max_title_width, subtitle.get_width()) + 2 * padding_x
-		box_height = total_title_height + subtitle.get_height() + 2 * padding_y + spacing
+		max_subtitle_width = max(sub_surf.get_width() for sub_surf in subtitle_surfaces)
+		total_subtitle_height = sum(sub_surf.get_height() for sub_surf in subtitle_surfaces) + spacing * (len(subtitle_surfaces) - 1)
+		box_width = max(max_title_width, max_subtitle_width) + 2 * padding_x
+		box_height = total_title_height + total_subtitle_height + 2 * padding_y + spacing
 	else:
 		box_width = max_title_width + 2 * padding_x
 		box_height = total_title_height + 2 * padding_y
@@ -699,9 +731,13 @@ def show_message(text, subtext="", color=WHITE):
 		current_y += title_surf.get_height() + spacing
 
 	if subtext != "":
-		subtitle_x = WIDTH // 2 - subtitle.get_width() // 2
-		subtitle_y = current_y
-		WIN.blit(subtitle, (subtitle_x, subtitle_y))
+		# subtitle_x = WIDTH // 2 - subtitle.get_width() // 2
+		# subtitle_y = current_y
+		# WIN.blit(subtitle, (subtitle_x, subtitle_y))
+		for subtitle_surf in subtitle_surfaces:
+			subtitle_x = WIDTH // 2 - subtitle_surf.get_width() // 2
+			WIN.blit(subtitle_surf, (subtitle_x, current_y))
+			current_y += subtitle_surf.get_height() + spacing
 
 	pygame.display.update()
 
