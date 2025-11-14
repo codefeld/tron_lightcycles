@@ -144,7 +144,7 @@ first_powerup_spawned = False
 info = pygame.display.Info()
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 
-background_82 = pygame.image.load("images/tron_82_grid_background.jpg")
+background_82 = pygame.image.load("images/tron_82_grid_background.png")
 background_82 = pygame.transform.scale(background_82, (WIDTH, HEIGHT))
 
 legacy_background = pygame.image.load("images/tron_legacy_grid.png")

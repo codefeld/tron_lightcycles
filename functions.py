@@ -219,10 +219,10 @@ def main_menu():
 				tron_logo_img = pygame.image.load("images/tron_logo.png")
 				# Scale the logo to a reasonable size (e.g., width of 400px)
 				lightcycle_img = pygame.image.load("images/lightcycle_text.png")
-				logo_width = 500
+				logo_width = 600
 				logo_height = int(tron_logo_img.get_height() * (logo_width / tron_logo_img.get_width()))
 				tron_title = pygame.transform.scale(tron_logo_img, (logo_width, logo_height))
-				subtitle_width = 400
+				subtitle_width = 500
 				subtitle_height = int(lightcycle_img.get_height() * (subtitle_width / lightcycle_img.get_width()))
 				lightcycles_title = pygame.transform.scale(lightcycle_img, (subtitle_width, subtitle_height))
 		elif theme == "RECONFIGURED":
@@ -230,7 +230,7 @@ def main_menu():
 			tron_logo_path = Path("images/tron_reconfigured_logo.png")
 			if tron_logo_path.exists():
 				tron_logo_img = pygame.image.load("images/tron_reconfigured_logo.png")
-				logo_width = 600
+				logo_width = 650
 				logo_height = int(tron_logo_img.get_height() * (logo_width / tron_logo_img.get_width()))
 				tron_title = pygame.transform.scale(tron_logo_img, (logo_width, logo_height))
 		elif theme == "UPRISING":
@@ -239,11 +239,11 @@ def main_menu():
 			if tron_logo_path.exists():
 				tron_logo_img = pygame.image.load("images/tron_uprising_logo.png")
 				# Scale the logo to a reasonable size (e.g., width of 400px)
-				lightcycle_img = pygame.image.load("images/lightcycle_text_uprising.png")
+				lightcycle_img = pygame.image.load("images/lightcycle_text_legacy.png")
 				logo_width = 600
 				logo_height = int(tron_logo_img.get_height() * (logo_width / tron_logo_img.get_width()))
 				tron_title = pygame.transform.scale(tron_logo_img, (logo_width, logo_height))
-				subtitle_width = 450
+				subtitle_width = 550
 				subtitle_height = int(lightcycle_img.get_height() * (subtitle_width / lightcycle_img.get_width()))
 				lightcycles_title = pygame.transform.scale(lightcycle_img, (subtitle_width, subtitle_height))
 			else:
@@ -274,7 +274,7 @@ def main_menu():
 		tron_x = (WIDTH - tron_title.get_width()) // 2
 		tron_y = HEIGHT // 3
 
-		if theme == "LEGACY":
+		if theme == "LEGACY" or theme == "UPRISING":
 			lightcycles_x = (WIDTH - lightcycles_title.get_width()) // 2 + 25
 		elif theme == "RECONFIGURED":
 			lightcycles_x = (WIDTH - lightcycles_title.get_width()) // 2 + 25
@@ -282,7 +282,7 @@ def main_menu():
 			lightcycles_x = (WIDTH - lightcycles_title.get_width()) // 2
 			
 		if theme == "82":
-			lightcycles_y = tron_y + tron_title.get_height() - 60
+			lightcycles_y = tron_y + tron_title.get_height() - 100
 		elif theme == "LEGACY":
 			lightcycles_y = tron_y + tron_title.get_height() - 30
 		elif theme == "ARES":
@@ -290,13 +290,13 @@ def main_menu():
 		elif theme == "RECONFIGURED":
 			lightcycles_y = tron_y + tron_title.get_height() + 30
 		elif theme == "UPRISING":
-			lightcycles_y = tron_y + tron_title.get_height() - 70
+			lightcycles_y = tron_y + tron_title.get_height() + 20
 
 		instruction_x = (WIDTH - instruction_text.get_width()) // 2
 		if theme == "82":
-			instruction_y = lightcycles_y + lightcycles_title.get_height() - 50
+			instruction_y = lightcycles_y + lightcycles_title.get_height() - 80
 		elif theme == "UPRISING":
-			instruction_y = lightcycles_y + lightcycles_title.get_height() - 60
+			instruction_y = lightcycles_y + lightcycles_title.get_height() + 50
 		elif theme == "LEGACY":
 			instruction_y = lightcycles_y + lightcycles_title.get_height() + 60
 		else:
@@ -720,7 +720,7 @@ def show_message(text, subtext="", color=WHITE):
 
 	# Draw black background rectangle
 	if theme == "82":
-		pygame.draw.rect(WIN, (13, 54, 77), (box_x, box_y, box_width, box_height))
+		pygame.draw.rect(WIN, (9, 35, 51), (box_x, box_y, box_width, box_height))
 	else:
 		pygame.draw.rect(WIN, BLACK, (box_x, box_y, box_width, box_height))
 
