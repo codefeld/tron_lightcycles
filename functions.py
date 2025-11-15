@@ -222,7 +222,7 @@ def main_menu():
 				logo_width = 600
 				logo_height = int(tron_logo_img.get_height() * (logo_width / tron_logo_img.get_width()))
 				tron_title = pygame.transform.scale(tron_logo_img, (logo_width, logo_height))
-				subtitle_width = 500
+				subtitle_width = 550
 				subtitle_height = int(lightcycle_img.get_height() * (subtitle_width / lightcycle_img.get_width()))
 				lightcycles_title = pygame.transform.scale(lightcycle_img, (subtitle_width, subtitle_height))
 		elif theme == "RECONFIGURED":
@@ -282,7 +282,7 @@ def main_menu():
 			lightcycles_x = (WIDTH - lightcycles_title.get_width()) // 2
 			
 		if theme == "82":
-			lightcycles_y = tron_y + tron_title.get_height() - 100
+			lightcycles_y = tron_y + tron_title.get_height() - 120
 		elif theme == "LEGACY":
 			lightcycles_y = tron_y + tron_title.get_height() - 30
 		elif theme == "ARES":
@@ -294,7 +294,7 @@ def main_menu():
 
 		instruction_x = (WIDTH - instruction_text.get_width()) // 2
 		if theme == "82":
-			instruction_y = lightcycles_y + lightcycles_title.get_height() - 80
+			instruction_y = lightcycles_y + lightcycles_title.get_height() - 100
 		elif theme == "UPRISING":
 			instruction_y = lightcycles_y + lightcycles_title.get_height() + 50
 		elif theme == "LEGACY":
@@ -540,7 +540,7 @@ def draw_rotated_rect_debug(surface, color, center_x, center_y, width, height, a
 
 def draw_tron_grid(surface, desired_spacing=40):
 	if theme == "LEGACY" or theme == "ARES" or theme == "UPRISING":
-		draw_squircle_grid(WIN, 90, 120, .1)
+		draw_squircle_grid(WIN, 90, 120, .2)
 	elif theme == "RECONFIGURED":
 		# 8-bit style pixelated grid
 		surface.fill((0, 10, 0))  # Dark green background
@@ -721,6 +721,8 @@ def show_message(text, subtext="", color=WHITE):
 	# Draw black background rectangle
 	if theme == "82":
 		pygame.draw.rect(WIN, (9, 35, 51), (box_x, box_y, box_width, box_height))
+	elif theme == "UPRISING":
+		pygame.draw.rect(WIN, (0, 0, 30), (box_x, box_y, box_width, box_height))
 	else:
 		pygame.draw.rect(WIN, BLACK, (box_x, box_y, box_width, box_height))
 

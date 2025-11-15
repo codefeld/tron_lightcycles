@@ -30,7 +30,7 @@ class Obstacle:
 		core = pygame.Rect(self.x, self.y, self.size, self.size)
 		if theme == "LEGACY":
 			pygame.draw.rect(screen, (0, 0, 0), core)
-			pygame.draw.rect(screen, (255, 255, 255), core, 2)
+			pygame.draw.rect(screen, (150, 255, 255), core, 2)
 		elif theme == "RECONFIGURED":
 			pygame.draw.rect(screen, (0, 20, 0), core)
 			pygame.draw.rect(screen, (100, 255, 100), core, 3)
