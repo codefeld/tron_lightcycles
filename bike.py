@@ -5,8 +5,9 @@ import math
 class Bike:
 	"""Represents a lightcycle with position, direction, trail, and status effects."""
 
-	def __init__(self, sprite, color, name):
+	def __init__(self, sprite, color, name, mask=None):
 		self.sprite = sprite
+		self.mask = mask  # Mask for pixel-perfect collision detection
 		self.color = color
 		self.name = name
 		self.pos = [0, 0]  # Back position of bike

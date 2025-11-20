@@ -961,6 +961,180 @@ def rotated_rects_intersect(center1_x, center1_y, width1, height1, angle1_deg,
 
 	return True  # No separating axis found, rectangles intersect
 
+def check_mask_collision(bike1, bike2, sprite_w, back_margin=4):
+	"""Check if two bikes collide using pixel-perfect mask collision detection.
+
+	Args:
+		bike1: First Bike object
+		bike2: Second Bike object
+		sprite_w: Width of the sprite
+		back_margin: Margin from the back of the sprite (default 4)
+
+	Returns:
+		True if masks overlap, False otherwise
+	"""
+	import math
+
+	# Get direction vectors and magnitudes
+	dx1, dy1 = bike1.dir
+	mag1 = math.hypot(dx1, dy1)
+	dx2, dy2 = bike2.dir
+	mag2 = math.hypot(dx2, dy2)
+
+	if mag1 == 0 or mag2 == 0:
+		return False  # One or both bikes not moving
+
+	# Calculate rotation angles
+	rad1 = math.atan2(-dy1, dx1)
+	angle1_deg = math.degrees(rad1)
+	rad2 = math.atan2(-dy2, dx2)
+	angle2_deg = math.degrees(rad2)
+
+	# Calculate sprite centers for both bikes (matching blit_bike_with_front_at logic)
+	back_center_x1 = bike1.pos[0] + 2  # Center of 5x5 block
+	back_center_y1 = bike1.pos[1] + 2
+	back_center_x2 = bike2.pos[0] + 2
+	back_center_y2 = bike2.pos[1] + 2
+
+	# Calculate sprite center using rotated vector approach - same as blit function
+	# Bike 1
+	local_center1 = pygame.math.Vector2((sprite_w/2 - back_margin, 0))
+	rotated_center1 = local_center1.rotate(-angle1_deg)
+	center_x1 = back_center_x1 + rotated_center1.x
+	center_y1 = back_center_y1 + rotated_center1.y
+
+	# Bike 2
+	local_center2 = pygame.math.Vector2((sprite_w/2 - back_margin, 0))
+	rotated_center2 = local_center2.rotate(-angle2_deg)
+	center_x2 = back_center_x2 + rotated_center2.x
+	center_y2 = back_center_y2 + rotated_center2.y
+
+	# Rotate the masks
+	rotated_mask1 = pygame.mask.from_surface(pygame.transform.rotate(bike1.sprite, angle1_deg))
+	rotated_mask2 = pygame.mask.from_surface(pygame.transform.rotate(bike2.sprite, angle2_deg))
+
+	# Get the rotated sprite rectangles to calculate top-left positions
+	rotated_sprite1 = pygame.transform.rotate(bike1.sprite, angle1_deg)
+	rotated_sprite2 = pygame.transform.rotate(bike2.sprite, angle2_deg)
+
+	rect1 = rotated_sprite1.get_rect(center=(center_x1, center_y1))
+	rect2 = rotated_sprite2.get_rect(center=(center_x2, center_y2))
+
+	# Calculate offset between the two masks
+	offset = (int(rect2.left - rect1.left), int(rect2.top - rect1.top))
+
+	# Check if masks overlap
+	overlap = rotated_mask1.overlap(rotated_mask2, offset)
+
+	return overlap is not None
+
+def check_mask_collision_with_rect(bike, rect_x, rect_y, rect_width, rect_height, sprite_w, back_margin=4, test_pos=None):
+	"""Check if a bike's mask collides with a rectangular area (trail block or obstacle).
+
+	Args:
+		bike: Bike object with mask and position
+		rect_x, rect_y: Top-left position of the rectangle
+		rect_width, rect_height: Dimensions of the rectangle
+		sprite_w: Width of the bike sprite
+		back_margin: Margin from the back of the sprite (default 4)
+		test_pos: Optional (x, y) tuple for testing collision at a different position
+
+	Returns:
+		True if mask overlaps with rectangle, False otherwise
+	"""
+	import math
+
+	if bike.mask is None:
+		return False
+
+	# Get direction vectors and magnitudes
+	dx, dy = bike.dir
+	mag = math.hypot(dx, dy)
+
+	if mag == 0:
+		return False
+
+	# Calculate rotation angle
+	rad = math.atan2(-dy, dx)
+	angle_deg = math.degrees(rad)
+
+	# Use test position if provided, otherwise use bike's current position
+	if test_pos is not None:
+		pos_x, pos_y = test_pos
+	else:
+		pos_x, pos_y = bike.pos
+
+	# Calculate sprite center (matching blit_bike_with_front_at logic)
+	back_center_x = pos_x + 2  # Center of 5x5 block
+	back_center_y = pos_y + 2
+
+	# Vector from back to center (unrotated) - same as blit function
+	local_center = pygame.math.Vector2((sprite_w/2 - back_margin, 0))
+
+	# Rotate that vector - same as blit function
+	rotated_center = local_center.rotate(-angle_deg)
+
+	# Compute where the sprite's center should be - same as blit function
+	center_x = back_center_x + rotated_center.x
+	center_y = back_center_y + rotated_center.y
+
+	# Rotate the bike sprite and get its mask
+	rotated_sprite = pygame.transform.rotate(bike.sprite, angle_deg)
+	rotated_mask = pygame.mask.from_surface(rotated_sprite)
+
+	# Get the rotated sprite rectangle
+	bike_rect = rotated_sprite.get_rect(center=(center_x, center_y))
+
+	# Create a mask for the rectangle (solid filled mask)
+	rect_surface = pygame.Surface((rect_width, rect_height))
+	rect_surface.fill((255, 255, 255))  # Fill with white (opaque)
+	rect_mask = pygame.mask.from_surface(rect_surface)
+
+	# Calculate offset between the bike mask and rectangle mask
+	offset = (int(rect_x - bike_rect.left), int(rect_y - bike_rect.top))
+
+	# Normalize direction vector to determine bike orientation
+	nx, ny = dx / mag, dy / mag
+
+	# Check if bike is facing up or down (moving vertically)
+	if abs(ny) > abs(nx):
+		# The problem: when bikes face up/down and hit the SIDE of a trail,
+		# mask.overlap() only detects collision when the bike has penetrated
+		# all the way through to the FAR edge of the trail block (5 pixels).
+		#
+		# Solution: Check multiple offset positions to detect collision earlier.
+		# We check in a grid pattern to catch side collisions before penetration.
+
+		check_radius = 6  # Check within 6 pixels to detect collision at near edge
+
+		for dx_offset in range(-check_radius, check_radius + 1):
+			for dy_offset in range(-check_radius, check_radius + 1):
+				test_offset = (offset[0] + dx_offset, offset[1] + dy_offset)
+				if rotated_mask.overlap(rect_mask, test_offset) is not None:
+					return True
+
+		return False
+	else:
+		# Bike is facing left/right - use normal collision detection
+		# Check if masks overlap OR are adjacent (within 1 pixel)
+		overlap = rotated_mask.overlap(rect_mask, offset)
+		if overlap is not None:
+			return True
+
+		# Also check adjacent positions to prevent tunneling
+		adjacent_checks = [
+			(offset[0] - 1, offset[1]),     # Check 1 pixel left
+			(offset[0] + 1, offset[1]),     # Check 1 pixel right
+			(offset[0], offset[1] - 1),     # Check 1 pixel up
+			(offset[0], offset[1] + 1),     # Check 1 pixel down
+		]
+
+		for adj_offset in adjacent_checks:
+			if rotated_mask.overlap(rect_mask, adj_offset) is not None:
+				return True
+
+		return False
+
 def draw_bike_glow(bike, alpha=80):
 	"""Draw a faint oval glow underneath a bike."""
 	import math
@@ -1009,14 +1183,23 @@ def draw_bike_glow(bike, alpha=80):
 	back_center_y = bike.pos[1] + 2
 
 	if mag > 0:
-		# Normalize direction
-		nx, ny = dx / mag, dy / mag
 		# Calculate center of sprite - same calculation as blit_bike_with_front_at
 		# This ensures the glow is centered exactly with the bike sprite
 		back_margin = 4
-		center_offset = sprite_width / 2 - back_margin
-		center_x = back_center_x + nx * center_offset
-		center_y = back_center_y + ny * center_offset
+
+		# Calculate rotation angle
+		rad = math.atan2(-dy, dx)
+		angle_deg = math.degrees(rad)
+
+		# Vector from back to center (unrotated) - same as blit function
+		local_center = pygame.math.Vector2((sprite_width/2 - back_margin, 0))
+
+		# Rotate that vector - same as blit function
+		rotated_center = local_center.rotate(-angle_deg)
+
+		# Compute where the sprite's center should be - same as blit function
+		center_x = back_center_x + rotated_center.x
+		center_y = back_center_y + rotated_center.y
 	else:
 		# Bike not moving, center on position
 		center_x = back_center_x
@@ -1084,7 +1267,7 @@ def draw_trails():
 			pygame.draw.rect(WIN, ORANGE, (*point, BLOCK_SIZE, BLOCK_SIZE))
 
 def draw_debug_hitboxes():
-	"""Draw debug visualization showing actual collision hitboxes."""
+	"""Draw debug visualization showing pixel-perfect mask-based hitboxes."""
 	import math
 
 	if theme == "LEGACY" or theme == "ARES" or theme == "UPRISING":
@@ -1098,65 +1281,69 @@ def draw_debug_hitboxes():
 		sprite_height = height_82
 
 	back_margin = 4  # Same as used in blit_bike_with_front_at
-	tight_width = sprite_width * 0.9
-	tight_height = sprite_height * 0.9
 
-	def draw_bike_hitboxes(bike, color_body, color_front):
-		"""Draw hitboxes for a single bike."""
+	def draw_bike_mask_hitbox(bike, color):
+		"""Draw the actual mask outline for a single bike."""
+		if bike.mask is None:
+			return
+
 		pos_x, pos_y = bike.pos
 		dir_x, dir_y = bike.dir
-		angle = math.degrees(math.atan2(dir_y, dir_x))
+
+		# Calculate rotation angle
+		rad = math.atan2(-dir_y, dir_x)
+		angle_deg = math.degrees(rad)
 
 		# Back center (center of 5x5 trail block)
 		back_center_x = pos_x + 2
 		back_center_y = pos_y + 2
 
-		# Normalize direction
-		mag = math.sqrt(dir_x**2 + dir_y**2)
-		if mag > 0:
-			nx = dir_x / mag
-			ny = dir_y / mag
-		else:
-			nx, ny = 1, 0
+		# Calculate sprite center using the SAME logic as blit_bike_with_front_at
+		# Vector from back to center (unrotated) - same as blit function
+		local_center = pygame.math.Vector2((sprite_width/2 - back_margin, 0))
 
-		# Calculate body hitbox center (90% of sprite size)
-		body_offset = sprite_width / 2 - back_margin
-		body_center_x = back_center_x + nx * body_offset
-		body_center_y = back_center_y + ny * body_offset
+		# Rotate that vector - same as blit function
+		rotated_center = local_center.rotate(-angle_deg)
 
-		# Draw body hitbox in semi-transparent color
-		draw_rotated_rect_debug(WIN, color_body, body_center_x, body_center_y,
-		                        tight_width, tight_height, angle, line_width=2)
+		# Compute where the sprite's center should be - same as blit function
+		center_x = back_center_x + rotated_center.x
+		center_y = back_center_y + rotated_center.y
 
-		# Calculate front hitbox position
-		# The outer edge of the front hitbox aligns with the sprite's front edge
-		front_hitbox_width = sprite_width * 0.25
-		front_hitbox_height = tight_height
+		# Rotate the sprite to get the rotated mask
+		rotated_sprite = pygame.transform.rotate(bike.sprite, angle_deg)
+		rotated_mask = pygame.mask.from_surface(rotated_sprite)
 
-		# Position the hitbox so its outer edge aligns with sprite edge
-		# Sprite front edge is at (sprite_width - back_margin) from back
-		# Hitbox center should be at: sprite_edge - (hitbox_width / 2)
-		front_offset = (sprite_width - back_margin) - (front_hitbox_width / 2)
-		front_center_x = back_center_x + nx * front_offset
-		front_center_y = back_center_y + ny * front_offset
+		# Get the rotated sprite rectangle
+		rect = rotated_sprite.get_rect(center=(center_x, center_y))
 
-		# Draw front hitbox in bright color
-		draw_rotated_rect_debug(WIN, color_front, front_center_x, front_center_y,
-		                        front_hitbox_width, front_hitbox_height, angle, line_width=2)
+		# Get the outline of the mask (list of points)
+		try:
+			outline = rotated_mask.outline()
 
-	# Player 1 hitboxes (cyan body, white front)
+			# Draw the outline
+			if len(outline) > 1:
+				# Convert mask-local coordinates to screen coordinates
+				screen_points = [(rect.left + x, rect.top + y) for x, y in outline]
+
+				# Draw the outline as a polygon
+				pygame.draw.polygon(WIN, color, screen_points, 2)
+		except:
+			# If outline fails (e.g., empty mask), draw a small marker at the center
+			pygame.draw.circle(WIN, color, (int(center_x), int(center_y)), 3, 1)
+
+	# Player 1 hitboxes
 	if theme == "RECONFIGURED":
-		draw_bike_hitboxes(player1, GREEN, (255, 255, 0))
+		draw_bike_mask_hitbox(player1, (0, 255, 100))  # Bright green outline
 	else:
-		draw_bike_hitboxes(player1, (0, 180, 180), (255, 255, 255))
+		draw_bike_mask_hitbox(player1, (0, 255, 255))  # Cyan outline
 
-	# Player 2 hitboxes (orange/red body, yellow front)
+	# Player 2 hitboxes
 	if theme == "ARES":
-		draw_bike_hitboxes(player2, (180, 0, 0), (255, 255, 0))
+		draw_bike_mask_hitbox(player2, (255, 50, 50))  # Bright red outline
 	elif theme == "RECONFIGURED":
-		draw_bike_hitboxes(player2, YELLOW, (255, 255, 0))
+		draw_bike_mask_hitbox(player2, (255, 255, 0))  # Yellow outline
 	else:
-		draw_bike_hitboxes(player2, (180, 100, 0), (255, 255, 0))
+		draw_bike_mask_hitbox(player2, (255, 180, 0))  # Orange outline
 
 def draw_scoreboard():
 	if theme == "RECONFIGURED":
@@ -1183,17 +1370,17 @@ def reset_game():
 	global game_over, game_time_offset, last_powerup_spawn, player1, player2
 
 	if theme == "LEGACY" or theme == "UPRISING":
-		player1 = Bike(blue_legacy_sprite, BLUE, "Blue")
-		player2 = Bike(orange_legacy_sprite, ORANGE, "Orange")
+		player1 = Bike(blue_legacy_sprite, BLUE, "Blue", blue_legacy_mask)
+		player2 = Bike(orange_legacy_sprite, ORANGE, "Orange", orange_legacy_mask)
 	elif theme == "ARES":
-		player1 = Bike(blue_legacy_sprite, BLUE, "Blue")
-		player2 = Bike(red_ares_sprite, RED, "Red")
+		player1 = Bike(blue_legacy_sprite, BLUE, "Blue", blue_legacy_mask)
+		player2 = Bike(red_ares_sprite, RED, "Red", red_ares_mask)
 	elif theme == "82":
-		player1 = Bike(blue_82_sprite, BLUE, "Blue")
-		player2 = Bike(orange_82_sprite, ORANGE, "Orange")
+		player1 = Bike(blue_82_sprite, BLUE, "Blue", blue_82_mask)
+		player2 = Bike(orange_82_sprite, ORANGE, "Orange", orange_82_mask)
 	elif theme == "RECONFIGURED":
-		player1 = Bike(green_reconfigured_sprite, GREEN, "Green")
-		player2 = Bike(yellow_reconfigured_sprite, YELLOW, "Yellow")
+		player1 = Bike(green_reconfigured_sprite, GREEN, "Green", green_reconfigured_mask)
+		player2 = Bike(yellow_reconfigured_sprite, YELLOW, "Yellow", yellow_reconfigured_mask)
 
 	reset_sprites()
 	clear_powerups()
@@ -2020,7 +2207,7 @@ def ai_control(current_game_time):
 			player2.last_turn_time = current_game_time
 
 def step_move_player(bike, other_bike, effective_speed, sprite_width, sprite_height, back_margin=4):
-	"""Move a bike and check for collisions using rotated rectangle collision detection."""
+	"""Move a bike and check for collisions using pixel-perfect mask collision detection."""
 	if effective_speed <= 0:
 		return False
 
@@ -2033,14 +2220,6 @@ def step_move_player(bike, other_bike, effective_speed, sprite_width, sprite_hei
 	# front offset from back
 	front_length = sprite_width - back_margin
 
-	# Calculate rotation angle
-	rad = math.atan2(-bike.dir[1], bike.dir[0])
-	angle_deg = math.degrees(rad)
-
-	# Use 90% of sprite dimensions for tight hitbox
-	tight_width = sprite_width * 0.9
-	tight_height = sprite_height * 0.9
-
 	# Skip the last few trail blocks to avoid self-collision with recent trail
 	# At SPEED=5 and 60 FPS, the bike moves 5 pixels per frame
 	# The bike sprite is ~20-40 pixels long, so we need to skip enough blocks
@@ -2050,109 +2229,106 @@ def step_move_player(bike, other_bike, effective_speed, sprite_width, sprite_hei
 	# Helper function to check if a position would cause collision
 	def would_collide(test_x, test_y):
 		"""Check if moving to position (test_x, test_y) would cause a collision."""
-		# Check wall collisions (using front position)
-		fx = test_x + nx * front_length
-		fy = test_y + ny * front_length
-		if fx < 0 or fx >= WIDTH or fy < 0 or fy >= HEIGHT:
-			return True
-
-		# Calculate front hitbox position
-		# The front hitbox is a small rectangle at the tip of the bike
-		# Its outer edge should align perfectly with the sprite's front edge
+		# Calculate body center using the SAME logic as blit_bike_with_front_at
+		# This is critical for proper collision detection with rotated sprites
 		back_margin = 4
-		front_hitbox_width = sprite_width * 0.25
-		front_hitbox_height = tight_height
 
-		# Position the hitbox so its outer edge aligns with sprite edge
-		# Sprite front edge is at (sprite_width - back_margin) from back
-		# Hitbox center should be at: sprite_edge - (hitbox_width / 2)
-		front_offset = (sprite_width - back_margin) - (front_hitbox_width / 2)
-		front_center_x = test_x + 2 + nx * front_offset
-		front_center_y = test_y + 2 + ny * front_offset
+		# pos_back is the top-left of the trail block, so offset to center of 5x5 block
+		back_center_x = test_x + 2
+		back_center_y = test_y + 2
 
-		# Also calculate body hitbox for turn collision detection
-		# The body extends from the back position
-		back_margin = 4
-		body_center_offset = sprite_width / 2 - back_margin
-		body_center_x = test_x + 2 + nx * body_center_offset
-		body_center_y = test_y + 2 + ny * body_center_offset
-		body_width = sprite_width * 0.9
-		body_height = tight_height
+		# Calculate rotation angle
+		rad = math.atan2(-bike.dir[1], bike.dir[0])
+		angle_deg = math.degrees(rad)
 
-		# Create a broad-phase AABB for the front of the bike to quickly reject distant objects
+		# Vector from back to center (unrotated) - same as blit function
+		local_center = pygame.math.Vector2((sprite_width/2 - back_margin, 0))
+
+		# Rotate that vector - same as blit function
+		rotated_center = local_center.rotate(-angle_deg)
+
+		# Compute where the sprite's center should be - same as blit function
+		body_center_x = back_center_x + rotated_center.x
+		body_center_y = back_center_y + rotated_center.y
+
+		# Check wall collisions using pixel-perfect mask collision
+		# This ensures the bike stops when the mask (not just a point) hits the wall
+		if bike.mask is not None:
+			# Rotate the sprite to get the rotated mask
+			rotated_sprite = pygame.transform.rotate(bike.sprite, angle_deg)
+			rotated_mask = pygame.mask.from_surface(rotated_sprite)
+
+			# Get the rotated sprite rectangle at test position
+			bike_rect = rotated_sprite.get_rect(center=(body_center_x, body_center_y))
+
+			# Check if any part of the mask would be outside the game boundaries
+			if bike_rect.left < 0 or bike_rect.right > WIDTH or bike_rect.top < 0 or bike_rect.bottom > HEIGHT:
+				# Get the mask outline to check actual pixels
+				try:
+					outline = rotated_mask.outline()
+					# Check each outline point to see if it's outside boundaries
+					for px, py in outline:
+						world_x = bike_rect.left + px
+						world_y = bike_rect.top + py
+						if world_x < 0 or world_x >= WIDTH or world_y < 0 or world_y >= HEIGHT:
+							return True
+				except:
+					# If outline fails, fall back to rectangle check
+					if bike_rect.left < 0 or bike_rect.right > WIDTH or bike_rect.top < 0 or bike_rect.bottom > HEIGHT:
+						return True
+
+		# Create a broad-phase AABB for quick rejection of distant objects
 		# This optimization dramatically improves performance with long trails
-		front_aabb = pygame.Rect(0, 0, front_hitbox_width + 20, front_hitbox_height + 20)
-		front_aabb.center = (front_center_x, front_center_y)
+		bike_aabb_broad = pygame.Rect(0, 0, sprite_width + 20, sprite_height + 20)
+		bike_aabb_broad.center = (body_center_x, body_center_y)
 
-		# Also create a broad-phase AABB for the body
-		body_aabb_broad = pygame.Rect(0, 0, body_width + 20, body_height + 20)
-		body_aabb_broad.center = (body_center_x, body_center_y)
-
-		# Check other bike's trail (all positions)
-		# No inflation - hitboxes must actually touch
+		# Check other bike's trail (all positions) using pixel-perfect mask collision
 		for trail_pos in other_bike.trail:
 			trail_rect = pygame.Rect(trail_pos[0], trail_pos[1], BLOCK_SIZE, BLOCK_SIZE)
-			# Quick AABB rejection test - skip expensive rotated rect check if not close
-			# Check both front and body AABBs
-			if front_aabb.colliderect(trail_rect):
-				# Check if front hitbox intersects trail
-				if rotated_rect_intersects_rect(front_center_x, front_center_y, front_hitbox_width, front_hitbox_height, angle_deg, trail_rect):
-					return True
-			if body_aabb_broad.colliderect(trail_rect):
-				# Also check if body hitbox intersects trail (important for turns)
-				if rotated_rect_intersects_rect(body_center_x, body_center_y, body_width, body_height, angle_deg, trail_rect):
+			# Quick AABB rejection test - skip expensive mask check if not close
+			if bike_aabb_broad.colliderect(trail_rect):
+				# Use pixel-perfect mask collision detection
+				if check_mask_collision_with_rect(bike, trail_pos[0], trail_pos[1], BLOCK_SIZE, BLOCK_SIZE, sprite_width, test_pos=(test_x, test_y)):
 					return True
 
 		# Check own trail (skip recent positions to avoid false collisions)
 		own_trail_to_check = bike.trail[:-TRAIL_SAFETY_MARGIN] if len(bike.trail) > TRAIL_SAFETY_MARGIN else []
 		for trail_pos in own_trail_to_check:
 			trail_rect = pygame.Rect(trail_pos[0], trail_pos[1], BLOCK_SIZE, BLOCK_SIZE)
-			# Quick AABB rejection test - skip expensive rotated rect check if not close
-			# Check both front and body AABBs
-			if front_aabb.colliderect(trail_rect):
-				# Check if front hitbox intersects trail
-				if rotated_rect_intersects_rect(front_center_x, front_center_y, front_hitbox_width, front_hitbox_height, angle_deg, trail_rect):
-					return True
-			if body_aabb_broad.colliderect(trail_rect):
-				# Also check if body hitbox intersects trail (important for turns)
-				if rotated_rect_intersects_rect(body_center_x, body_center_y, body_width, body_height, angle_deg, trail_rect):
+			# Quick AABB rejection test - skip expensive mask check if not close
+			if bike_aabb_broad.colliderect(trail_rect):
+				# Use pixel-perfect mask collision detection
+				if check_mask_collision_with_rect(bike, trail_pos[0], trail_pos[1], BLOCK_SIZE, BLOCK_SIZE, sprite_width, test_pos=(test_x, test_y)):
 					return True
 
-		# Check obstacle collisions
+		# Check obstacle collisions using pixel-perfect mask collision
 		for obs in obstacles:
 			obs_rect = pygame.Rect(obs.x, obs.y, obs.size, obs.size)
-			# Quick AABB rejection test - skip expensive rotated rect check if not close
-			if not front_aabb.colliderect(obs_rect):
-				continue
-			# Check if front hitbox intersects obstacle
-			if rotated_rect_intersects_rect(front_center_x, front_center_y, front_hitbox_width, front_hitbox_height, angle_deg, obs_rect):
-				return True
+			# Quick AABB rejection test - skip expensive mask check if not close
+			if bike_aabb_broad.colliderect(obs_rect):
+				# Use pixel-perfect mask collision detection
+				if check_mask_collision_with_rect(bike, obs.x, obs.y, obs.size, obs.size, sprite_width, test_pos=(test_x, test_y)):
+					return True
 
-		# Check bike-to-bike collision
-		if other_bike is not None:
-			# Calculate other bike's position and hitbox
+		# Check bike-to-bike collision using pixel-perfect mask collision
+		# Note: This is checked during step movement for continuous collision detection
+		# The main game loop also checks bike-to-bike collision after movement completes
+		if other_bike is not None and other_bike.mask is not None and bike.mask is not None:
 			other_mag = math.hypot(other_bike.dir[0], other_bike.dir[1])
 			if other_mag > 0:
-				# Calculate other bike's rotation angle
-				other_rad = math.atan2(-other_bike.dir[1], other_bike.dir[0])
-				other_angle_deg = math.degrees(other_rad)
+				# Temporarily update bike position for collision check
+				original_pos = bike.pos.copy()
+				bike.pos = [test_x, test_y]
 
-				# Calculate other bike's sprite center
-				other_back_center_x = other_bike.pos[0] + 2
-				other_back_center_y = other_bike.pos[1] + 2
-				other_nx = other_bike.dir[0] / other_mag
-				other_ny = other_bike.dir[1] / other_mag
-				other_center_offset = sprite_width / 2 - back_margin
-				other_center_x = other_back_center_x + other_nx * other_center_offset
-				other_center_y = other_back_center_y + other_ny * other_center_offset
+				# Check mask collision between bikes
+				collision = check_mask_collision(bike, other_bike, sprite_width)
 
-				# Check if this bike's hitbox would intersect the other bike's hitbox
-				# Use the full body hitbox for bike-to-bike collision
-				if rotated_rects_intersect(
-					body_center_x, body_center_y, body_width, body_height, angle_deg,
-					other_center_x, other_center_y, tight_width, tight_height, other_angle_deg
-				):
-					return True
+				# Restore original position
+				bike.pos = original_pos
+
+				if collision:
+					# Return special value to indicate bike-to-bike collision
+					return "bike_collision"
 
 		return False
 
@@ -2169,35 +2345,52 @@ def step_move_player(bike, other_bike, effective_speed, sprite_width, sprite_hei
 		next_y = bike.pos[1] + ny * step_size
 
 		# Check if moving to this position would cause collision
-		if would_collide(next_x, next_y):
-			# Collision detected - do a binary search to find the exact tangent position
-			# Start with current position (safe) and next position (collision)
-			safe_x, safe_y = bike.pos[0], bike.pos[1]
-			collide_x, collide_y = next_x, next_y
-
-			# Binary search for the exact tangent point (10 iterations gives sub-pixel precision)
-			for _ in range(10):
-				mid_x = (safe_x + collide_x) / 2
-				mid_y = (safe_y + collide_y) / 2
-
-				if would_collide(mid_x, mid_y):
-					# Mid point collides, search in first half
-					collide_x, collide_y = mid_x, mid_y
-				else:
-					# Mid point is safe, search in second half
-					safe_x, safe_y = mid_x, mid_y
-
-			# Move to the tangent position (midpoint between final safe and collide positions)
-			# This ensures the hitbox edge is exactly at the collision boundary
-			tangent_x = (safe_x + collide_x) / 2
-			tangent_y = (safe_y + collide_y) / 2
-			bike.pos[0] = tangent_x
-			bike.pos[1] = tangent_y
-
-			if bike == player1:
-				collided_player = 1
+		collision_result = would_collide(next_x, next_y)
+		if collision_result:
+			# Check if it's a bike-to-bike collision
+			if collision_result == "bike_collision":
+				# Bike-to-bike collision should result in a draw
+				# Set special return value to indicate this
+				collided_player = 3  # Special value for bike-to-bike collision
 			else:
-				collided_player = 2
+				# Regular collision (wall, trail, or obstacle)
+				# Do a binary search to find the exact tangent position
+				# Start with current position (safe) and next position (collision)
+				safe_x, safe_y = bike.pos[0], bike.pos[1]
+				collide_x, collide_y = next_x, next_y
+
+				# Binary search for the exact tangent point (10 iterations gives sub-pixel precision)
+				for _ in range(10):
+					mid_x = (safe_x + collide_x) / 2
+					mid_y = (safe_y + collide_y) / 2
+
+					if would_collide(mid_x, mid_y):
+						# Mid point collides, search in first half
+						collide_x, collide_y = mid_x, mid_y
+					else:
+						# Mid point is safe, search in second half
+						safe_x, safe_y = mid_x, mid_y
+
+				# Move to the last safe position (not the midpoint!)
+				# The last safe position is where the bike's hitbox is tangent to the obstacle
+				# without any overlap or penetration
+
+				# DEBUG: Verify the safe position truly doesn't collide
+				# If safe position still collides, back off further
+				backup_distance = 0
+				while would_collide(safe_x, safe_y) and backup_distance < 10:
+					# Back up by 1 pixel in the opposite direction of movement
+					safe_x -= nx * 0.5
+					safe_y -= ny * 0.5
+					backup_distance += 0.5
+
+				bike.pos[0] = safe_x
+				bike.pos[1] = safe_y
+
+				if bike == player1:
+					collided_player = 1
+				else:
+					collided_player = 2
 			break
 
 		# Update position (only if no collision)
@@ -2318,11 +2511,78 @@ def run_game():
 			# Move both bikes
 			collided1 = step_move_player(player1, player2, effective_speed_p1, sprite_w, sprite_h, back_margin=4)
 			collided2 = step_move_player(player2, player1, effective_speed_p2, sprite_w, sprite_h, back_margin=4)
-			if collided1 == 1:
+
+			# Check if either collision was a bike-to-bike collision (should be a draw)
+			if collided1 == 3 or collided2 == 3:
+				# Bike-to-bike collision during movement - it's a draw
+				WIN.fill(BLACK)
+				draw_tron_grid(WIN)
+				if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED" or theme == "UPRISING":
+					draw_bike_glow(player1)
+					draw_bike_glow(player2)
+				draw_trails()
+				draw_obstacles()
+				draw_powerups()
+				draw_sprites()
+				if show_debug_hitboxes:
+					draw_debug_hitboxes()
+				draw_scoreboard()
+				pygame.display.update()
+				if theme == "82":
+					if derezzed_sound_82_file.exists():
+						pygame.mixer.music.stop()
+						turn_channel.stop()
+						derezz_channel.play(derezzed_sound_82)
+				else:
+					if derezzed_sound_file.exists():
+						pygame.mixer.music.stop()
+						derezz_channel.play(derezzed_sound)
+				game_over = True
+				if theme == "82":
+					pygame.time.delay(2600)
+				else:
+					pygame.time.delay(1800)
+				win_text = "DRAW!"
+				if theme == "ARES":
+					win_color = DARKER_RED
+					if this_changes_everything.exists():
+						pygame.mixer.music.load("music/this_changes_everything.mp3")
+						pygame.mixer.music.play(-1)
+						pygame.mixer.music.set_volume(0.75)
+						current_track = str(this_changes_everything)
+				elif theme == "LEGACY":
+					win_color = DARKER_BLUE
+					if arena.exists():
+						pygame.mixer.music.load("music/arena.mp3")
+						pygame.mixer.music.play(-1)
+						pygame.mixer.music.set_volume(1)
+						current_track = str(arena)
+				elif theme == "RECONFIGURED":
+					win_color = GREEN
+					if solar_sailer_reconfigured.exists():
+						pygame.mixer.music.load("music/solar_sailer_reconfigured.mp3")
+						pygame.mixer.music.play(-1)
+						pygame.mixer.music.set_volume(0.75)
+						current_track = str(solar_sailer_reconfigured)
+				elif theme == "82":
+					win_color = LIGHT_GRAY
+					if tower_music.exists():
+						pygame.mixer.music.load("music/tower_music.mp3")
+						pygame.mixer.music.play(-1)
+						pygame.mixer.music.set_volume(1)
+						current_track = str(tower_music)
+				elif theme == "UPRISING":
+					win_color = DARKER_BLUE
+					if rescuing_the_rebellion.exists():
+						pygame.mixer.music.load("music/rescuing_the_rebellion.mp3")
+						pygame.mixer.music.play(-1)
+						pygame.mixer.music.set_volume(1)
+						current_track = str(rescuing_the_rebellion)
+			elif collided1 == 1:
 				p2_win()
 			elif collided1 == 2:
 				p1_win()
-			if collided2 == 1:
+			elif collided2 == 1:
 				p2_win()
 			elif collided2 == 2:
 				p1_win()
@@ -2339,122 +2599,75 @@ def run_game():
 			bikes_collided = False
 
 			if mag1 > 0 and mag2 > 0:  # Both bikes are moving
-				# Calculate rotation angles
-				rad1 = math.atan2(-dy1, dx1)
-				angle1_deg = math.degrees(rad1)
-				rad2 = math.atan2(-dy2, dx2)
-				angle2_deg = math.degrees(rad2)
-
-				# Calculate sprite centers for both bikes
-				back_margin = 4
-				back_center_x1 = player1.pos[0] + 2
-				back_center_y1 = player1.pos[1] + 2
-				back_center_x2 = player2.pos[0] + 2
-				back_center_y2 = player2.pos[1] + 2
-
-				# Normalize direction vectors
-				nx1, ny1 = dx1 / mag1, dy1 / mag1
-				nx2, ny2 = dx2 / mag2, dy2 / mag2
-
-				# Calculate sprite center offset (matching blit_bike_with_front_at logic)
-				center_offset = sprite_w / 2 - back_margin
-				center_x1 = back_center_x1 + nx1 * center_offset
-				center_y1 = back_center_y1 + ny1 * center_offset
-				center_x2 = back_center_x2 + nx2 * center_offset
-				center_y2 = back_center_y2 + ny2 * center_offset
-
-				# Check if the two sprite hitboxes intersect
-				bikes_collided = rotated_rects_intersect(
-					center_x1, center_y1, sprite_w, sprite_h, angle1_deg,
-					center_x2, center_y2, sprite_w, sprite_h, angle2_deg
-				)
+				# Use pixel-perfect mask collision detection
+				bikes_collided = check_mask_collision(player1, player2, sprite_w)
 
 			# Handle bike-to-bike collision ONLY if neither bike crashed into walls/trails
+			# All bike-to-bike collisions count as a draw
 			if bikes_collided and collided1 == 0 and collided2 == 0:
-				# Determine winner based on who hit whom from the side
-				# Calculate front positions of both bikes
-				p1_front_x = center_x1 + nx1 * (sprite_w / 2)
-				p1_front_y = center_y1 + ny1 * (sprite_w / 2)
-				p2_front_x = center_x2 + nx2 * (sprite_w / 2)
-				p2_front_y = center_y2 + ny2 * (sprite_w / 2)
-
-				# Calculate distances from each bike's front to the other bike's center
-				dist_p1_front_to_p2_center = math.hypot(p1_front_x - center_x2, p1_front_y - center_y2)
-				dist_p2_front_to_p1_center = math.hypot(p2_front_x - center_x1, p2_front_y - center_y1)
-
-				# The bike whose front is closer to the other bike's center is the one that crashed
-				# The other bike wins (was hit from the side)
-				if dist_p1_front_to_p2_center < dist_p2_front_to_p1_center:
-					# Player 1's front hit player 2's side - player 2 wins
-					p2_win()
-				elif dist_p2_front_to_p1_center < dist_p1_front_to_p2_center:
-					# Player 2's front hit player 1's side - player 1 wins
-					p1_win()
+				WIN.fill(BLACK)
+				draw_tron_grid(WIN)
+				if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED" or theme == "UPRISING":
+					draw_bike_glow(player1)
+					draw_bike_glow(player2)
+				draw_trails()
+				draw_obstacles()
+				draw_powerups()
+				draw_sprites()
+				if show_debug_hitboxes:
+					draw_debug_hitboxes()
+				draw_scoreboard()
+				pygame.display.update()
+				if theme == "82":
+					if derezzed_sound_82_file.exists():
+						pygame.mixer.music.stop()
+						turn_channel.stop()
+						derezz_channel.play(derezzed_sound_82)
 				else:
-					# Perfect head-on collision - it's a draw (very rare)
-					WIN.fill(BLACK)
-					draw_tron_grid(WIN)
-					if theme == "LEGACY" or theme == "ARES" or theme == "RECONFIGURED" or theme == "UPRISING":
-						draw_bike_glow(player1)
-						draw_bike_glow(player2)
-					draw_trails()
-					draw_obstacles()
-					draw_powerups()
-					draw_sprites()
-					if show_debug_hitboxes:
-						draw_debug_hitboxes()
-					draw_scoreboard()
-					pygame.display.update()
-					if theme == "82":
-						if derezzed_sound_82_file.exists():
-							pygame.mixer.music.stop()
-							turn_channel.stop()
-							derezz_channel.play(derezzed_sound_82)
-					else:
-						if derezzed_sound_file.exists():
-							pygame.mixer.music.stop()
-							derezz_channel.play(derezzed_sound)
-					game_over = True
-					if theme == "82":
-						pygame.time.delay(2600)
-					else:
-						pygame.time.delay(1800)
-					win_text = "DRAW!"
-					if theme == "ARES":
-						win_color = DARKER_RED
-						if this_changes_everything.exists():
-							pygame.mixer.music.load("music/this_changes_everything.mp3")
-							pygame.mixer.music.play(-1)
-							pygame.mixer.music.set_volume(0.75)
-							current_track = str(this_changes_everything)
-					elif theme == "LEGACY":
-						win_color = DARKER_BLUE
-						if arena.exists():
-							pygame.mixer.music.load("music/arena.mp3")
-							pygame.mixer.music.play(-1)
-							pygame.mixer.music.set_volume(1)
-							current_track = str(arena)
-					elif theme == "RECONFIGURED":
-						win_color = GREEN
-						if solar_sailer_reconfigured.exists():
-							pygame.mixer.music.load("music/solar_sailer_reconfigured.mp3")
-							pygame.mixer.music.play(-1)
-							pygame.mixer.music.set_volume(0.75)
-							current_track = str(solar_sailer_reconfigured)
-					elif theme == "82":
-						win_color = LIGHT_GRAY
-						if tower_music.exists():
-							pygame.mixer.music.load("music/tower_music.mp3")
-							pygame.mixer.music.play(-1)
-							pygame.mixer.music.set_volume(1)
-							current_track = str(tower_music)
-					elif theme == "UPRISING":
-						win_color = DARKER_BLUE
-						if rescuing_the_rebellion.exists():
-							pygame.mixer.music.load("music/rescuing_the_rebellion.mp3")
-							pygame.mixer.music.play(-1)
-							pygame.mixer.music.set_volume(1)
-							current_track = str(rescuing_the_rebellion)
+					if derezzed_sound_file.exists():
+						pygame.mixer.music.stop()
+						derezz_channel.play(derezzed_sound)
+				game_over = True
+				if theme == "82":
+					pygame.time.delay(2600)
+				else:
+					pygame.time.delay(1800)
+				win_text = "DRAW!"
+				if theme == "ARES":
+					win_color = DARKER_RED
+					if this_changes_everything.exists():
+						pygame.mixer.music.load("music/this_changes_everything.mp3")
+						pygame.mixer.music.play(-1)
+						pygame.mixer.music.set_volume(0.75)
+						current_track = str(this_changes_everything)
+				elif theme == "LEGACY":
+					win_color = DARKER_BLUE
+					if arena.exists():
+						pygame.mixer.music.load("music/arena.mp3")
+						pygame.mixer.music.play(-1)
+						pygame.mixer.music.set_volume(1)
+						current_track = str(arena)
+				elif theme == "RECONFIGURED":
+					win_color = GREEN
+					if solar_sailer_reconfigured.exists():
+						pygame.mixer.music.load("music/solar_sailer_reconfigured.mp3")
+						pygame.mixer.music.play(-1)
+						pygame.mixer.music.set_volume(0.75)
+						current_track = str(solar_sailer_reconfigured)
+				elif theme == "82":
+					win_color = LIGHT_GRAY
+					if tower_music.exists():
+						pygame.mixer.music.load("music/tower_music.mp3")
+						pygame.mixer.music.play(-1)
+						pygame.mixer.music.set_volume(1)
+						current_track = str(tower_music)
+				elif theme == "UPRISING":
+					win_color = DARKER_BLUE
+					if rescuing_the_rebellion.exists():
+						pygame.mixer.music.load("music/rescuing_the_rebellion.mp3")
+						pygame.mixer.music.play(-1)
+						pygame.mixer.music.set_volume(1)
+						current_track = str(rescuing_the_rebellion)
 
 			# --- Power-up collisions ---
 			check_powerup_collision(p1_front, player1, current_time)

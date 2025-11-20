@@ -99,8 +99,6 @@ themes = ["82", "LEGACY", "ARES"]
 
 theme = random.choice(themes)
 
-# theme = "RECONFIGURED"
-
 message_color = ""
 
 # Colors
@@ -111,7 +109,7 @@ DARKER_BLUE = (0, 200, 200)
 ORANGE = (255, 150, 0)
 RED = (255, 0, 0)
 DARKER_RED = (200, 0, 0)
-DARKEST_RED = (150, 0, 0)
+DARKEST_RED = (190, 0, 0)
 LIGHT_RED = (255, 50, 50)
 TEAL = (0, 180, 150)
 DARKER_TEAL = (0, 10, 20)
@@ -185,21 +183,28 @@ dirs = {
 
 blue_82_big = pygame.image.load("images/blue_lightcycle_82.png").convert_alpha()
 blue_82_big = pygame.transform.flip(blue_82_big, True, False)
+blue_82_mask_big = pygame.mask.from_surface(blue_82_big)
 orange_82_big = pygame.image.load("images/orange_lightcycle_82.png").convert_alpha()
 orange_82_big = pygame.transform.flip(orange_82_big, True, False)
+orange_82_mask_big = pygame.mask.from_surface(orange_82_big)
 
 blue_legacy_big = pygame.image.load("images/blue_lightcycle_legacy.png").convert_alpha()
 blue_legacy_big = pygame.transform.flip(blue_legacy_big, True, False)
+blue_legacy_mask_big = pygame.mask.from_surface(blue_legacy_big)
 orange_legacy_big = pygame.image.load("images/orange_lightcycle_legacy.png").convert_alpha()
 orange_legacy_big = pygame.transform.flip(orange_legacy_big, True, False)
+orange_legacy_mask_big = pygame.mask.from_surface(orange_legacy_big)
 
 red_ares_big = pygame.image.load("images/red_lightcycle_ares.png").convert_alpha()
 red_ares_big = pygame.transform.flip(red_ares_big, True, False)
+red_ares_mask_big = pygame.mask.from_surface(red_ares_big)
 
 green_reconfigured_big = pygame.image.load("images/green_lightcycle_reconfigured.png").convert_alpha()
 green_reconfigured_big = pygame.transform.flip(green_reconfigured_big, True, False)
+green_reconfigured_mask_big = pygame.mask.from_surface(green_reconfigured_big)
 yellow_reconfigured_big = pygame.image.load("images/yellow_lightcycle_reconfigured.png").convert_alpha()
 yellow_reconfigured_big = pygame.transform.flip(yellow_reconfigured_big, True, False)
+yellow_reconfigured_mask_big = pygame.mask.from_surface(yellow_reconfigured_big)
 
 scale_factor_82 = .05
 width_82 = int(blue_82_big.get_width() * scale_factor_82)
@@ -214,15 +219,22 @@ reconfigured_width = int(green_reconfigured_big.get_width() * reconfigured_scale
 reconfigured_height = int(green_reconfigured_big.get_height() * reconfigured_scale_factor)
 
 blue_82_sprite = pygame.transform.scale(blue_82_big, (width_82, height_82))
+blue_82_mask = pygame.mask.from_surface(blue_82_sprite)
 orange_82_sprite = pygame.transform.scale(orange_82_big, (width_82, height_82))
+orange_82_mask = pygame.mask.from_surface(orange_82_sprite)
 
 blue_legacy_sprite = pygame.transform.scale(blue_legacy_big, (legacy_width, legacy_height))
+blue_legacy_mask = pygame.mask.from_surface(blue_legacy_sprite)
 orange_legacy_sprite = pygame.transform.scale(orange_legacy_big, (legacy_width, legacy_height))
+orange_legacy_mask = pygame.mask.from_surface(orange_legacy_sprite)
 
 red_ares_sprite = pygame.transform.scale(red_ares_big, (legacy_width, legacy_height))
+red_ares_mask = pygame.mask.from_surface(red_ares_sprite)
 
 green_reconfigured_sprite = pygame.transform.scale(green_reconfigured_big, (reconfigured_width, reconfigured_height))
+green_reconfigured_mask = pygame.mask.from_surface(green_reconfigured_sprite)
 yellow_reconfigured_sprite = pygame.transform.scale(yellow_reconfigured_big, (reconfigured_width, reconfigured_height))
+yellow_reconfigured_mask = pygame.mask.from_surface(yellow_reconfigured_sprite)
 
 # Create bike instances
 player1 = ""

@@ -23,7 +23,7 @@ class PowerUp:
 		elif theme == "RECONFIGURED":
 			self.color = (0, 150, 0)
 		elif theme == "UPRISING":
-			self.color = (0, 0, 0)
+			self.color = (0, 0, 40)
 		else:
 			self.color = PowerUp.COLORS[ptype]
 
